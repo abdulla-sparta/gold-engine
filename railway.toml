@@ -1,0 +1,16 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120"
+restartPolicyType = "on_failure"
+
+[[services.cronJobs]]
+schedule  = "30 3 * * 1-5"   # 09:00 IST Mon–Fri
+path      = "/cron/start"
+method    = "POST"
+
+[[services.cronJobs]]
+schedule  = "55 17 * * 1-5"  # 23:25 IST Mon–Fri
+path      = "/cron/stop"
+method    = "POST"
