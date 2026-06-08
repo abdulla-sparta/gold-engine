@@ -3,123 +3,145 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GoldEngine — MCX Gold Algo</title>
+<title>GoldEngine — MCX Gold Algo | Light Edition</title>
 <style>
   :root {
-    --gold:   #F5A623;
-    --gold2:  #FFD700;
-    --bg:     #0D0D0D;
-    --card:   #161616;
-    --border: #2A2A2A;
-    --text:   #E8E8E8;
-    --muted:  #888;
-    --green:  #22C55E;
-    --red:    #EF4444;
-    --blue:   #3B82F6;
-    --bull:   #22C55E;
-    --bear:   #EF4444;
+    /* Light theme – gold & white */
+    --gold:     #C9971E;
+    --gold-light: #FCEFC7;
+    --gold-soft: #FEF5E7;
+    --gold2:    #D4AF37;
+    --bg:       #FDFBF7;
+    --card:     #FFFFFF;
+    --border:   #E5DFCF;
+    --border-dark: #D6CDB5;
+    --text:     #1E1A0F;
+    --text-muted: #5E5A4C;
+    --green:    #2B7A3E;
+    --red:      #C23B22;
+    --blue:     #2C6E9E;
+    --bull:     #2B7A3E;
+    --bear:     #C23B22;
+    --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.05);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; font-size: 14px; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif; font-size: 14px; line-height: 1.4; }
 
-  /* Navbar */
-  nav { background: #111; border-bottom: 1px solid var(--border); padding: 0 24px;
-        display: flex; align-items: center; height: 52px; gap: 24px; }
-  nav .brand { color: var(--gold); font-weight: 700; font-size: 18px; letter-spacing: 1px; }
-  nav .badge { font-size: 11px; padding: 2px 8px; border-radius: 4px; background: #222;
-               border: 1px solid var(--border); color: var(--muted); }
-  nav .badge.live { border-color: var(--green); color: var(--green); }
+  /* Navbar – light with subtle shine */
+  nav { background: #FFFFFF; border-bottom: 1px solid var(--border); padding: 0 24px;
+        display: flex; align-items: center; height: 56px; gap: 24px; box-shadow: var(--shadow-sm); }
+  nav .brand { color: var(--gold); font-weight: 800; font-size: 18px; letter-spacing: -0.2px; background: var(--gold-light); padding: 5px 12px; border-radius: 40px; }
+  nav .badge { font-size: 11px; padding: 4px 10px; border-radius: 40px; background: #F4F0E6;
+               border: 1px solid var(--border); color: var(--text-muted); font-weight: 500; }
+  nav .badge.live { background: #E6F4EA; border-color: var(--green); color: var(--green); }
   nav .spacer { flex: 1; }
   nav button { background: transparent; border: 1px solid var(--border); color: var(--text);
-               padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
-  nav button:hover { border-color: var(--gold); color: var(--gold); }
+               padding: 6px 16px; border-radius: 40px; cursor: pointer; font-size: 13px; font-weight: 500;
+               transition: all 0.2s ease; }
+  nav button:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-light); }
   nav button.danger { border-color: var(--red); color: var(--red); }
-  nav button.primary { background: var(--gold); color: #000; border-color: var(--gold); font-weight: 600; }
+  nav button.danger:hover { background: #FEE2E2; border-color: var(--red); color: var(--red); }
+  nav button.primary { background: var(--gold); color: #1A1507; border-color: var(--gold); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.05);}
+  nav button.primary:hover { background: #B5841A; border-color: #B5841A; color: white; }
 
   /* Layout */
-  .main { padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
-  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .main { padding: 24px 28px; max-width: 1400px; margin: 0 auto; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 24px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
 
-  /* Cards */
-  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
-  .card-title { font-size: 11px; color: var(--muted); text-transform: uppercase;
-                letter-spacing: 1px; margin-bottom: 10px; }
-  .card-value { font-size: 26px; font-weight: 700; }
-  .card-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  /* Cards – white, light gold borders, subtle shadow */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 18px 20px; 
+          box-shadow: var(--shadow-sm); transition: all 0.1s ease; }
+  .card-title { font-size: 11px; color: var(--text-muted); text-transform: uppercase;
+                letter-spacing: 1px; margin-bottom: 12px; font-weight: 600; }
+  .card-value { font-size: 28px; font-weight: 800; color: #1C1A10; letter-spacing: -0.2px; }
+  .card-sub { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
 
   /* Conversion panel */
   .conv-row { display: flex; justify-content: space-between; align-items: center;
-              padding: 8px 0; border-bottom: 1px solid var(--border); }
+              padding: 10px 0; border-bottom: 1px solid #EFE8DC; }
   .conv-row:last-child { border-bottom: none; }
-  .conv-label { color: var(--muted); font-size: 12px; }
-  .conv-value { font-weight: 600; }
-  .frozen-tag { font-size: 10px; color: var(--gold); margin-left: 6px;
-                background: #1a1400; padding: 1px 5px; border-radius: 3px; border: 1px solid var(--gold); }
+  .conv-label { color: var(--text-muted); font-size: 13px; font-weight: 500; }
+  .conv-value { font-weight: 700; color: #2C281C; }
+  .frozen-tag { font-size: 10px; color: #B27E1A; margin-left: 6px;
+                background: #FEF0D6; padding: 2px 7px; border-radius: 30px; border: 1px solid var(--gold); font-weight: 600; }
 
-  /* Bias pill */
-  .bias { display: inline-block; padding: 4px 14px; border-radius: 20px;
-          font-weight: 700; font-size: 13px; letter-spacing: 0.5px; }
-  .bias.BULLISH { background: #0d2d1a; color: var(--bull); border: 1px solid var(--bull); }
-  .bias.BEARISH { background: #2d0d0d; color: var(--bear); border: 1px solid var(--bear); }
-  .bias.NONE    { background: #1a1a1a; color: var(--muted); border: 1px solid var(--border); }
+  /* Bias pills - light theme */
+  .bias { display: inline-block; padding: 5px 16px; border-radius: 40px;
+          font-weight: 700; font-size: 13px; letter-spacing: 0.3px; }
+  .bias.BULLISH { background: #E0F2E3; color: #1C6E2F; border: 1px solid #9DC8A8; }
+  .bias.BEARISH { background: #FCE8E4; color: #B13A23; border: 1px solid #E5B8AF; }
+  .bias.NONE    { background: #F0EDE5; color: #5E5A4C; border: 1px solid var(--border); }
 
-  /* Position card */
-  .pos-card { background: #0d1a2d; border: 1px solid #1e3a5f; border-radius: 10px;
-              padding: 16px; margin-bottom: 20px; }
-  .pos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-  .pos-dir { font-size: 20px; font-weight: 700; }
+  /* Position card – golden cream */
+  .pos-card { background: #FFFBF2; border-left: 5px solid var(--gold); border-radius: 20px;
+              padding: 20px; margin-bottom: 24px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+  .pos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+  .pos-dir { font-size: 22px; font-weight: 800; letter-spacing: -0.2px; }
   .pos-dir.BUY  { color: var(--bull); }
   .pos-dir.SELL { color: var(--bear); }
-  .pos-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-  .pos-item label { font-size: 11px; color: var(--muted); display: block; }
-  .pos-item span  { font-weight: 600; font-size: 15px; }
+  .pos-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 4px; }
+  .pos-item label { font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 5px; font-weight: 500; text-transform: uppercase; }
+  .pos-item span  { font-weight: 700; font-size: 16px; color: #1E1A0F; }
 
-  /* Swing levels table */
+  /* Swing table – elegant */
   .swing-table { width: 100%; border-collapse: collapse; }
-  .swing-table th { font-size: 11px; color: var(--muted); text-align: left;
-                    padding: 6px 10px; border-bottom: 1px solid var(--border); text-transform: uppercase; }
-  .swing-table td { padding: 8px 10px; border-bottom: 1px solid #1a1a1a; font-size: 13px; }
+  .swing-table th { font-size: 11px; color: var(--text-muted); text-align: left;
+                    padding: 10px 12px; border-bottom: 1px solid var(--border); text-transform: uppercase; font-weight: 600; }
+  .swing-table td { padding: 12px 12px; border-bottom: 1px solid #F0E9DE; font-size: 13px; color: #2C281C; }
   .swing-table tr:last-child td { border-bottom: none; }
-  .near-tag { background: #1a2200; color: #aaff00; font-size: 10px;
-              padding: 2px 6px; border-radius: 3px; border: 1px solid #aaff00; margin-left: 6px; }
+  .near-tag { background: #E9F7E1; color: #2C6E2F; font-size: 10px; font-weight: 700;
+              padding: 3px 8px; border-radius: 40px; border: 1px solid #AAD6A0; margin-left: 8px; }
 
   /* Config panel */
-  .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .cfg-row { display: flex; flex-direction: column; gap: 4px; }
-  .cfg-row label { font-size: 11px; color: var(--muted); }
+  .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .cfg-row { display: flex; flex-direction: column; gap: 6px; }
+  .cfg-row label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
   .cfg-row input, .cfg-row select {
-    background: #1a1a1a; border: 1px solid var(--border); color: var(--text);
-    padding: 6px 10px; border-radius: 6px; font-size: 13px; width: 100%;
+    background: #FFFFFF; border: 1px solid var(--border-dark); color: #1E1A0F;
+    padding: 8px 12px; border-radius: 14px; font-size: 13px; width: 100%; transition: 0.2s;
   }
-  .cfg-row input:focus { border-color: var(--gold); outline: none; }
+  .cfg-row input:focus, .cfg-row select:focus { border-color: var(--gold); outline: none; box-shadow: 0 0 0 2px rgba(201,151,30,0.2); }
 
   /* Trade log */
-  .trade-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  .trade-table th { color: var(--muted); text-align: left; padding: 6px 8px;
-                    border-bottom: 1px solid var(--border); font-size: 11px; text-transform: uppercase; }
-  .trade-table td { padding: 7px 8px; border-bottom: 1px solid #1a1a1a; }
+  .trade-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .trade-table th { color: var(--text-muted); text-align: left; padding: 8px 12px;
+                    border-bottom: 1px solid var(--border); font-size: 11px; text-transform: uppercase; font-weight: 600; }
+  .trade-table td { padding: 10px 12px; border-bottom: 1px solid #F0E9DE; }
   .trade-table tr:last-child td { border-bottom: none; }
-  .pnl-pos { color: var(--green); }
-  .pnl-neg { color: var(--red); }
+  .pnl-pos { color: var(--green); font-weight: 700; }
+  .pnl-neg { color: var(--red); font-weight: 700; }
 
   /* Buttons */
-  .btn { padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px;
-         font-weight: 600; border: none; }
-  .btn-gold  { background: var(--gold); color: #000; }
+  .btn { padding: 8px 18px; border-radius: 40px; cursor: pointer; font-size: 13px;
+         font-weight: 600; border: none; transition: 0.2s; }
+  .btn-gold  { background: var(--gold); color: #1A1507; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+  .btn-gold:hover { background: #B27D15; color: white; }
   .btn-red   { background: var(--red);  color: #fff; }
-  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
-  .btn:hover { opacity: 0.85; }
+  .btn-red:hover { background: #A32F1A; }
+  .btn-ghost { background: transparent; border: 1px solid var(--border-dark); color: var(--text); }
+  .btn-ghost:hover { background: var(--gold-light); border-color: var(--gold); }
 
   /* Section header */
-  .sec-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-  .sec-title { font-size: 13px; font-weight: 600; color: var(--text); }
+  .sec-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .sec-title { font-size: 14px; font-weight: 700; color: #1F1B0E; letter-spacing: -0.2px; }
 
-  .tag { font-size: 10px; padding: 2px 7px; border-radius: 3px; display: inline-block; }
-  .tag-high { background: #2d1500; color: #ff8800; border: 1px solid #ff8800; }
-  .tag-low  { background: #001520; color: #00aaff; border: 1px solid #00aaff; }
-  .mt-16 { margin-top: 16px; }
-  .text-gold { color: var(--gold); }
+  .tag { font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 40px; display: inline-block; }
+  .tag-high { background: #FFEFE0; color: #BD7A1A; border: 1px solid #F3CDA5; }
+  .tag-low  { background: #E3F0FA; color: #1F6392; border: 1px solid #BED3E8; }
+  .mt-16 { margin-top: 24px; }
+  .text-gold { color: var(--gold); font-weight: 700; }
+
+  /* adjustments for row readability */
+  .card-value.text-gold { color: var(--gold); }
+  #pos-pnl { font-weight: 800; letter-spacing: -0.2px; }
+  .conv-value.text-gold { font-size: 20px; }
+  .btn-red, .btn-gold { cursor: pointer; }
+  nav .danger { border-color: var(--red); }
+  #session-badge { background: var(--gold-light); color: #7A5C1A; border-color: var(--gold); }
+  #eng-badge { font-weight: 600; }
+  .pos-item span { font-family: monospace; letter-spacing: 0; }
+  hr { border-color: var(--border); }
 </style>
 </head>
 <body>
@@ -142,17 +164,17 @@
     <div class="pos-header">
       <div>
         <span class="pos-dir" id="pos-dir">BUY</span>
-        <span style="color:var(--muted);margin-left:8px;font-size:13px">GOLDTEN MCX</span>
+        <span style="color:var(--text-muted);margin-left:12px;font-size:13px;font-weight:500">GOLDTEN MCX</span>
       </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span id="pos-pnl" style="font-size:18px;font-weight:700"></span>
+      <div style="display:flex;gap:12px;align-items:center">
+        <span id="pos-pnl" style="font-size:20px;font-weight:800"></span>
         <button class="btn btn-red" onclick="forceExit()">Exit Position</button>
       </div>
     </div>
     <div class="pos-grid">
       <div class="pos-item"><label>Entry (MCX)</label><span id="pos-entry">—</span></div>
-      <div class="pos-item"><label>Stop</label><span id="pos-stop" style="color:var(--red)">—</span></div>
-      <div class="pos-item"><label>Target</label><span id="pos-target" style="color:var(--green)">—</span></div>
+      <div class="pos-item"><label>Stop</label><span id="pos-stop" style="color:var(--red); font-weight:700">—</span></div>
+      <div class="pos-item"><label>Target</label><span id="pos-target" style="color:var(--green); font-weight:700">—</span></div>
       <div class="pos-item"><label>Qty (lots)</label><span id="pos-qty">—</span></div>
       <div class="pos-item"><label>XAU/USD Entry</label><span id="pos-xau">—</span></div>
       <div class="pos-item"><label>USDINR at Entry</label><span id="pos-usdinr">—</span></div>
@@ -175,8 +197,8 @@
     </div>
     <div class="card">
       <div class="card-title">HTF Bias (15m XAU/USD)</div>
-      <div style="margin-top:6px"><span class="bias NONE" id="htf-bias">NONE</span></div>
-      <div class="card-sub" style="margin-top:8px" id="htf-ref">—</div>
+      <div style="margin-top:8px"><span class="bias NONE" id="htf-bias">NONE</span></div>
+      <div class="card-sub" style="margin-top:10px" id="htf-ref">—</div>
     </div>
   </div>
 
@@ -203,11 +225,11 @@
     <div class="card">
       <div class="sec-header">
         <span class="sec-title">Live Conversion</span>
-        <span style="font-size:11px;color:var(--muted)">XAU/USD → MCX ₹</span>
+        <span style="font-size:11px;color:var(--text-muted);background:var(--gold-light);padding:2px 8px;border-radius:20px;">XAU/USD → MCX ₹</span>
       </div>
       <div class="conv-row">
         <span class="conv-label">Formula</span>
-        <span class="conv-value" style="font-size:12px;color:var(--muted)">XAU × 0.35274 × USDINR</span>
+        <span class="conv-value" style="font-size:12px;color:var(--text-muted)">XAU × 0.35274 × USDINR</span>
       </div>
       <div class="conv-row">
         <span class="conv-label">XAU/USD</span>
@@ -221,9 +243,9 @@
         <span class="conv-label">× USDINR <span id="conv-frozen-tag"></span></span>
         <span class="conv-value" id="conv-usdinr">—</span>
       </div>
-      <div class="conv-row" style="border-top:1px solid var(--gold);margin-top:4px;padding-top:12px">
-        <span class="conv-label" style="color:var(--gold);font-weight:600">= MCX Spot Equiv</span>
-        <span class="conv-value text-gold" style="font-size:18px" id="conv-result">—</span>
+      <div class="conv-row" style="border-top:1px solid var(--gold);margin-top:6px;padding-top:12px">
+        <span class="conv-label" style="color:var(--gold);font-weight:700">= MCX Spot Equiv</span>
+        <span class="conv-value text-gold" style="font-size:20px" id="conv-result">—</span>
       </div>
       <div class="conv-row">
         <span class="conv-label">GOLDTEN Futures</span>
@@ -274,10 +296,10 @@
   </div>
 
   <!-- Swing levels -->
-  <div class="card mt-16" style="margin-bottom:20px">
+  <div class="card mt-16" style="margin-bottom:24px">
     <div class="sec-header">
       <span class="sec-title">Active Swing Levels (XAU/USD → MCX)</span>
-      <span style="font-size:11px;color:var(--muted)">Threshold: <span id="threshold-label">0.30</span>%</span>
+      <span style="font-size:11px;background:var(--gold-light);padding:3px 10px;border-radius:40px;color:#6E4F10;">Threshold: <span id="threshold-label">0.30</span>%</span>
     </div>
     <table class="swing-table">
       <thead>
@@ -292,9 +314,7 @@
         </tr>
       </thead>
       <tbody id="swing-tbody">
-        <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">
-          Loading swing levels...
-        </td></tr>
+        <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:28px">Loading swing levels...</td></tr>
       </tbody>
     </table>
   </div>
@@ -303,17 +323,14 @@
   <div class="card">
     <div class="sec-header">
       <span class="sec-title">Trade Log</span>
-      <span id="trade-count" style="font-size:11px;color:var(--muted)">—</span>
+      <span id="trade-count" style="font-size:12px;background:var(--gold-light);padding:2px 8px;border-radius:20px;">—</span>
     </div>
     <table class="trade-table">
       <thead>
-        <tr>
-          <th>Time</th><th>Dir</th><th>XAU Entry</th><th>MCX Entry</th>
-          <th>Stop</th><th>Target</th><th>Qty</th><th>USDINR</th><th>PnL</th><th>Status</th>
-        </tr>
+        <tr><th>Time</th><th>Dir</th><th>XAU Entry</th><th>MCX Entry</th><th>Stop</th><th>Target</th><th>Qty</th><th>USDINR</th><th>PnL</th><th>Status</th></tr>
       </thead>
       <tbody id="trade-tbody">
-        <tr><td colspan="10" style="text-align:center;color:var(--muted);padding:20px">No trades yet</td></tr>
+        <tr><td colspan="10" style="text-align:center;color:var(--text-muted);padding:28px">No trades yet</td></tr>
       </tbody>
     </table>
   </div>
@@ -348,42 +365,37 @@ async function fetchTrades() {
 }
 
 function renderStatus(d) {
-  // Engine badge
   const badge = document.getElementById('eng-badge');
   badge.textContent = d.running ? 'LIVE' : 'IDLE';
   badge.className = d.running ? 'badge live' : 'badge';
+  document.getElementById('kill-btn').style.opacity = d.kill_switch ? '0.6' : '1';
 
-  // Kill switch button
-  document.getElementById('kill-btn').style.opacity = d.kill_switch ? '0.5' : '1';
-
-  // Prices
   document.getElementById('xau-price').textContent = d.xauusd_last ? `$${d.xauusd_last.toLocaleString('en-US', {minimumFractionDigits:3})}` : '—';
   document.getElementById('goldten-price').textContent = d.goldten_last ? `₹${Math.round(d.goldten_last).toLocaleString('en-IN')}` : '—';
   document.getElementById('dxy-val').textContent = d.dxy_last ? d.dxy_last.toFixed(3) : '—';
   document.getElementById('basis-val').textContent = d.live_basis ? `₹${Math.round(d.live_basis).toLocaleString('en-IN')}` : '—';
 
-  // USDINR
   const usdinr = d.usdinr_is_frozen ? d.usdinr_frozen : d.usdinr_live;
   document.getElementById('usdinr-rate').textContent = usdinr ? `₹${usdinr.toFixed(4)}` : '—';
   document.getElementById('usdinr-status').textContent = d.usdinr_is_frozen ? '🔒 Frozen (evening session)' : 'Live · NSE Futures';
-  document.getElementById('usdinr-status').style.color = d.usdinr_is_frozen ? 'var(--gold)' : 'var(--muted)';
+  document.getElementById('usdinr-status').style.color = d.usdinr_is_frozen ? 'var(--gold)' : 'var(--text-muted)';
 
-  // HTF Bias
   const bias = d.htf_bias?.bias || 'NONE';
   const biasEl = document.getElementById('htf-bias');
   biasEl.textContent = bias;
   biasEl.className = `bias ${bias}`;
   const refHigh = d.htf_bias?.ref_high;
   const refLow  = d.htf_bias?.ref_low;
-  document.getElementById('htf-ref').textContent =
-    refHigh ? `Ref High: $${refHigh.toFixed(3)}` :
-    refLow  ? `Ref Low:  $${refLow.toFixed(3)}`  : 'No pivot reference';
+  document.getElementById('htf-ref').textContent = refHigh ? `Ref High: $${refHigh.toFixed(3)}` : refLow ? `Ref Low:  $${refLow.toFixed(3)}` : 'No pivot reference';
 
-  // Config fields
   document.getElementById('cfg-threshold').value  = d.swing_threshold ?? 0.30;
   document.getElementById('threshold-label').textContent = (d.swing_threshold ?? 0.30).toFixed(2);
+  if (d.risk_reward) document.getElementById('cfg-rr').value = d.risk_reward;
+  if (d.risk_pct) document.getElementById('cfg-risk').value = d.risk_pct;
+  if (d.max_lots) document.getElementById('cfg-maxlots').value = d.max_lots;
+  if (d.swing_max_age_hours) document.getElementById('cfg-swingage').value = d.swing_max_age_hours;
+  if (d.dxy_enabled !== undefined) document.getElementById('cfg-dxy').value = d.dxy_enabled ? 'true' : 'false';
 
-  // Session badge
   const now = new Date();
   const ist = new Date(now.toLocaleString('en-US', {timeZone: 'Asia/Kolkata'}));
   const h = ist.getHours(), m = ist.getMinutes();
@@ -393,10 +405,8 @@ function renderStatus(d) {
   else if (hm >= 17*60 && hm <= 23*60+25) session = '🌙 Evening (USDINR frozen)';
   document.getElementById('session-badge').textContent = session;
 
-  // Swing levels
   renderSwings(d.swing_levels || [], d.goldten_last || 0, d.swing_threshold || 0.30);
 
-  // Position card
   const pos = d.current_position;
   const posCard = document.getElementById('pos-card');
   if (pos) {
@@ -411,7 +421,6 @@ function renderStatus(d) {
     document.getElementById('pos-usdinr').textContent = `₹${pos.usdinr_rate?.toFixed(4)}`;
     document.getElementById('pos-basis').textContent  = `₹${Math.round(pos.basis || 0).toLocaleString('en-IN')}`;
     document.getElementById('pos-goldten').textContent = d.goldten_last ? `₹${Math.round(d.goldten_last).toLocaleString('en-IN')}` : '—';
-    // Live PnL estimate
     if (d.goldten_last && pos.entry_price) {
       const rawPnl = (d.goldten_last - pos.entry_price) * pos.qty * (pos.direction === 'BUY' ? 1 : -1);
       const pnlEl = document.getElementById('pos-pnl');
@@ -429,16 +438,14 @@ function renderConversion(d) {
   document.getElementById('conv-usdinr').textContent  = d.usdinr ? `₹${d.usdinr.toFixed(4)}` : '—';
   document.getElementById('conv-result').textContent  = d.mcx_equiv ? `₹${Math.round(d.mcx_equiv).toLocaleString('en-IN')}` : '—';
   document.getElementById('conv-goldten').textContent = d.goldten_last ? `₹${Math.round(d.goldten_last).toLocaleString('en-IN')}` : '—';
-  document.getElementById('conv-basis').textContent   = d.live_basis !== undefined ?
-    `₹${Math.round(d.live_basis).toLocaleString('en-IN')} (${d.basis_pct?.toFixed(3)}%)` : '—';
-  document.getElementById('conv-frozen-tag').innerHTML = d.usdinr_frozen ?
-    '<span class="frozen-tag">🔒 FROZEN</span>' : '';
+  document.getElementById('conv-basis').textContent   = d.live_basis !== undefined ? `₹${Math.round(d.live_basis).toLocaleString('en-IN')} (${d.basis_pct?.toFixed(3)}%)` : '—';
+  document.getElementById('conv-frozen-tag').innerHTML = d.usdinr_frozen ? '<span class="frozen-tag">🔒 FROZEN</span>' : '';
 }
 
 function renderSwings(levels, goldten, threshold) {
   const tbody = document.getElementById('swing-tbody');
   if (!levels || levels.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">No swing levels detected yet</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:28px">No swing levels detected yet</td></tr>';
     return;
   }
   const sorted = [...levels].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -446,8 +453,7 @@ function renderSwings(levels, goldten, threshold) {
     const mcq    = Math.round(lvl.mcx_equiv || 0);
     const dist   = goldten > 0 ? Math.abs(goldten - mcq) / mcq * 100 : null;
     const isNear = dist !== null && dist <= threshold;
-    const tag    = lvl.swing_type === 'swing_high' ?
-      '<span class="tag tag-high">HIGH</span>' : '<span class="tag tag-low">LOW</span>';
+    const tag    = lvl.swing_type === 'swing_high' ? '<span class="tag tag-high">HIGH</span>' : '<span class="tag tag-low">LOW</span>';
     const nearTag = isNear ? '<span class="near-tag">⚡ NEAR</span>' : '';
     const ts = lvl.timestamp ? new Date(lvl.timestamp).toLocaleString('en-IN', {timeZone:'Asia/Kolkata',hour12:false}) : '—';
     const distStr = dist !== null ? `${dist.toFixed(3)}%` : '—';
@@ -456,11 +462,9 @@ function renderSwings(levels, goldten, threshold) {
       <td>$${parseFloat(lvl.xau_price).toFixed(3)}</td>
       <td>₹${mcq.toLocaleString('en-IN')}${nearTag}</td>
       <td>₹${parseFloat(lvl.usdinr_rate || 0).toFixed(4)}</td>
-      <td style="font-size:11px;color:var(--muted)">${ts}</td>
-      <td style="${isNear ? 'color:var(--green);font-weight:600' : 'color:var(--muted)'}">${distStr}</td>
-      <td style="color:${lvl.touched ? 'var(--muted)' : 'var(--green)'}">
-        ${lvl.touched ? 'Touched' : 'Active'}
-      </td>
+      <td style="font-size:11px;color:var(--text-muted)">${ts}</td>
+      <td style="${isNear ? 'color:var(--green);font-weight:700' : 'color:var(--text-muted)'}">${distStr}</td>
+      <td style="color:${lvl.touched ? 'var(--text-muted)' : 'var(--green)'}">${lvl.touched ? 'Touched' : 'Active'}</td>
     </tr>`;
   }).join('');
 }
@@ -469,7 +473,7 @@ function renderTrades(trades) {
   const tbody = document.getElementById('trade-tbody');
   document.getElementById('trade-count').textContent = `${trades.length} trade(s)`;
   if (!trades || trades.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:20px">No trades yet</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--text-muted);padding:28px">No trades yet</td></tr>';
     return;
   }
   tbody.innerHTML = trades.map(t => {
@@ -479,41 +483,24 @@ function renderTrades(trades) {
     const ts      = new Date(t.entry_time).toLocaleString('en-IN', {timeZone:'Asia/Kolkata',hour12:false});
     const dirClr  = t.direction === 'BUY' ? 'var(--bull)' : 'var(--bear)';
     return `<tr>
-      <td style="font-size:11px;color:var(--muted)">${ts}</td>
-      <td style="color:${dirClr};font-weight:700">${t.direction}</td>
+      <td style="font-size:11px;color:var(--text-muted)">${ts}</td>
+      <td style="color:${dirClr};font-weight:800">${t.direction}</td>
       <td>$${parseFloat(t.xauusd_entry || 0).toFixed(3)}</td>
       <td>₹${Math.round(t.entry_price || 0).toLocaleString('en-IN')}</td>
-      <td style="color:var(--red)">₹${Math.round(t.stop_price || 0).toLocaleString('en-IN')}</td>
-      <td style="color:var(--green)">₹${Math.round(t.target_price || 0).toLocaleString('en-IN')}</td>
+      <td style="color:var(--red);font-weight:600">₹${Math.round(t.stop_price || 0).toLocaleString('en-IN')}</td>
+      <td style="color:var(--green);font-weight:600">₹${Math.round(t.target_price || 0).toLocaleString('en-IN')}</td>
       <td>${t.qty}</td>
       <td>₹${parseFloat(t.usdinr_rate || 0).toFixed(4)}</td>
       <td class="${pnlCls}">${pnlStr}</td>
-      <td style="color:${t.status === 'OPEN' ? 'var(--gold)' : 'var(--muted)'}">${t.status}</td>
+      <td style="color:${t.status === 'OPEN' ? 'var(--gold)' : 'var(--text-muted)'}">${t.status}</td>
     </tr>`;
   }).join('');
 }
 
-// ── Actions ──────────────────────────────────────────────────────────────────
-
-async function engineStart() {
-  await fetch('/engine/start', {method:'POST'});
-  fetchStatus();
-}
-async function engineStop() {
-  await fetch('/engine/stop', {method:'POST'});
-  fetchStatus();
-}
-async function forceExit() {
-  if (!confirm('Force close position at market price?')) return;
-  await fetch('/engine/force-exit', {method:'POST'});
-  fetchStatus();
-}
-async function toggleKill() {
-  const active = statusData?.kill_switch;
-  const url = active ? '/engine/reset-kill-switch' : '/engine/kill-switch';
-  await fetch(url, {method:'POST'});
-  fetchStatus();
-}
+async function engineStart() { await fetch('/engine/start', {method:'POST'}); fetchStatus(); }
+async function engineStop() { await fetch('/engine/stop', {method:'POST'}); fetchStatus(); }
+async function forceExit() { if (!confirm('Force close position at market price?')) return; await fetch('/engine/force-exit', {method:'POST'}); fetchStatus(); }
+async function toggleKill() { const active = statusData?.kill_switch; const url = active ? '/engine/reset-kill-switch' : '/engine/kill-switch'; await fetch(url, {method:'POST'}); fetchStatus(); }
 async function saveConfig() {
   const payload = {
     swing_level_threshold_pct: parseFloat(document.getElementById('cfg-threshold').value),
@@ -523,28 +510,13 @@ async function saveConfig() {
     swing_max_age_hours:       parseInt(document.getElementById('cfg-swingage').value),
     dxy_enabled:               document.getElementById('cfg-dxy').value === 'true',
   };
-  const r = await fetch('/config/update', {
-    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
-  });
+  const r = await fetch('/config/update', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
   const d = await r.json();
   alert('Config saved: ' + JSON.stringify(d.updated));
   fetchStatus();
 }
 
-// ── Load config fields when status loads ─────────────────────────────────────
-function populateConfig(d) {
-  if (document.getElementById('cfg-rr'))       document.getElementById('cfg-rr').value       = d.risk_reward ?? 5;
-  if (document.getElementById('cfg-risk'))     document.getElementById('cfg-risk').value     = d.risk_pct ?? 2;
-  if (document.getElementById('cfg-maxlots'))  document.getElementById('cfg-maxlots').value  = d.max_lots ?? 5;
-  if (document.getElementById('cfg-swingage')) document.getElementById('cfg-swingage').value = d.swing_max_age_hours ?? 48;
-  if (document.getElementById('cfg-dxy'))      document.getElementById('cfg-dxy').value      = d.dxy_enabled ? 'true' : 'false';
-}
-
-// ── Poll ─────────────────────────────────────────────────────────────────────
-async function tick() {
-  await fetchStatus();
-  await fetchConversion();
-}
+async function tick() { await fetchStatus(); await fetchConversion(); }
 tick();
 fetchTrades();
 setInterval(tick, 5000);
