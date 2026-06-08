@@ -196,6 +196,23 @@ def api_conversion():
     })
 
 
+# ── Macro Events Calendar ────────────────────────────────────────────────────
+
+@app.route("/api/macro-events")
+def api_macro_events():
+    """
+    Returns upcoming macro events for the dashboard events card.
+    Cached for 1 hour in macro_calendar.py.
+    Optional query params:
+      days=30  — look-ahead window in days (default 30)
+    """
+    from macro_calendar import get_macro_events
+    days   = min(int(request.args.get("days", 30)), 90)
+    token  = os.getenv("FINNHUB_TOKEN", "")  # optional — falls back to static
+    events = get_macro_events(finnhub_token=token, max_days=days)
+    return jsonify({"events": events, "count": len(events)})
+
+
 # ── Cron endpoints (Railway cron) ─────────────────────────────────────────────
 
 @app.route("/cron/start", methods=["POST"])

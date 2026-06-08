@@ -123,6 +123,36 @@
   .trade-table td { padding: 8px 10px; border-bottom: 1px solid #F1F3F6; }
   .trade-table tr:last-child td { border-bottom: none; }
   .trade-table tbody tr:hover { background: #FAFBFC; }
+
+  /* ── Macro Events Card ── */
+  .events-list { list-style: none; margin: 0; padding: 0; }
+  .event-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 9px 0; border-bottom: 1px solid #F1F3F6;
+  }
+  .event-item:last-child { border-bottom: none; }
+  .event-impact {
+    flex-shrink: 0; width: 6px; height: 6px; border-radius: 50%;
+    margin-top: 5px;
+  }
+  .event-body { flex: 1; min-width: 0; }
+  .event-title { font-size: 12px; font-weight: 600; color: var(--text);
+                 white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .event-meta  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .event-badge {
+    flex-shrink: 0; font-size: 10px; font-weight: 700; padding: 2px 7px;
+    border-radius: 20px; border: 1px solid; white-space: nowrap;
+  }
+  .event-soon  { background: #FEF3C7; border-color: #FCD34D; color: #92400E; }
+  .events-empty { text-align: center; color: var(--muted); padding: 20px; font-size: 13px; }
+  .events-header-row { display:flex; align-items:center; gap:6px; }
+  .events-window-btn {
+    font-size: 10px; padding: 2px 8px; border-radius: 20px; cursor: pointer;
+    background: #F1F3F6; border: 1px solid var(--border); color: var(--muted);
+    transition: all .15s;
+  }
+  .events-window-btn.active,
+  .events-window-btn:hover { background: var(--gold-bg); border-color: var(--gold); color: var(--gold); }
   .pnl-pos { color: var(--green); font-weight: 700; }
   .pnl-neg { color: var(--red);   font-weight: 700; }
 
@@ -443,6 +473,22 @@
     </table>
   </div>
 
+  <!-- Macro Events Calendar -->
+  <div class="card" style="margin-top:18px">
+    <div class="sec-header">
+      <span class="sec-title">📅 Macro Events</span>
+      <div class="events-header-row">
+        <button class="events-window-btn active" onclick="setEventsWindow(7,this)">7d</button>
+        <button class="events-window-btn" onclick="setEventsWindow(14,this)">14d</button>
+        <button class="events-window-btn" onclick="setEventsWindow(30,this)">30d</button>
+        <span id="events-count" style="font-size:11px;color:var(--muted);margin-left:4px">—</span>
+      </div>
+    </div>
+    <ul class="events-list" id="events-list">
+      <li class="events-empty">Loading…</li>
+    </ul>
+  </div>
+
 </div>
 
 <script>
@@ -654,6 +700,74 @@ async function tick() { await fetchStatus(); await fetchConversion(); }
 tick(); fetchTrades();
 setInterval(tick, 5000);
 setInterval(fetchTrades, 15000);
+
+// ── Macro Events Calendar ────────────────────────────────────────────────────
+
+let _eventsDays = 7;
+
+function setEventsWindow(days, btn) {
+  _eventsDays = days;
+  document.querySelectorAll('.events-window-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  fetchMacroEvents();
+}
+
+async function fetchMacroEvents() {
+  try {
+    const r = await fetch(`/api/macro-events?days=${_eventsDays}`);
+    const d = await r.json();
+    renderEvents(d.events || []);
+    document.getElementById('events-count').textContent = `${d.count} events`;
+  } catch(e) {
+    document.getElementById('events-list').innerHTML =
+      '<li class="events-empty">Failed to load events</li>';
+  }
+}
+
+function renderEvents(events) {
+  const ul  = document.getElementById('events-list');
+  const now = Date.now() / 1000;
+
+  if (!events.length) {
+    ul.innerHTML = '<li class="events-empty">No events in selected window</li>';
+    return;
+  }
+
+  const IMPACT_DOT = { HIGH: '#EF4444', MEDIUM: '#F59E0B', LOW: '#9CA3AF' };
+
+  ul.innerHTML = events.map(ev => {
+    const dot     = IMPACT_DOT[ev.impact] || '#9CA3AF';
+    const hrs     = ev.in_hours;
+    const isSoon  = hrs >= 0 && hrs <= 48;
+    const badgeClass = isSoon ? 'event-badge event-soon' : 'event-badge';
+
+    let timeLabel;
+    if (hrs < 0)          timeLabel = `${ev.date_ist}`;
+    else if (hrs < 1)     timeLabel = 'In &lt;1h';
+    else if (hrs < 24)    timeLabel = `In ${Math.round(hrs)}h`;
+    else                  timeLabel = ev.date_ist;
+
+    const badge = isSoon
+      ? `<span class="${badgeClass}">⚡ ${ev.time_ist}</span>`
+      : `<span class="${badgeClass}">${ev.time_ist}</span>`;
+
+    const src = ev.source === 'finnhub' ? '' :
+                ev.source === 'fed_rss' ? ' · Fed RSS' : '';
+
+    return `
+      <li class="event-item">
+        <span class="event-impact" style="background:${dot}"></span>
+        <div class="event-body">
+          <div class="event-title" title="${ev.title}">${ev.title}</div>
+          <div class="event-meta">${ev.impact} · ${timeLabel}${src}</div>
+        </div>
+        ${badge}
+      </li>`;
+  }).join('');
+}
+
+fetchMacroEvents();
+setInterval(fetchMacroEvents, 3600000);  // refresh every hour
 </script>
 </body>
 </html>
