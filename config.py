@@ -19,8 +19,8 @@ CONFIG = {
     "xauusd_poll_interval": 60,   # seconds — free tier safe
 
     # ── Instruments ───────────────────────────────────────────────────────────
-    "goldten_instrument_key": "MCX_FO|427269",   # GOLDTEN 30JUN26 FUT
-    "usdinr_instrument_key":  "NSE_FO|408065",   # USDINR 25JUN26 FUT
+    "goldten_instrument_key": "",   # resolved at startup via instrument_resolver
+    "usdinr_instrument_key":  "",   # resolved at startup via instrument_resolver
 
     # ── Conversion constants ──────────────────────────────────────────────────
     "oz_to_10gms": 0.35274,          # 1 troy oz = 31.1035g → 10g = 0.35274 oz
@@ -54,7 +54,7 @@ CONFIG = {
 
     # ── Confluence filters ────────────────────────────────────────────────────
     "dxy_enabled":            True,       # use DXY as confluence filter
-    "dxy_symbol":             "DX-Y.0",  # Twelve Data symbol for DXY
+    "dxy_symbol":             "DXY",     # Twelve Data symbol for DXY
     "usdinr_trend_enabled":   True,
 
     # ── Telegram ──────────────────────────────────────────────────────────────

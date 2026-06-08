@@ -26,7 +26,9 @@ def startup():
     db.init()
 
     from upstox_auth import restore_token_on_startup
-    restore_token_on_startup()
+    if restore_token_on_startup():
+        from instrument_resolver import resolve_all
+        resolve_all()
 
     from xauusd_feed import seed_buffers, start_polling
     seed_buffers()
@@ -70,6 +72,8 @@ def callback():
     if not token:
         return "<h2>Token exchange failed — check logs</h2><a href='/login'>Retry</a>", 500
     save_token(token)
+    from instrument_resolver import resolve_all
+    resolve_all()
     # Auto-start engine after successful auth
     from gold_engine import get_engine
     eng = get_engine()
