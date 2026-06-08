@@ -44,6 +44,35 @@ class GoldEngine:
         log.info("[GoldEngine] Started")
         send_message("🚀 <b>GoldEngine started</b>\nMonitoring XAU/USD structure for MCX entries.")
 
+    def start_passive_analysis(self):
+        """
+        Runs HTF/LTF bias + swing scan continuously regardless of engine running state.
+        This ensures HTF Bias shows on dashboard even when engine is IDLE.
+        """
+        def _passive_loop():
+            while True:
+                try:
+                    xau_feed = get_xauusd()
+                    candles_15m = xau_feed.buf_15m.all_closed()
+                    candles_5m  = xau_feed.buf_5m.all_closed()
+                    if len(candles_15m) >= 10:
+                        self.htf.update(candles_15m)
+                        usdinr = get_usdinr()
+                        if usdinr > 0:
+                            self.swings.scan(candles_15m, usdinr)
+                    if len(candles_5m) >= 8:
+                        # Update LTF pivots passively (no signal firing)
+                        htf_bias = self.htf.bias
+                        if htf_bias != "NONE":
+                            self.ltf.check(candles_5m, htf_bias)
+                except Exception as e:
+                    log.debug(f"[PassiveAnalysis] error: {e}")
+                time.sleep(30)
+
+        t = threading.Thread(target=_passive_loop, daemon=True, name="PassiveAnalysis")
+        t.start()
+        log.info("[GoldEngine] Passive analysis loop started")
+
     def stop(self):
         self._running = False
         CONFIG["engine_running"] = False
@@ -161,11 +190,16 @@ class GoldEngine:
             log.warning("[GoldEngine] Insufficient margin for even 1 lot — skip")
             return
 
-        # 10. Place order
-        order_id = place_order(direction, qty, mcx_entry)
-        if not order_id:
-            log.error("[GoldEngine] Order placement failed")
-            return
+        # 10. Place order (or simulate in paper mode)
+        paper_mode = CONFIG.get("paper_mode", True)
+        if paper_mode:
+            order_id = f"PAPER-{int(time.time())}"
+            log.info(f"[GoldEngine] 📝 PAPER trade — {direction} {qty}x @ ₹{mcx_entry:.0f}")
+        else:
+            order_id = place_order(direction, qty, mcx_entry)
+            if not order_id:
+                log.error("[GoldEngine] Order placement failed")
+                return
 
         # 11. Mark swing level as touched
         if best_level.get("id"):
@@ -195,8 +229,9 @@ class GoldEngine:
 
         # 13. Telegram alert
         frozen_tag = " 🔒frozen" if CONFIG.get("usdinr_is_frozen") else ""
+        paper_tag  = " 📝 PAPER" if CONFIG.get("paper_mode", True) else ""
         send_message(
-            f"📈 <b>GoldEngine Entry</b>\n\n"
+            f"📈 <b>GoldEngine Entry{paper_tag}</b>\n\n"
             f"Direction: <b>{direction}</b>\n"
             f"XAU/USD:   <b>${xau_entry:,.3f}</b>\n"
             f"USDINR:    <b>₹{usdinr:.4f}</b>{frozen_tag}\n"
@@ -240,7 +275,8 @@ class GoldEngine:
 
             # Close via opposite market order
             close_dir = "SELL" if direction == "BUY" else "BUY"
-            place_order(close_dir, qty, goldten, order_type="MARKET")
+            if not CONFIG.get("paper_mode", True):
+                place_order(close_dir, qty, goldten, order_type="MARKET")
 
             db.close_trade(pos["trade_id"], round(pnl, 2))
             CONFIG["current_position"] = None
@@ -267,12 +303,14 @@ class GoldEngine:
         qty       = pos.get("qty", 1)
         entry     = pos.get("entry_price")
         close_dir = "SELL" if direction == "BUY" else "BUY"
-        place_order(close_dir, qty, goldten, order_type="MARKET")
+        if not CONFIG.get("paper_mode", True):
+            place_order(close_dir, qty, goldten, order_type="MARKET")
         pnl = (goldten - entry) * qty * (1 if direction == "BUY" else -1)
         db.close_trade(pos["trade_id"], round(pnl, 2))
         CONFIG["current_position"] = None
         db.set("current_position", None)
-        send_message(f"🚨 <b>Manual Exit</b>\nPnL: ₹{pnl:,.0f}")
+        paper_tag = " [PAPER]" if CONFIG.get("paper_mode", True) else ""
+        send_message(f"🚨 <b>Manual Exit{paper_tag}</b>\nPnL: ₹{pnl:,.0f}")
         return True
 
     # ── Session check ─────────────────────────────────────────────────────────
@@ -311,6 +349,7 @@ class GoldEngine:
             "current_position": CONFIG.get("current_position"),
             "swing_levels":     self.swings.all_levels(),
             "swing_threshold":  CONFIG.get("swing_level_threshold_pct"),
+            "paper_mode":       CONFIG.get("paper_mode", True),
             "dxy_last":         CONFIG.get("dxy_last"),
         }
 
@@ -322,4 +361,5 @@ def get_engine() -> GoldEngine:
     global _engine
     if _engine is None:
         _engine = GoldEngine()
+        _engine.start_passive_analysis()
     return _engine

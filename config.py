@@ -72,4 +72,5 @@ CONFIG = {
     "live_basis":          0.0,          # GOLDTEN - converted XAU spot
     "current_position":    None,         # active trade dict or None
     "kill_switch":         False,
+    "paper_mode":          True,    # True = simulate orders, False = live execution
 }

@@ -144,7 +144,7 @@ def update_config():
     allowed_keys = {
         "swing_level_threshold_pct", "swing_max_age_hours",
         "risk_reward", "risk_pct", "max_lots",
-        "dxy_enabled", "usdinr_trend_enabled",
+        "dxy_enabled", "usdinr_trend_enabled", "paper_mode",
         "htf_pivot_left", "htf_pivot_right",
         "ltf_pivot_left", "ltf_pivot_right",
     }
