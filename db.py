@@ -24,54 +24,65 @@ def _get_conn():
 def init():
     conn = _get_conn()
     cur = conn.cursor()
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS kv_store (
-            key   TEXT PRIMARY KEY,
-            value JSONB,
+            key        TEXT PRIMARY KEY,
+            value      JSONB,
             updated_at TIMESTAMPTZ DEFAULT NOW()
-        );
+        )
+    """)
+
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS trades (
-            id          SERIAL PRIMARY KEY,
-            symbol      TEXT DEFAULT 'GOLDTEN',
-            direction   TEXT,
-            entry_price NUMERIC,
-            stop_price  NUMERIC,
+            id           SERIAL PRIMARY KEY,
+            symbol       TEXT DEFAULT 'GOLDTEN',
+            direction    TEXT,
+            entry_price  NUMERIC,
+            stop_price   NUMERIC,
             target_price NUMERIC,
-            qty         INTEGER,
+            qty          INTEGER,
             xauusd_entry NUMERIC,
             usdinr_rate  NUMERIC,
             basis        NUMERIC,
-            status      TEXT DEFAULT 'OPEN',
-            pnl         NUMERIC,
-            entry_time  TIMESTAMPTZ DEFAULT NOW(),
-            exit_time   TIMESTAMPTZ,
-            notes       TEXT
-        );
+            status       TEXT DEFAULT 'OPEN',
+            pnl          NUMERIC,
+            entry_time   TIMESTAMPTZ DEFAULT NOW(),
+            exit_time    TIMESTAMPTZ,
+            notes        TEXT
+        )
+    """)
+
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS swing_levels (
-            id           SERIAL PRIMARY KEY,
-            xau_price    NUMERIC,
-            mcx_equiv    NUMERIC,
-            usdinr_rate  NUMERIC,
-            swing_type   TEXT,
-            timestamp    TIMESTAMPTZ,
-            touched      BOOLEAN DEFAULT FALSE,
-            created_at   TIMESTAMPTZ DEFAULT NOW()
-        );
-        CREATE TABLE IF NOT EXISTS signals (
             id          SERIAL PRIMARY KEY,
-            direction   TEXT,
-            xauusd_price NUMERIC,
+            xau_price   NUMERIC,
             mcx_equiv   NUMERIC,
             usdinr_rate NUMERIC,
-            htf_bias    TEXT,
-            swing_level_id INTEGER,
-            entry_price NUMERIC,
-            stop_price  NUMERIC,
-            target_price NUMERIC,
-            fired       BOOLEAN DEFAULT FALSE,
+            swing_type  TEXT,
+            timestamp   TIMESTAMPTZ,
+            touched     BOOLEAN DEFAULT FALSE,
             created_at  TIMESTAMPTZ DEFAULT NOW()
-        );
+        )
     """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS signals (
+            id             SERIAL PRIMARY KEY,
+            direction      TEXT,
+            xauusd_price   NUMERIC,
+            mcx_equiv      NUMERIC,
+            usdinr_rate    NUMERIC,
+            htf_bias       TEXT,
+            swing_level_id INTEGER,
+            entry_price    NUMERIC,
+            stop_price     NUMERIC,
+            target_price   NUMERIC,
+            fired          BOOLEAN DEFAULT FALSE,
+            created_at     TIMESTAMPTZ DEFAULT NOW()
+        )
+    """)
+
     log.info("[DB] Tables initialised")
 
 
@@ -149,7 +160,7 @@ def get_active_swings(max_age_hours: int = 48):
         cur.execute("""
             SELECT * FROM swing_levels
             WHERE touched = FALSE
-              AND timestamp > NOW() - INTERVAL '%s hours'
+              AND timestamp > NOW() - INTERVAL '1 hour' * %s
             ORDER BY timestamp DESC
             LIMIT 20
         """, (max_age_hours,))

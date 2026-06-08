@@ -216,3 +216,9 @@ if __name__ == "__main__":
     startup()
     port = int(os.getenv("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
+
+
+# ── Gunicorn-compatible startup ───────────────────────────────────────────────
+# Called whether running via `python app.py` or `gunicorn app:app`
+with app.app_context():
+    startup()
