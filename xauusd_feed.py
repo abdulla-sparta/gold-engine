@@ -80,7 +80,7 @@ class SymbolFeed:
 # ── Singleton feeds ───────────────────────────────────────────────────────────
 
 _xauusd = SymbolFeed("XAU/USD", "XAU/USD")
-_dxy    = SymbolFeed("DXY",     "DXY")
+_dxy    = SymbolFeed("DXY",     "EUR/USD")
 _lock   = threading.Lock()
 
 

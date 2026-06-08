@@ -54,7 +54,7 @@ CONFIG = {
 
     # ── Confluence filters ────────────────────────────────────────────────────
     "dxy_enabled":            True,       # use DXY as confluence filter
-    "dxy_symbol":             "DXY",     # Twelve Data symbol for DXY
+    "dxy_symbol":             "EUR/USD", # EUR/USD used as DXY proxy (inverted, EUR=57.6% of DXY)
     "usdinr_trend_enabled":   True,
 
     # ── Telegram ──────────────────────────────────────────────────────────────

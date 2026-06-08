@@ -308,22 +308,24 @@ class SwingLevelTracker:
 
 def dxy_confluence(dxy_candles_15m: list, signal_direction: str) -> bool:
     """
-    Simple DXY filter:
-    - BUY gold signal: DXY should be falling (bearish DXY = bullish gold)
-    - SELL gold signal: DXY should be rising (bullish DXY = bearish gold)
-    Returns True if DXY aligns, False if conflict.
+    DXY direction derived from EUR/USD (inverted — EUR is 57.6% of DXY).
+    EUR/USD rising  = DXY falling  = bullish gold  → aligns with BUY
+    EUR/USD falling = DXY rising   = bearish gold  → aligns with SELL
+    Returns True if DXY aligns with signal, False if conflict.
     """
     if not CONFIG.get("dxy_enabled") or len(dxy_candles_15m) < 3:
         return True   # no data = pass through
 
-    recent = dxy_candles_15m[-3:]
-    dxy_trend = recent[-1]["close"] - recent[0]["open"]
+    recent    = dxy_candles_15m[-3:]
+    eurusd_move = recent[-1]["close"] - recent[0]["open"]
+    # Invert: EUR/USD rising means DXY falling
+    dxy_trend = -eurusd_move
 
-    if signal_direction == "BUY" and dxy_trend > 0.3:
-        log.info(f"[DXY] Conflict — DXY rising ({dxy_trend:+.3f}), filtering BUY signal")
+    if signal_direction == "BUY" and dxy_trend > 0.0010:
+        log.info(f"[DXY] Conflict — EUR/USD falling → DXY rising ({dxy_trend:+.5f}), filtering BUY signal")
         return False
-    if signal_direction == "SELL" and dxy_trend < -0.3:
-        log.info(f"[DXY] Conflict — DXY falling ({dxy_trend:+.3f}), filtering SELL signal")
+    if signal_direction == "SELL" and dxy_trend < -0.0010:
+        log.info(f"[DXY] Conflict — EUR/USD rising → DXY falling ({dxy_trend:+.5f}), filtering SELL signal")
         return False
 
     return True

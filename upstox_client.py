@@ -219,7 +219,8 @@ def start_goldten_ws():
         instrument_key = CONFIG.get("goldten_instrument_key")
         while True:
             try:
-                if CONFIG.get("upstox_access_token"):
+                token = CONFIG.get("upstox_access_token", "")
+                if token:
                     r = requests.get(
                         f"{BASE}/market-quote/ltp",
                         headers=_headers(),
@@ -281,9 +282,12 @@ def start_usdinr_poller():
 
             # Only fetch if not frozen and during USDINR trading hours (9 AM–5 PM IST)
             if not CONFIG.get("usdinr_is_frozen") and 9 <= hour < 17:
-                rate = fetch_usdinr_rate()
-                if rate > 0:
-                    CONFIG["usdinr_live"] = rate
+                if not CONFIG.get("upstox_access_token"):
+                    pass   # skip silently — no token yet
+                else:
+                    rate = fetch_usdinr_rate()
+                    if rate > 0:
+                        CONFIG["usdinr_live"] = rate
 
             time.sleep(30)
 
