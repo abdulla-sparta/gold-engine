@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GoldEngine — MCX Gold Algo with TradingView Chart</title>
+<title>GoldEngine — MCX Gold Algo with Large Chart</title>
 <style>
   :root {
     --gold:    #C8860A;
@@ -147,7 +147,7 @@
   .mt-14 { margin-top: 14px; }
   .divider { height: 1px; background: var(--border); margin: 4px 0 12px; }
 
-  /* TradingView chart container */
+  /* CHART CONTAINER - NOW HALF PAGE HEIGHT (50vh) */
   .chart-container {
     background: white;
     border-radius: 10px;
@@ -180,8 +180,10 @@
     color: var(--muted);
     font-size: 11px;
   }
+  /* KEY CHANGE: Height set to 50vh (half viewport height) for larger chart */
   .tradingview-widget-container {
-    height: 460px;
+    height: 50vh;
+    min-height: 320px;
     width: 100%;
     margin-top: 6px;
   }
@@ -190,7 +192,7 @@
     width: 100%;
   }
   @media (max-width: 780px) {
-    .tradingview-widget-container { height: 360px; }
+    .tradingview-widget-container { height: 45vh; min-height: 280px; }
     .grid-3, .grid-2 { grid-template-columns: 1fr; gap: 12px; }
     .pos-grid { grid-template-columns: 1fr 1fr; }
   }
@@ -210,16 +212,16 @@
   <button onclick="window.location='/login'">🔐 Re-Auth</button>
 </nav>
 
-<!-- TradingView Chart Section - Placed above main dashboard, beside XAU/USD conceptually but full width above metrics -->
+<!-- TradingView Chart Section - Now large (half page height) -->
 <div class="main" style="padding-bottom: 0;">
   <div class="chart-container">
     <div class="chart-header">
       <h3>📈 XAU/USD Spot & Futures — Advanced Chart (TVC:GOLD)</h3>
       <small>15m interval · TradingView</small>
     </div>
-    <!-- TradingView Widget BEGIN -->
-    <div class="tradingview-widget-container" style="height:460px;width:100%">
-      <div class="tradingview-widget-container__widget" style="height:calc(100% - 28px);width:100%"></div>
+    <!-- TradingView Widget BEGIN (height adjusted to 50vh via CSS) -->
+    <div class="tradingview-widget-container">
+      <div class="tradingview-widget-container__widget"></div>
       <div class="tradingview-widget-copyright" style="font-size:10px;text-align:right;padding-right:12px;">
         <a href="https://www.tradingview.com/symbols/GOLD/?exchange=TVC" rel="noopener nofollow" target="_blank" style="color:var(--muted);text-decoration:none;">
           <span class="blue-text">GOLD chart</span> by TradingView
@@ -282,7 +284,7 @@
     </div>
   </div>
 
-  <!-- Top metrics (XAU/USD spot appears here, chart is right above) -->
+  <!-- Top metrics -->
   <div class="grid-3">
     <div class="card">
       <div class="card-title">XAU/USD Spot</div>
