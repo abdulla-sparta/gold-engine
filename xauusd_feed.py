@@ -35,7 +35,7 @@ IST = timezone(timedelta(hours=5, minutes=30))
 
 # Yahoo Finance symbol map
 _YF_SYMBOLS = {
-    "XAU/USD": "XAUUSD=X",
+    "XAU/USD": "GC=F",
     "EUR/USD": "EURUSD=X",
 }
 
