@@ -107,10 +107,15 @@ def fetch_usdinr_rate() -> float:
         if r.status_code != 200:
             log.warning(f"[Upstox] USDINR fetch failed: {r.status_code}")
             return CONFIG.get("usdinr_live", 85.0)
-        data = r.json()
-        ltp = data.get("data", {}).get(instrument_key, {}).get("last_price", 0)
+        resp_data = r.json().get("data", {})
+        item = resp_data.get(instrument_key)
+        if not item:
+            item = next(iter(resp_data.values()), None) if resp_data else None
+        ltp = item.get("last_price", 0) if item else 0
         if ltp:
+            log.info(f"[USDINR] ₹{ltp:.4f}")
             return float(ltp)
+        log.warning(f"[USDINR] LTP not found in response: {r.text[:150]}")
         return CONFIG.get("usdinr_live", 85.0)
     except Exception as e:
         log.warning(f"[Upstox] USDINR fetch error: {e}")
@@ -215,12 +220,12 @@ def start_goldten_ws():
             log.debug(f"[WS] message error: {e}")
 
     def _poll_goldten_ltp():
-        """Lightweight fallback: poll LTP every 5 seconds if WS unavailable."""
-        instrument_key = CONFIG.get("goldten_instrument_key")
+        """Lightweight fallback: poll LTP every 5 seconds."""
         while True:
             try:
                 token = CONFIG.get("upstox_access_token", "")
-                if token:
+                instrument_key = CONFIG.get("goldten_instrument_key", "")
+                if token and instrument_key:
                     r = requests.get(
                         f"{BASE}/market-quote/ltp",
                         headers=_headers(),
@@ -229,14 +234,22 @@ def start_goldten_ws():
                     )
                     if r.status_code == 200:
                         data = r.json().get("data", {})
-                        ltp  = data.get(instrument_key, {}).get("last_price", 0)
+                        # Key in response may be exact instrument_key
+                        # Try direct key first, then iterate all values
+                        item = data.get(instrument_key)
+                        if not item:
+                            # Fallback: grab first item in data dict
+                            item = next(iter(data.values()), None) if data else None
+                        ltp = item.get("last_price", 0) if item else 0
                         if ltp:
                             CONFIG["goldten_last"] = float(ltp)
-                            # Update live basis
-                            xau  = CONFIG.get("xauusd_last", 0)
+                            xau = CONFIG.get("xauusd_last", 0)
                             if xau > 0:
                                 spot_equiv = xau_to_mcx(xau)
                                 CONFIG["live_basis"] = round(float(ltp) - spot_equiv, 0)
+                            log.info(f"[GoldtenLTP] ₹{ltp:.0f}")
+                    elif r.status_code != 200:
+                        log.warning(f"[GoldtenLTP] {r.status_code}: {r.text[:100]}")
             except Exception as e:
                 log.debug(f"[GoldtenLTP] poll error: {e}")
             time.sleep(5)
