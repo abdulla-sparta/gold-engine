@@ -1,19 +1,43 @@
 """
-xauusd_feed.py — Twelve Data polling feed for XAU/USD and DXY
-Polls every 60 seconds (free tier safe: 800 credits/day, uses ~24/day for XAU + DXY).
-Builds 1m, 5m, 15m OHLC candle buffers internally.
+xauusd_feed.py — yfinance-based feed for XAU/USD and DXY (EUR/USD proxy)
+
+Replaces Twelve Data (which exhausted its 800 free credits/day).
+yfinance uses Yahoo Finance — no API key, no rate limits, no credits.
+
+Symbols used:
+  XAU/USD  →  XAUUSD=X   (spot gold in USD)
+  EUR/USD  →  EURUSD=X   (DXY proxy — inverted, EUR = 57.6% of DXY basket)
+
+Polling strategy (free, unlimited):
+  - Startup seed: 1d history at 1m interval  (~390 candles)
+  - Live poll: every 60s, fetch last 2 candles, push the closed one
+  - 5m / 15m buffers are aggregated internally from 1m pushes
+  - Higher-TF seed: also fetches 5m/15m directly on startup for richer history
 """
+
 import time
 import threading
 import logging
-import requests
 from datetime import datetime, timezone, timedelta
 from collections import deque
+
+try:
+    import yfinance as yf
+    _YF_AVAILABLE = True
+except ImportError:
+    _YF_AVAILABLE = False
+
 from config import CONFIG
 
 log = logging.getLogger(__name__)
 
 IST = timezone(timedelta(hours=5, minutes=30))
+
+# Yahoo Finance symbol map
+_YF_SYMBOLS = {
+    "XAU/USD": "XAUUSD=X",
+    "EUR/USD": "EURUSD=X",
+}
 
 # ── Candle buffer ─────────────────────────────────────────────────────────────
 
@@ -23,12 +47,10 @@ class CandleBuffer:
     def __init__(self, timeframe_minutes: int, maxlen: int = 200):
         self.tf_min   = timeframe_minutes
         self.candles  = deque(maxlen=maxlen)
-        self._current = None   # candle being built
+        self._current = None
 
     def push_1m(self, candle_1m: dict):
-        """Accept a 1m OHLC dict and aggregate into this buffer's timeframe."""
-        ts = candle_1m["timestamp"]  # datetime
-        # Which N-min bucket does this 1m belong to?
+        ts = candle_1m["timestamp"]
         bucket_min = (ts.minute // self.tf_min) * self.tf_min
         bucket_ts  = ts.replace(minute=bucket_min, second=0, microsecond=0)
 
@@ -49,7 +71,6 @@ class CandleBuffer:
             c["close"] = candle_1m["close"]
 
     def latest(self, n: int = 1):
-        """Return latest N closed candles (excludes current forming candle)."""
         lst = list(self.candles)
         return lst[-n:] if n > 1 else (lst[-1] if lst else None)
 
@@ -60,14 +81,14 @@ class CandleBuffer:
 # ── Symbol state ──────────────────────────────────────────────────────────────
 
 class SymbolFeed:
-    def __init__(self, symbol: str, twelve_symbol: str):
-        self.symbol        = symbol
-        self.twelve_symbol = twelve_symbol
-        self.buf_1m        = deque(maxlen=500)
-        self.buf_5m        = CandleBuffer(5,  maxlen=200)
-        self.buf_15m       = CandleBuffer(15, maxlen=100)
-        self.last_price    = 0.0
-        self.last_update   = None
+    def __init__(self, symbol: str, yf_symbol: str):
+        self.symbol     = symbol
+        self.yf_symbol  = yf_symbol
+        self.buf_1m     = deque(maxlen=500)
+        self.buf_5m     = CandleBuffer(5,  maxlen=200)
+        self.buf_15m    = CandleBuffer(15, maxlen=100)
+        self.last_price = 0.0
+        self.last_update = None
 
     def push_1m_candle(self, c: dict):
         self.buf_1m.append(c)
@@ -79,8 +100,8 @@ class SymbolFeed:
 
 # ── Singleton feeds ───────────────────────────────────────────────────────────
 
-_xauusd = SymbolFeed("XAU/USD", "XAU/USD")
-_dxy    = SymbolFeed("DXY",     "EUR/USD")
+_xauusd = SymbolFeed("XAU/USD", _YF_SYMBOLS["XAU/USD"])
+_dxy    = SymbolFeed("DXY",     _YF_SYMBOLS["EUR/USD"])
 _lock   = threading.Lock()
 
 
@@ -91,128 +112,112 @@ def get_dxy() -> SymbolFeed:
     return _dxy
 
 
-# ── Twelve Data REST fetch ────────────────────────────────────────────────────
+# ── yfinance fetch helpers ────────────────────────────────────────────────────
 
-def _fetch_latest_candle(twelve_symbol: str) -> dict | None:
-    """Fetch the most recent completed 1m candle from Twelve Data."""
-    api_key = CONFIG.get("twelve_data_api_key", "")
-    if not api_key:
-        log.warning("[TwelveData] API key not set")
-        return None
-    try:
-        url = "https://api.twelvedata.com/time_series"
-        params = {
-            "symbol":     twelve_symbol,
-            "interval":   "1min",
-            "outputsize": 2,        # get 2 so we always have 1 closed candle
-            "apikey":     api_key,
-            "format":     "JSON",
-        }
-        r = requests.get(url, params=params, timeout=10)
-        data = r.json()
-        if data.get("status") == "error":
-            log.warning(f"[TwelveData] {twelve_symbol}: {data.get('message')}")
-            return None
-        values = data.get("values", [])
-        if len(values) < 2:
-            return None
-        # values[0] = newest (possibly still forming), values[1] = last closed
-        raw = values[1]
-        ts_str = raw["datetime"]   # "2026-06-06 14:32:00"
-        # Twelve Data returns in exchange timezone — XAU/USD is UTC
-        ts = datetime.strptime(ts_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
-        return {
-            "timestamp": ts,
-            "open":  float(raw["open"]),
-            "high":  float(raw["high"]),
-            "low":   float(raw["low"]),
-            "close": float(raw["close"]),
-        }
-    except Exception as e:
-        log.warning(f"[TwelveData] fetch error for {twelve_symbol}: {e}")
-        return None
+def _yf_to_candle(row, idx) -> dict:
+    """Convert a yfinance DataFrame row to our candle dict (UTC-aware)."""
+    ts = idx
+    if hasattr(ts, "tzinfo") and ts.tzinfo is None:
+        ts = ts.replace(tzinfo=timezone.utc)
+    else:
+        ts = ts.to_pydatetime().astimezone(timezone.utc).replace(tzinfo=timezone.utc)
+    return {
+        "timestamp": ts,
+        "open":  float(row["Open"]),
+        "high":  float(row["High"]),
+        "low":   float(row["Low"]),
+        "close": float(row["Close"]),
+    }
 
 
-def _fetch_historical(twelve_symbol: str, outputsize: int = 100) -> list:
-    """Seed the buffer with historical 1m candles on startup."""
-    api_key = CONFIG.get("twelve_data_api_key", "")
-    if not api_key:
+def _fetch_historical_1m(yf_symbol: str, outputsize: int = 200) -> list:
+    """Seed buffer with recent 1m candles from yfinance (last trading day)."""
+    if not _YF_AVAILABLE:
+        log.warning("[yfinance] yfinance not installed — pip install yfinance")
         return []
     try:
-        url = "https://api.twelvedata.com/time_series"
-        params = {
-            "symbol":     twelve_symbol,
-            "interval":   "1min",
-            "outputsize": outputsize,
-            "apikey":     api_key,
-            "format":     "JSON",
-        }
-        r = requests.get(url, params=params, timeout=15)
-        data = r.json()
-        if data.get("status") == "error":
-            log.warning(f"[TwelveData] historical {twelve_symbol}: {data.get('message')}")
+        tk   = yf.Ticker(yf_symbol)
+        hist = tk.history(period="1d", interval="1m", auto_adjust=True)
+        if hist.empty:
+            log.warning(f"[yfinance] {yf_symbol} returned empty history")
             return []
-        values = data.get("values", [])
-        candles = []
-        for raw in reversed(values[1:]):   # oldest first, skip newest (forming)
-            ts = datetime.strptime(raw["datetime"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
-            candles.append({
-                "timestamp": ts,
-                "open":  float(raw["open"]),
-                "high":  float(raw["high"]),
-                "low":   float(raw["low"]),
-                "close": float(raw["close"]),
-            })
+        # Drop the last row (still-forming candle), keep the rest
+        hist = hist.iloc[:-1]
+        # Take the most recent `outputsize` rows
+        hist = hist.tail(outputsize)
+        candles = [_yf_to_candle(row, idx) for idx, row in hist.iterrows()]
         return candles
     except Exception as e:
-        log.warning(f"[TwelveData] historical fetch error: {e}")
+        log.warning(f"[yfinance] historical 1m fetch error for {yf_symbol}: {e}")
         return []
+
+
+def _fetch_historical_tf(yf_symbol: str, interval: str, outputsize: int) -> list:
+    """Fetch 5m or 15m candles directly for richer startup seeding."""
+    if not _YF_AVAILABLE:
+        return []
+    try:
+        # yfinance interval map: "5m", "15m"  (yf uses "5m" not "5min")
+        yf_interval = interval.replace("min", "m")
+        period = "5d"   # enough for 200 candles of any TF
+        tk   = yf.Ticker(yf_symbol)
+        hist = tk.history(period=period, interval=yf_interval, auto_adjust=True)
+        if hist.empty:
+            return []
+        hist = hist.iloc[:-1].tail(outputsize)   # drop forming candle
+        return [_yf_to_candle(row, idx) for idx, row in hist.iterrows()]
+    except Exception as e:
+        log.warning(f"[yfinance] historical {interval} fetch error for {yf_symbol}: {e}")
+        return []
+
+
+def _fetch_latest_1m_candle(yf_symbol: str) -> dict | None:
+    """Fetch the most recent completed 1m candle (live poll)."""
+    if not _YF_AVAILABLE:
+        return None
+    try:
+        tk   = yf.Ticker(yf_symbol)
+        hist = tk.history(period="1d", interval="1m", auto_adjust=True)
+        if hist.empty or len(hist) < 2:
+            return None
+        # index[-2] = last fully-closed 1m bar  (index[-1] is still forming)
+        return _yf_to_candle(hist.iloc[-2], hist.index[-2])
+    except Exception as e:
+        log.warning(f"[yfinance] live fetch error for {yf_symbol}: {e}")
+        return None
 
 
 # ── Seed buffers on startup ───────────────────────────────────────────────────
 
 def seed_buffers():
-    """Call once at startup to populate 15m buffer (needs ~100 1m candles)."""
-    log.info("[TwelveData] Seeding XAU/USD buffer...")
-    xau_candles = _fetch_historical(_xauusd.twelve_symbol, outputsize=100)
+    """Call once at startup to populate candle buffers."""
+    log.info("[yfinance] Seeding XAU/USD buffer...")
+    xau_candles = _fetch_historical_1m(_xauusd.yf_symbol, outputsize=200)
     for c in xau_candles:
         _xauusd.push_1m_candle(c)
-    log.info(f"[TwelveData] XAU/USD seeded with {len(xau_candles)} 1m candles")
+    log.info(f"[yfinance] XAU/USD seeded with {len(xau_candles)} 1m candles")
 
     if CONFIG.get("dxy_enabled"):
-        log.info("[TwelveData] Seeding DXY buffer...")
-        dxy_candles = _fetch_historical(_dxy.twelve_symbol, outputsize=100)
+        log.info("[yfinance] Seeding DXY (EUR/USD) buffer...")
+        dxy_candles = _fetch_historical_1m(_dxy.yf_symbol, outputsize=200)
         for c in dxy_candles:
             _dxy.push_1m_candle(c)
-        log.info(f"[TwelveData] DXY seeded with {len(dxy_candles)} 1m candles")
+        log.info(f"[yfinance] DXY seeded with {len(dxy_candles)} 1m candles")
 
-    # Seed 5m/15m from historical 5m endpoint too
-    _seed_higher_tf(_xauusd, "5min", 60)
-    _seed_higher_tf(_xauusd, "15min", 50)
+    # Seed higher timeframes directly for richer structure analysis
+    _seed_higher_tf(_xauusd, "5m",  60)
+    _seed_higher_tf(_xauusd, "15m", 50)
 
 
 def _seed_higher_tf(feed: SymbolFeed, interval: str, size: int):
-    """Directly fetch 5m/15m candles to pre-populate aggregated buffers."""
-    api_key = CONFIG.get("twelve_data_api_key", "")
-    if not api_key:
+    """Directly seed 5m/15m CandleBuffer from yfinance higher-TF data."""
+    candles = _fetch_historical_tf(feed.yf_symbol, interval, size)
+    if not candles:
         return
-    try:
-        r = requests.get("https://api.twelvedata.com/time_series", params={
-            "symbol": feed.twelve_symbol, "interval": interval,
-            "outputsize": size, "apikey": api_key, "format": "JSON"
-        }, timeout=15)
-        data = r.json()
-        if data.get("status") == "error":
-            return
-        buf = feed.buf_5m if interval == "5min" else feed.buf_15m
-        for raw in reversed(data.get("values", [])[1:]):
-            ts = datetime.strptime(raw["datetime"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
-            c = {"timestamp": ts, "open": float(raw["open"]), "high": float(raw["high"]),
-                 "low": float(raw["low"]), "close": float(raw["close"])}
-            buf.candles.append(c)
-        log.info(f"[TwelveData] {feed.symbol} {interval} seeded with {len(buf.candles)} candles")
-    except Exception as e:
-        log.warning(f"[TwelveData] seed_higher_tf error: {e}")
+    buf = feed.buf_5m if interval == "5m" else feed.buf_15m
+    for c in candles:
+        buf.candles.append(c)
+    log.info(f"[yfinance] {feed.symbol} {interval} seeded with {len(candles)} candles")
 
 
 # ── Polling thread ────────────────────────────────────────────────────────────
@@ -224,30 +229,34 @@ _last_dxy_ts = None
 def _poll_loop():
     global _last_xau_ts, _last_dxy_ts
     interval = CONFIG.get("xauusd_poll_interval", 60)
-    log.info(f"[TwelveData] Poll loop started — interval={interval}s")
+    log.info(f"[yfinance] Poll loop started — interval={interval}s")
+
+    dxy_counter = 0   # poll DXY every 2nd cycle to reduce load
 
     while True:
         try:
-            # XAU/USD
-            c = _fetch_latest_candle(_xauusd.twelve_symbol)
+            # ── XAU/USD ───────────────────────────────────────────────────────
+            c = _fetch_latest_1m_candle(_xauusd.yf_symbol)
             if c and c["timestamp"] != _last_xau_ts:
                 _last_xau_ts = c["timestamp"]
                 with _lock:
                     _xauusd.push_1m_candle(c)
                 CONFIG["xauusd_last"] = c["close"]
-                log.debug(f"[TwelveData] XAU/USD 1m close={c['close']:.3f}")
+                log.debug(f"[yfinance] XAU/USD 1m close={c['close']:.3f}")
 
-            # DXY (every other poll to save credits)
-            if CONFIG.get("dxy_enabled"):
-                c_dxy = _fetch_latest_candle(_dxy.twelve_symbol)
+            # ── DXY (every 2nd poll) ──────────────────────────────────────────
+            dxy_counter += 1
+            if CONFIG.get("dxy_enabled") and dxy_counter % 2 == 0:
+                c_dxy = _fetch_latest_1m_candle(_dxy.yf_symbol)
                 if c_dxy and c_dxy["timestamp"] != _last_dxy_ts:
                     _last_dxy_ts = c_dxy["timestamp"]
                     with _lock:
                         _dxy.push_1m_candle(c_dxy)
                     CONFIG["dxy_last"] = c_dxy["close"]
+                    log.debug(f"[yfinance] EUR/USD 1m close={c_dxy['close']:.5f}")
 
         except Exception as e:
-            log.warning(f"[TwelveData] Poll error: {e}")
+            log.warning(f"[yfinance] Poll error: {e}")
 
         time.sleep(interval)
 
@@ -256,5 +265,5 @@ def start_polling():
     """Start background polling thread."""
     t = threading.Thread(target=_poll_loop, daemon=True, name="XAUUSDPoller")
     t.start()
-    log.info("[TwelveData] Polling thread started")
+    log.info("[yfinance] Polling thread started")
     return t
