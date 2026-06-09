@@ -3,8 +3,8 @@ upstox_client.py — Upstox V3 WebSocket for GOLDTEN MCX + USDINR futures
 Also handles:
   - Live margin fetch for GOLDTEN
   - Order placement on MCX
-  - Ledger balance fetch
-  - Real‑time balance and positions for dashboard
+  - Ledger balance fetch (fixed endpoint)
+  - Background balance updater for dashboard
 """
 import os
 import json
@@ -33,14 +33,15 @@ BASE = "https://api.upstox.com/v2"
 # ── Balance & Positions (live) ─────────────────────────────────────────────────
 
 def fetch_ledger_balance() -> float:
-    """Fetch available cash balance from Upstox ledger."""
+    """Fetch available cash balance from Upstox ledger using correct endpoint."""
     token = CONFIG.get("upstox_access_token")
     if not token:
         log.warning("[Balance] No Upstox token - returning fallback")
         return CONFIG.get("capital", 200000)
 
     try:
-        r = requests.get(f"{BASE}/user/fund-and-margin", headers=_headers(), timeout=10)
+        # Correct endpoint: /user/get-funds-and-margin
+        r = requests.get(f"{BASE}/user/get-funds-and-margin", headers=_headers(), timeout=10)
         if r.status_code != 200:
             log.warning(f"[Balance] fetch failed: {r.status_code} {r.text[:200]}")
             return CONFIG.get("capital", 200000)
@@ -359,7 +360,7 @@ def start_balance_updater():
     log.info("[Upstox] Balance updater started (every 60s)")
 
 
-# Call this at startup (after token is ready)
 def start_background_updaters():
+    """Call this from app startup to start all background updaters."""
     start_balance_updater()
     # Positions are fetched on demand via /api/positions, no background needed
