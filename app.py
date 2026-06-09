@@ -95,6 +95,200 @@ def index():
     return render_template("dashboard.html")
 
 
+
+"""
+trading_terminal_routes.py
+──────────────────────────
+Paste these routes into app.py (before the `if __name__ == "__main__":` block).
+
+They back the trading terminal widget:
+  GET  /api/positions          — open positions from Upstox
+  GET  /api/ltp                — LTP for a given instrument_key
+  GET  /api/search-instrument  — instrument search (proxied from Upstox)
+  POST /api/manual-order       — place a manual BUY/SELL order
+"""
+
+
+
+log = logging.getLogger(__name__)
+
+
+# ── Positions ─────────────────────────────────────────────────────────────────
+
+@app.route("/api/positions")
+def api_positions():
+    """
+    Returns current short-term positions from Upstox.
+    Falls back to the engine's current_position if the Upstox call fails.
+    """
+    from upstox_client import get_positions
+    positions = get_positions()
+
+    # Enrich with live LTP where missing
+    goldten_last = CONFIG.get("goldten_last", 0)
+    for p in positions:
+        sym = (p.get("tradingsymbol") or "").upper()
+        if "GOLDTEN" in sym and not p.get("last_price"):
+            p["last_price"] = goldten_last
+        # Compute unrealised P&L if absent
+        if "unrealised" not in p and p.get("last_price") and p.get("average_price"):
+            qty = p.get("net_quantity", 0)
+            p["unrealised"] = round(
+                (float(p["last_price"]) - float(p["average_price"])) * int(qty), 2
+            )
+
+    return jsonify(positions)
+
+
+# ── LTP for a single instrument ───────────────────────────────────────────────
+
+@app.route("/api/ltp")
+def api_ltp():
+    """
+    GET /api/ltp?instrument_key=MCX_FO|...
+    Returns { ltp, change, change_pct } for the requested instrument.
+    """
+    import requests as req
+    instrument_key = request.args.get("instrument_key", "").strip()
+    if not instrument_key:
+        return jsonify({"error": "instrument_key required"}), 400
+
+    # Shortcut — return cached value for GOLDTEN to avoid extra Upstox calls
+    if "GOLDTEN" in instrument_key.upper():
+        ltp = CONFIG.get("goldten_last", 0)
+        return jsonify({"ltp": ltp, "change": 0, "change_pct": 0})
+
+    token = CONFIG.get("upstox_access_token", "")
+    if not token:
+        return jsonify({"error": "not authenticated"}), 401
+
+    try:
+        r = req.get(
+            "https://api.upstox.com/v2/market-quote/ltp",
+            headers={"Authorization": f"Bearer {token}", "Accept": "application/json", "Api-Version": "2.0"},
+            params={"instrument_key": instrument_key},
+            timeout=6,
+        )
+        if r.status_code != 200:
+            return jsonify({"error": f"upstox {r.status_code}"}), 502
+        data = r.json().get("data", {})
+        item = data.get(instrument_key) or next(iter(data.values()), {})
+        ltp = item.get("last_price", 0)
+        return jsonify({"ltp": ltp, "change": 0, "change_pct": 0})
+    except Exception as e:
+        log.warning(f"[api/ltp] {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# ── Instrument search ─────────────────────────────────────────────────────────
+
+@app.route("/api/search-instrument")
+def api_search_instrument():
+    """
+    GET /api/search-instrument?query=GOLDTEN&exchange=MCX
+    Proxies the Upstox instruments/search endpoint.
+    """
+    import requests as req
+    query    = request.args.get("query", "").strip()
+    exchange = request.args.get("exchange", "ALL").strip()
+    if not query:
+        return jsonify({"data": []}), 200
+
+    token = CONFIG.get("upstox_access_token", "")
+    if not token:
+        return jsonify({"error": "not authenticated"}), 401
+
+    try:
+        params = {"query": query}
+        if exchange and exchange != "ALL":
+            params["exchange"] = exchange
+
+        r = req.get(
+            "https://api.upstox.com/v2/instruments/search",
+            headers={"Authorization": f"Bearer {token}", "Accept": "application/json", "Api-Version": "2.0"},
+            params=params,
+            timeout=8,
+        )
+        if r.status_code != 200:
+            return jsonify({"error": f"upstox {r.status_code}", "data": []}), 502
+        return jsonify(r.json())
+    except Exception as e:
+        log.warning(f"[api/search-instrument] {e}")
+        return jsonify({"error": str(e), "data": []}), 500
+
+
+# ── Manual order placement ────────────────────────────────────────────────────
+
+@app.route("/api/manual-order", methods=["POST"])
+def api_manual_order():
+    """
+    POST /api/manual-order
+    Body: { direction, instrument_key, qty, price, order_type, product }
+
+    Places an order via Upstox and returns { order_id } or { error }.
+    This route is intentionally separate from the engine's automated orders
+    so it's always available regardless of engine state.
+    """
+    import requests as req
+    data = request.json or {}
+
+    direction      = data.get("direction", "").upper()          # BUY | SELL
+    instrument_key = data.get("instrument_key", "").strip()
+    qty            = int(data.get("qty", 1))
+    price          = float(data.get("price", 0))
+    order_type     = data.get("order_type", "LIMIT").upper()    # LIMIT | MARKET | SL | SL-M
+    product        = data.get("product", "D").upper()           # D=NRML/Delivery, I=Intraday
+
+    if direction not in ("BUY", "SELL"):
+        return jsonify({"error": "direction must be BUY or SELL"}), 400
+    if not instrument_key:
+        return jsonify({"error": "instrument_key required"}), 400
+    if qty < 1:
+        return jsonify({"error": "qty must be >= 1"}), 400
+
+    token = CONFIG.get("upstox_access_token", "")
+    if not token:
+        return jsonify({"error": "Not authenticated — visit /login first"}), 401
+
+    payload = {
+        "instrument_key":     instrument_key,
+        "transaction_type":   direction,
+        "order_type":         order_type,
+        "product":            product,
+        "quantity":           qty,
+        "price":              round(price, 0) if order_type == "LIMIT" else 0,
+        "validity":           "DAY",
+        "disclosed_quantity": 0,
+        "trigger_price":      0,
+        "is_amo":             False,
+    }
+
+    try:
+        r = req.post(
+            "https://api.upstox.com/v2/order/place",
+            headers={
+                "Authorization":  f"Bearer {token}",
+                "Accept":         "application/json",
+                "Content-Type":   "application/json",
+                "Api-Version":    "2.0",
+            },
+            json=payload,
+            timeout=10,
+        )
+        resp = r.json()
+        if r.status_code == 200:
+            order_id = resp.get("data", {}).get("order_id")
+            log.info(f"[ManualOrder] {direction} {qty}x {instrument_key} @ {price} → {order_id}")
+            return jsonify({"order_id": order_id, "ok": True})
+        else:
+            err_msg = resp.get("message") or resp.get("error") or r.text[:200]
+            log.warning(f"[ManualOrder] failed {r.status_code}: {err_msg}")
+            return jsonify({"error": err_msg}), 400
+    except Exception as e:
+        log.error(f"[ManualOrder] exception: {e}")
+        return jsonify({"error": str(e)}), 500    
+
+
 # ── Engine control ────────────────────────────────────────────────────────────
 
 @app.route("/engine/start", methods=["POST"])
