@@ -415,6 +415,13 @@ def api_macro_events():
     return jsonify({"events": events, "count": len(events)})
 
 
+    
+@app.route("/api/myip")
+def api_myip():
+    import requests as req
+    r = req.get("https://api.ipify.org?format=json", timeout=5)
+    return jsonify(r.json())
+
 # ── Cron endpoints (Railway cron) ─────────────────────────────────────────────
 
 @app.route("/cron/start", methods=["POST"])
