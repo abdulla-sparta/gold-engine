@@ -34,6 +34,12 @@ def startup():
     seed_buffers()
     start_polling()
 
+    # Start intelligence poller (newsbot integration)
+    if CONFIG.get("newsbot_url"):
+        from intelligence_client import start_polling as start_intel_polling
+        start_intel_polling()
+        log.info("[Startup] Intelligence client started")
+
     from upstox_client import start_goldten_ws, start_usdinr_poller
     start_goldten_ws()
     start_usdinr_poller()
@@ -194,6 +200,18 @@ def api_conversion():
         "live_basis":      CONFIG.get("live_basis"),
         "basis_pct":       round(CONFIG.get("live_basis", 0) / mcx_equiv * 100, 3) if mcx_equiv else 0,
     })
+
+
+# ── Newsbot Intelligence ──────────────────────────────────────────────────────
+
+@app.route("/api/intelligence")
+def api_intelligence():
+    """
+    Returns the latest XAU intelligence signal fetched from the newsbot.
+    Cached in CONFIG["intelligence"] by intelligence_client.py.
+    """
+    intel = CONFIG.get("intelligence", {})
+    return jsonify(intel)
 
 
 # ── Macro Events Calendar ────────────────────────────────────────────────────

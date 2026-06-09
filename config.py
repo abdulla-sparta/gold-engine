@@ -61,6 +61,12 @@ CONFIG = {
     "telegram_bot_token": os.getenv("TELEGRAM_BOT_TOKEN", ""),
     "telegram_chat_id":   os.getenv("TELEGRAM_CHAT_ID", ""),
 
+    # ── Newsbot Intelligence ──────────────────────────────────────────────────
+    # URL of the deployed Django newsbot service (e.g. https://newsbot.up.railway.app)
+    "newsbot_url":                 os.getenv("NEWSBOT_URL", ""),
+    "intelligence_poll_interval":  1800,   # seconds — 30 min
+    "intelligence_filter_enabled": True,   # if True, skip entries that conflict with intel bias
+
     # ── Runtime state (not persisted) ────────────────────────────────────────
     "engine_running":      False,
     "usdinr_live":         0.0,
@@ -73,4 +79,5 @@ CONFIG = {
     "current_position":    None,         # active trade dict or None
     "kill_switch":         False,
     "paper_mode":          True,    # True = simulate orders, False = live execution
+    "intelligence":        {},      # populated by intelligence_client.py at runtime
 }

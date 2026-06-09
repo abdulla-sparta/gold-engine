@@ -125,26 +125,80 @@
   .trade-table tbody tr:hover { background: #FAFBFC; }
 
   /* ── Macro Events Card ── */
+  @keyframes pulse-red {
+    0%,100% { opacity: 1; box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
+    50%      { opacity: 0.6; box-shadow: 0 0 0 5px rgba(239,68,68,0); }
+  }
+  @keyframes pulse-border {
+    0%,100% { border-color: #FECACA; background: #FFF5F5; }
+    50%      { border-color: #EF4444; background: #FEE2E2; }
+  }
   .events-list { list-style: none; margin: 0; padding: 0; }
+
+  /* Date group header */
+  .event-date-group {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.6px;
+    text-transform: uppercase; color: var(--muted);
+    padding: 10px 0 4px; border-bottom: 1px solid #F1F3F6;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .event-date-group:first-child { padding-top: 2px; }
+  .today-label {
+    background: #EF4444; color: #fff; font-size: 9px; font-weight: 800;
+    padding: 1px 6px; border-radius: 20px; letter-spacing: 0.4px;
+    animation: pulse-red 1.4s ease-in-out infinite;
+  }
+  .tomorrow-label {
+    background: #F59E0B; color: #fff; font-size: 9px; font-weight: 800;
+    padding: 1px 6px; border-radius: 20px;
+  }
+
+  /* Event row */
   .event-item {
-    display: flex; align-items: flex-start; gap: 10px;
-    padding: 9px 0; border-bottom: 1px solid #F1F3F6;
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 8px 8px 4px; margin: 3px 0; border-radius: 7px;
+    border: 1px solid transparent; transition: background .15s;
   }
-  .event-item:last-child { border-bottom: none; }
+  .event-item:hover { background: #FAFBFC; }
+  .event-item.is-today {
+    border: 1px solid #FECACA; background: #FFF5F5;
+    animation: pulse-border 2s ease-in-out infinite;
+  }
+  .event-item.is-today .event-title { color: #B91C1C; }
+
+  /* Impact dot */
   .event-impact {
-    flex-shrink: 0; width: 6px; height: 6px; border-radius: 50%;
-    margin-top: 5px;
+    flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%;
   }
+  .event-impact.HIGH   { background: #EF4444; box-shadow: 0 0 0 2px rgba(239,68,68,0.2); }
+  .event-impact.MEDIUM { background: #F59E0B; box-shadow: 0 0 0 2px rgba(245,158,11,0.2); }
+  .event-impact.LOW    { background: #9CA3AF; }
+  .event-impact.is-today-dot { animation: pulse-red 1.2s ease-in-out infinite; }
+
   .event-body { flex: 1; min-width: 0; }
-  .event-title { font-size: 12px; font-weight: 600; color: var(--text);
-                 white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .event-meta  { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .event-badge {
-    flex-shrink: 0; font-size: 10px; font-weight: 700; padding: 2px 7px;
-    border-radius: 20px; border: 1px solid; white-space: nowrap;
+  .event-title {
+    font-size: 12px; font-weight: 600; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .event-soon  { background: #FEF3C7; border-color: #FCD34D; color: #92400E; }
-  .events-empty { text-align: center; color: var(--muted); padding: 20px; font-size: 13px; }
+  .event-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* Severity badge */
+  .sev-badge {
+    flex-shrink: 0; font-size: 9px; font-weight: 800; padding: 2px 7px;
+    border-radius: 20px; border: 1px solid; white-space: nowrap; letter-spacing: 0.3px;
+  }
+  .sev-HIGH   { background: #FEF2F2; border-color: #FECACA; color: #B91C1C; }
+  .sev-MEDIUM { background: #FFFBEB; border-color: #FDE68A; color: #92400E; }
+  .sev-LOW    { background: #F9FAFB; border-color: #E5E7EB; color: #6B7280; }
+
+  /* Time chip */
+  .time-chip {
+    flex-shrink: 0; font-size: 10px; font-weight: 700; color: var(--text);
+    background: #F1F3F6; border-radius: 5px; padding: 2px 6px; white-space: nowrap;
+  }
+  .time-chip.today { background: #FEE2E2; color: #B91C1C; }
+
+  .events-empty { text-align: center; color: var(--muted); padding: 24px; font-size: 13px; }
   .events-header-row { display:flex; align-items:center; gap:6px; }
   .events-window-btn {
     font-size: 10px; padding: 2px 8px; border-radius: 20px; cursor: pointer;
@@ -153,6 +207,55 @@
   }
   .events-window-btn.active,
   .events-window-btn:hover { background: var(--gold-bg); border-color: var(--gold); color: var(--gold); }
+  /* ── Intelligence Card ── */
+  .intel-card { border-radius: 10px; border: 1px solid var(--border); padding: 16px; }
+  .intel-bias {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 18px; font-weight: 800; letter-spacing: 0.3px;
+  }
+  .intel-bias.BULLISH { color: #16A34A; }
+  .intel-bias.BEARISH { color: #DC2626; }
+  .intel-bias.NEUTRAL { color: #6B7280; }
+  .intel-bias.NONE    { color: #9CA3AF; }
+  .intel-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+  }
+  .intel-dot.BULLISH { background: #16A34A; box-shadow: 0 0 0 3px rgba(22,163,74,0.2); }
+  .intel-dot.BEARISH { background: #DC2626; box-shadow: 0 0 0 3px rgba(220,38,38,0.2); }
+  .intel-dot.NEUTRAL { background: #6B7280; }
+  .intel-dot.NONE    { background: #D1D5DB; }
+  .intel-score-bar {
+    height: 6px; border-radius: 3px; background: #F1F3F6;
+    overflow: hidden; margin: 6px 0;
+  }
+  .intel-score-fill {
+    height: 100%; border-radius: 3px; transition: width .4s ease;
+  }
+  .intel-score-fill.BULLISH { background: #16A34A; }
+  .intel-score-fill.BEARISH { background: #DC2626; }
+  .intel-score-fill.NEUTRAL { background: #9CA3AF; }
+  .intel-meta  { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .intel-narrative {
+    font-size: 12px; color: var(--text); line-height: 1.6;
+    background: #FAFBFC; border-left: 3px solid var(--gold);
+    padding: 8px 10px; border-radius: 0 6px 6px 0; margin: 10px 0;
+    font-style: italic;
+  }
+  .intel-reason {
+    font-size: 11px; color: var(--muted);
+    padding: 3px 0; display: flex; align-items: flex-start; gap: 5px;
+  }
+  .intel-reason::before { content: "·"; color: var(--gold); font-weight: 900; flex-shrink:0; }
+  .intel-stale { background: #FFFBEB; border-color: #FDE68A; color: #92400E;
+                 font-size: 10px; padding: 2px 7px; border-radius: 20px;
+                 border: 1px solid; display: inline-block; margin-left: 6px; }
+  .intel-price-note {
+    font-size: 11px; font-weight: 600; color: var(--text);
+    background: #F8F9FB; border: 1px solid var(--border);
+    border-radius: 6px; padding: 5px 10px; margin: 8px 0;
+    font-family: monospace;
+  }
+
   .pnl-pos { color: var(--green); font-weight: 700; }
   .pnl-neg { color: var(--red);   font-weight: 700; }
 
@@ -473,6 +576,17 @@
     </table>
   </div>
 
+  <!-- Intelligence Card (Newsbot) -->
+  <div class="card" style="margin-top:18px" id="intel-card">
+    <div class="sec-header">
+      <span class="sec-title">🧠 XAU Intelligence</span>
+      <span id="intel-ts" style="font-size:11px;color:var(--muted)">—</span>
+    </div>
+    <div id="intel-body">
+      <div style="color:var(--muted);font-size:13px;padding:12px 0">Loading intelligence…</div>
+    </div>
+  </div>
+
   <!-- Macro Events Calendar -->
   <div class="card" style="margin-top:18px">
     <div class="sec-header">
@@ -481,6 +595,10 @@
         <button class="events-window-btn active" onclick="setEventsWindow(7,this)">7d</button>
         <button class="events-window-btn" onclick="setEventsWindow(14,this)">14d</button>
         <button class="events-window-btn" onclick="setEventsWindow(30,this)">30d</button>
+        <span style="width:1px;height:14px;background:var(--border);display:inline-block;margin:0 2px"></span>
+        <button class="events-window-btn" id="flt-HIGH"   onclick="toggleImpactFilter('HIGH',this)"   style="border-color:#FECACA;color:#B91C1C;background:#FEF2F2">HIGH</button>
+        <button class="events-window-btn" id="flt-MEDIUM" onclick="toggleImpactFilter('MEDIUM',this)" style="border-color:#FDE68A;color:#92400E;background:#FFFBEB">MED</button>
+        <button class="events-window-btn" id="flt-LOW"    onclick="toggleImpactFilter('LOW',this)"    style="color:var(--muted)">LOW</button>
         <span id="events-count" style="font-size:11px;color:var(--muted);margin-left:4px">—</span>
       </div>
     </div>
@@ -704,6 +822,8 @@ setInterval(fetchTrades, 15000);
 // ── Macro Events Calendar ────────────────────────────────────────────────────
 
 let _eventsDays = 7;
+let _eventsAll  = [];
+let _impactFilter = new Set(['HIGH', 'MEDIUM', 'LOW']);  // all on by default
 
 function setEventsWindow(days, btn) {
   _eventsDays = days;
@@ -712,12 +832,27 @@ function setEventsWindow(days, btn) {
   fetchMacroEvents();
 }
 
+function toggleImpactFilter(impact, btn) {
+  if (_impactFilter.has(impact)) {
+    _impactFilter.delete(impact);
+    btn.style.opacity = '0.35';
+  } else {
+    _impactFilter.add(impact);
+    btn.style.opacity = '1';
+  }
+  const filtered = _eventsAll.filter(ev => _impactFilter.has(ev.impact));
+  renderEvents(filtered);
+  document.getElementById('events-count').textContent = `${filtered.length} events`;
+}
+
 async function fetchMacroEvents() {
   try {
     const r = await fetch(`/api/macro-events?days=${_eventsDays}`);
     const d = await r.json();
-    renderEvents(d.events || []);
-    document.getElementById('events-count').textContent = `${d.count} events`;
+    _eventsAll = d.events || [];
+    const filtered = _eventsAll.filter(ev => _impactFilter.has(ev.impact));
+    renderEvents(filtered);
+    document.getElementById('events-count').textContent = `${filtered.length} events`;
   } catch(e) {
     document.getElementById('events-list').innerHTML =
       '<li class="events-empty">Failed to load events</li>';
@@ -733,38 +868,139 @@ function renderEvents(events) {
     return;
   }
 
-  const IMPACT_DOT = { HIGH: '#EF4444', MEDIUM: '#F59E0B', LOW: '#9CA3AF' };
+  // Get IST date string for grouping
+  const toISTDateStr = (epochSec) =>
+    new Date(epochSec * 1000).toLocaleDateString('en-IN', {
+      timeZone: 'Asia/Kolkata', day:'2-digit', month:'short', year:'numeric'
+    });
 
-  ul.innerHTML = events.map(ev => {
-    const dot     = IMPACT_DOT[ev.impact] || '#9CA3AF';
-    const hrs     = ev.in_hours;
-    const isSoon  = hrs >= 0 && hrs <= 48;
-    const badgeClass = isSoon ? 'event-badge event-soon' : 'event-badge';
+  const todayIST    = toISTDateStr(now);
+  const tomorrowIST = toISTDateStr(now + 86400);
 
-    let timeLabel;
-    if (hrs < 0)          timeLabel = `${ev.date_ist}`;
-    else if (hrs < 1)     timeLabel = 'In &lt;1h';
-    else if (hrs < 24)    timeLabel = `In ${Math.round(hrs)}h`;
-    else                  timeLabel = ev.date_ist;
+  // Group events by IST date
+  const groups = {};
+  const groupOrder = [];
+  events.forEach(ev => {
+    const dk = ev.date_ist;
+    if (!groups[dk]) { groups[dk] = []; groupOrder.push(dk); }
+    groups[dk].push(ev);
+  });
 
-    const badge = isSoon
-      ? `<span class="${badgeClass}">⚡ ${ev.time_ist}</span>`
-      : `<span class="${badgeClass}">${ev.time_ist}</span>`;
+  let html = '';
+  groupOrder.forEach(dateKey => {
+    const isToday    = dateKey === todayIST;
+    const isTomorrow = dateKey === tomorrowIST;
 
-    const src = ev.source === 'finnhub' ? '' :
-                ev.source === 'fed_rss' ? ' · Fed RSS' : '';
+    let label = '';
+    if (isToday)    label = '<span class="today-label">TODAY</span>';
+    if (isTomorrow) label = '<span class="tomorrow-label">TOMORROW</span>';
+    html += `<li class="event-date-group">${dateKey} ${label}</li>`;
 
-    return `
-      <li class="event-item">
-        <span class="event-impact" style="background:${dot}"></span>
-        <div class="event-body">
-          <div class="event-title" title="${ev.title}">${ev.title}</div>
-          <div class="event-meta">${ev.impact} · ${timeLabel}${src}</div>
-        </div>
-        ${badge}
-      </li>`;
-  }).join('');
+    groups[dateKey].forEach(ev => {
+      const dotCls  = `event-impact ${ev.impact}${isToday ? ' is-today-dot' : ''}`;
+      const rowCls  = `event-item${isToday ? ' is-today' : ''}`;
+      const timeCls = `time-chip${isToday ? ' today' : ''}`;
+      const sevCls  = `sev-badge sev-${ev.impact}`;
+      const hrs     = ev.in_hours;
+
+      let countdown = '';
+      if (hrs >= 0 && hrs < 1)       countdown = ' &nbsp;·&nbsp; <b>In &lt;1h ⚡</b>';
+      else if (hrs >= 0 && hrs < 24) countdown = ` &nbsp;·&nbsp; In ${Math.round(hrs)}h`;
+
+      html += `
+        <li class="${rowCls}">
+          <span class="${dotCls}"></span>
+          <div class="event-body">
+            <div class="event-title" title="${ev.title}">${ev.title}</div>
+            <div class="event-meta">${ev.impact}${countdown}</div>
+          </div>
+          <span class="${timeCls}">${ev.time_ist}</span>
+          <span class="${sevCls}">${ev.impact}</span>
+        </li>`;
+    });
+  });
+
+  ul.innerHTML = html;
 }
+
+// ── Intelligence (Newsbot) ───────────────────────────────────────────────────
+
+async function fetchIntelligence() {
+  try {
+    const r = await fetch('/api/intelligence');
+    const d = await r.json();
+    renderIntelligence(d);
+  } catch(e) {
+    document.getElementById('intel-body').innerHTML =
+      '<div style="color:var(--muted);font-size:12px">Newsbot unavailable</div>';
+  }
+}
+
+function renderIntelligence(d) {
+  const ts   = document.getElementById('intel-ts');
+  const body = document.getElementById('intel-body');
+
+  if (!d || !d.available) {
+    ts.textContent = '';
+    body.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px 0">' +
+      (document.querySelector('[data-newsbot-url]') ? 'No signal yet — waiting for newsbot run' :
+       'NEWSBOT_URL not configured') + '</div>';
+    return;
+  }
+
+  const bias       = d.bias || 'NONE';
+  const score      = d.score || 0;
+  const conf       = d.confidence || 0;
+  const reasons    = d.reasons || [];
+  const narrative  = d.narrative || '';
+  const priceNote  = d.price_note || '';
+  const stale      = d.stale;
+
+  ts.innerHTML = d.timestamp
+    ? `<span style="font-size:10px;color:var(--muted)">${d.timestamp}${stale ? ' <span class="intel-stale">STALE</span>' : ''}</span>`
+    : '';
+
+  const biasEmoji = { BULLISH: '🟢', BEARISH: '🔴', NEUTRAL: '⚪', NONE: '—' }[bias] || '—';
+  const barWidth  = Math.min(100, Math.max(4, (Math.abs(score) / 20) * 100));
+
+  let html = `
+    <div class="intel-card" style="border-color:${bias==='BULLISH'?'#BBF7D0':bias==='BEARISH'?'#FECACA':'var(--border)'}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div class="intel-bias ${bias}">
+          <span class="intel-dot ${bias}"></span>
+          ${biasEmoji} ${bias}
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:13px;font-weight:700;color:var(--text)">Score: ${score > 0 ? '+' : ''}${score}</div>
+          <div style="font-size:11px;color:var(--muted)">Confidence: ${conf}%</div>
+        </div>
+      </div>
+
+      <div class="intel-score-bar">
+        <div class="intel-score-fill ${bias}" style="width:${barWidth}%"></div>
+      </div>`;
+
+  if (priceNote) {
+    html += `<div class="intel-price-note">💹 ${priceNote}</div>`;
+  }
+
+  if (narrative) {
+    html += `<div class="intel-narrative">${narrative}</div>`;
+  }
+
+  if (reasons.length) {
+    html += `<div style="margin-top:8px;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.4px;text-transform:uppercase;margin-bottom:4px">Key Drivers</div>`;
+    reasons.forEach(r => {
+      html += `<div class="intel-reason">${r}</div>`;
+    });
+  }
+
+  html += `</div>`;
+  body.innerHTML = html;
+}
+
+fetchIntelligence();
+setInterval(fetchIntelligence, 1800000);  // refresh every 30 min
 
 fetchMacroEvents();
 setInterval(fetchMacroEvents, 3600000);  // refresh every hour
