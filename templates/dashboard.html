@@ -557,7 +557,7 @@ tickTerminalClock();
 
 document.getElementById('add-sym-btn')?.addEventListener('click',addWatchlistSymbol);
 document.getElementById('sym-input')?.addEventListener('keydown',e=>{if(e.key==='Enter')addWatchlistSymbol();});
-document.getElementById('order-btn')?.addEventListener('click',()=>openOrderModal('','GOLDTEN','BUY',statusData?.goldten_last||0));
+document.getElementById('order-btn')?.addEventListener('click',()=>{ const key=statusData?.goldten_instrument_key||''; const sym=statusData?.goldten_trading_symbol||'GOLDTEN'; openOrderModal(key,sym,'BUY',statusData?.goldten_last||0); });
 document.getElementById('refresh-live-btn')?.addEventListener('click',refreshLiveTerminal);
 
 setTerminalMode('paper');

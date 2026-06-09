@@ -356,6 +356,10 @@ class GoldEngine:
             # Paper mode: paper capital. Live mode: real Upstox available margin.
             "balance":          CONFIG.get("balance", CONFIG.get("capital", 0)),
             "capital":          CONFIG.get("capital", 0),
+            # Instrument keys — resolved at startup by instrument_resolver.
+            # Exposed here so the dashboard order modal can pre-fill the key.
+            "goldten_instrument_key":  CONFIG.get("goldten_instrument_key", ""),
+            "goldten_trading_symbol":  CONFIG.get("goldten_trading_symbol", ""),
         }
 
 
