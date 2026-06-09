@@ -308,24 +308,43 @@ class SwingLevelTracker:
 
 def dxy_confluence(dxy_candles_15m: list, signal_direction: str) -> bool:
     """
-    DXY direction derived from EUR/USD (inverted — EUR is 57.6% of DXY).
-    EUR/USD rising  = DXY falling  = bullish gold  → aligns with BUY
-    EUR/USD falling = DXY rising   = bearish gold  → aligns with SELL
-    Returns True if DXY aligns with signal, False if conflict.
+    Real DXY confluence filter using CONFIG["dxy_last"] and CONFIG["dxy_change_pct"]
+    sourced from newsbot /api/prices/ (DX-Y.NYB via yfinance — actual dollar index).
+
+    DXY rising  → USD strengthening → bearish gold → conflicts with BUY
+    DXY falling → USD weakening     → bullish gold → conflicts with SELL
+
+    Threshold: ±0.15% change is considered directional (same as newsbot intelligence.py).
+    Falls back gracefully if no DXY data available.
     """
-    if not CONFIG.get("dxy_enabled") or len(dxy_candles_15m) < 3:
-        return True   # no data = pass through
+    if not CONFIG.get("dxy_enabled"):
+        return True
 
-    recent    = dxy_candles_15m[-3:]
-    eurusd_move = recent[-1]["close"] - recent[0]["open"]
-    # Invert: EUR/USD rising means DXY falling
-    dxy_trend = -eurusd_move
+    dxy_price      = CONFIG.get("dxy_last", 0.0)
+    dxy_change_pct = CONFIG.get("dxy_change_pct", 0.0)
 
-    if signal_direction == "BUY" and dxy_trend > 0.0010:
-        log.info(f"[DXY] Conflict — EUR/USD falling → DXY rising ({dxy_trend:+.5f}), filtering BUY signal")
+    if not dxy_price:
+        # No real DXY data yet — fall back to EUR/USD candles if available
+        if len(dxy_candles_15m) >= 3:
+            recent      = dxy_candles_15m[-3:]
+            eurusd_move = recent[-1]["close"] - recent[0]["open"]
+            dxy_trend   = -eurusd_move   # invert EUR/USD
+            if signal_direction == "BUY" and dxy_trend > 0.0010:
+                log.info(f"[DXY] Fallback EUR/USD proxy — conflict filtering BUY ({dxy_trend:+.5f})")
+                return False
+            if signal_direction == "SELL" and dxy_trend < -0.0010:
+                log.info(f"[DXY] Fallback EUR/USD proxy — conflict filtering SELL ({dxy_trend:+.5f})")
+                return False
+        return True   # no data at all = pass through
+
+    # Real DXY from newsbot
+    if signal_direction == "BUY" and dxy_change_pct > 0.15:
+        log.info(f"[DXY] Real DXY rising {dxy_price:.2f} (+{dxy_change_pct:.3f}%) — filtering BUY signal")
         return False
-    if signal_direction == "SELL" and dxy_trend < -0.0010:
-        log.info(f"[DXY] Conflict — EUR/USD rising → DXY falling ({dxy_trend:+.5f}), filtering SELL signal")
+
+    if signal_direction == "SELL" and dxy_change_pct < -0.15:
+        log.info(f"[DXY] Real DXY falling {dxy_price:.2f} ({dxy_change_pct:.3f}%) — filtering SELL signal")
         return False
 
+    log.debug(f"[DXY] Real DXY {dxy_price:.2f} ({dxy_change_pct:+.3f}%) — no conflict for {signal_direction}")
     return True

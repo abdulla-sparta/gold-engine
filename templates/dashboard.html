@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>GoldEngine — MCX Gold Algo with Upstox Terminal & Large Chart</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoldEngine — MCX Gold Algo with Large Chart</title>
 <style>
   :root {
     --gold:    #C8860A;
@@ -125,137 +125,108 @@
   .trade-table tbody tr:hover { background: #FAFBFC; }
 
   /* ── Macro Events Card ── */
-  @keyframes pulse-red {
-    0%,100% { opacity: 1; box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
-    50%      { opacity: 0.6; box-shadow: 0 0 0 5px rgba(239,68,68,0); }
-  }
-  @keyframes pulse-border {
-    0%,100% { border-color: #FECACA; background: #FFF5F5; }
-    50%      { border-color: #EF4444; background: #FEE2E2; }
-  }
   .events-list { list-style: none; margin: 0; padding: 0; }
-  .event-date-group {
-    font-size: 10px; font-weight: 700; letter-spacing: 0.6px;
-    text-transform: uppercase; color: var(--muted);
-    padding: 10px 0 4px; border-bottom: 1px solid #F1F3F6;
-    display: flex; align-items: center; gap: 6px;
-  }
-  .event-date-group:first-child { padding-top: 2px; }
-  .today-label {
-    background: #EF4444; color: #fff; font-size: 9px; font-weight: 800;
-    padding: 1px 6px; border-radius: 20px; letter-spacing: 0.4px;
-    animation: pulse-red 1.4s ease-in-out infinite;
-  }
-  .tomorrow-label {
-    background: #F59E0B; color: #fff; font-size: 9px; font-weight: 800;
-    padding: 1px 6px; border-radius: 20px;
-  }
   .event-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 8px 8px 8px 4px; margin: 3px 0; border-radius: 7px;
-    border: 1px solid transparent; transition: background .15s;
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 9px 0; border-bottom: 1px solid #F1F3F6;
   }
-  .event-item:hover { background: #FAFBFC; }
-  .event-item.is-today {
-    border: 1px solid #FECACA; background: #FFF5F5;
-    animation: pulse-border 2s ease-in-out infinite;
-  }
-  .event-item.is-today .event-title { color: #B91C1C; }
+  .event-item:last-child { border-bottom: none; }
   .event-impact {
-    flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%;
+    flex-shrink: 0; width: 6px; height: 6px; border-radius: 50%;
+    margin-top: 5px;
   }
-  .event-impact.HIGH   { background: #EF4444; box-shadow: 0 0 0 2px rgba(239,68,68,0.2); }
-  .event-impact.MEDIUM { background: #F59E0B; box-shadow: 0 0 0 2px rgba(245,158,11,0.2); }
-  .event-impact.LOW    { background: #9CA3AF; }
-  .event-impact.is-today-dot { animation: pulse-red 1.2s ease-in-out infinite; }
   .event-body { flex: 1; min-width: 0; }
-  .event-title { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .event-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .sev-badge { flex-shrink: 0; font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 20px; border: 1px solid; white-space: nowrap; letter-spacing: 0.3px; }
-  .sev-HIGH   { background: #FEF2F2; border-color: #FECACA; color: #B91C1C; }
-  .sev-MEDIUM { background: #FFFBEB; border-color: #FDE68A; color: #92400E; }
-  .sev-LOW    { background: #F9FAFB; border-color: #E5E7EB; color: #6B7280; }
-  .time-chip { flex-shrink: 0; font-size: 10px; font-weight: 700; color: var(--text); background: #F1F3F6; border-radius: 5px; padding: 2px 6px; white-space: nowrap; }
-  .time-chip.today { background: #FEE2E2; color: #B91C1C; }
-  .events-empty { text-align: center; color: var(--muted); padding: 24px; font-size: 13px; }
+  .event-title { font-size: 12px; font-weight: 600; color: var(--text);
+                 white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .event-meta  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .event-badge {
+    flex-shrink: 0; font-size: 10px; font-weight: 700; padding: 2px 7px;
+    border-radius: 20px; border: 1px solid; white-space: nowrap;
+  }
+  .event-soon  { background: #FEF3C7; border-color: #FCD34D; color: #92400E; }
+  .events-empty { text-align: center; color: var(--muted); padding: 20px; font-size: 13px; }
   .events-header-row { display:flex; align-items:center; gap:6px; }
-  .events-window-btn { font-size: 10px; padding: 2px 8px; border-radius: 20px; cursor: pointer; background: #F1F3F6; border: 1px solid var(--border); color: var(--muted); transition: all .15s; }
-  .events-window-btn.active, .events-window-btn:hover { background: var(--gold-bg); border-color: var(--gold); color: var(--gold); }
-
-  /* Intelligence card */
-  .intel-card { border-radius: 10px; border: 1px solid var(--border); padding: 16px; }
-  .intel-bias { display: inline-flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 800; letter-spacing: 0.3px; }
-  .intel-bias.BULLISH { color: #16A34A; }
-  .intel-bias.BEARISH { color: #DC2626; }
-  .intel-bias.NEUTRAL { color: #6B7280; }
-  .intel-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-  .intel-dot.BULLISH { background: #16A34A; box-shadow: 0 0 0 3px rgba(22,163,74,0.2); }
-  .intel-dot.BEARISH { background: #DC2626; box-shadow: 0 0 0 3px rgba(220,38,38,0.2); }
-  .intel-score-bar { height: 6px; border-radius: 3px; background: #F1F3F6; overflow: hidden; margin: 6px 0; }
-  .intel-score-fill { height: 100%; border-radius: 3px; transition: width .4s ease; }
-  .intel-score-fill.BULLISH { background: #16A34A; }
-  .intel-score-fill.BEARISH { background: #DC2626; }
-  .intel-narrative { font-size: 12px; color: var(--text); line-height: 1.6; background: #FAFBFC; border-left: 3px solid var(--gold); padding: 8px 10px; border-radius: 0 6px 6px 0; margin: 10px 0; font-style: italic; }
-  .intel-reason { font-size: 11px; color: var(--muted); padding: 3px 0; display: flex; align-items: flex-start; gap: 5px; }
-  .intel-reason::before { content: "·"; color: var(--gold); font-weight: 900; flex-shrink:0; }
-  .intel-price-note { font-size: 11px; font-weight: 600; color: var(--text); background: #F8F9FB; border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; margin: 8px 0; font-family: monospace; }
+  .events-window-btn {
+    font-size: 10px; padding: 2px 8px; border-radius: 20px; cursor: pointer;
+    background: #F1F3F6; border: 1px solid var(--border); color: var(--muted);
+    transition: all .15s;
+  }
+  .events-window-btn.active,
+  .events-window-btn:hover { background: var(--gold-bg); border-color: var(--gold); color: var(--gold); }
   .pnl-pos { color: var(--green); font-weight: 700; }
   .pnl-neg { color: var(--red);   font-weight: 700; }
-  .btn { padding: 8px 16px; border-radius: 7px; cursor: pointer; font-size: 13px; font-weight: 600; border: 1px solid transparent; transition: all 0.15s; }
+
+  /* Buttons */
+  .btn { padding: 8px 16px; border-radius: 7px; cursor: pointer; font-size: 13px;
+         font-weight: 600; border: 1px solid transparent; transition: all 0.15s; }
   .btn-gold  { background: var(--gold); color: #fff; border-color: var(--gold); }
   .btn-gold:hover { background: #B07208; }
   .btn-red   { background: var(--red-bg); color: var(--red); border-color: #FECACA; }
   .btn-red:hover { background: #FEE2E2; }
+  .btn-ghost { background: #F8F9FB; border-color: var(--border); color: var(--text); }
+  .btn-ghost:hover { border-color: var(--gold); }
+
+  /* Section header */
   .sec-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
   .sec-title { font-size: 13px; font-weight: 700; color: var(--text); }
+
   .tag { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px; display: inline-block; }
   .tag-high { background: #FFF7ED; color: #C2410C; border: 1px solid #FDBA74; }
   .tag-low  { background: #EFF6FF; color: #1D4ED8; border: 1px solid #93C5FD; }
+
   .mt-14 { margin-top: 14px; }
+  .divider { height: 1px; background: var(--border); margin: 4px 0 12px; }
 
-  /* Chart container (half page) */
-  .chart-container { background: white; height: 600px; border-radius: 10px; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 20px; overflow: hidden; }
-  .chart-header { padding: 12px 18px 0 18px; display: flex; align-items: baseline; justify-content: space-between; border-bottom: none; }
-  .chart-header h3 { font-size: 13px; font-weight: 700; background: #FAFBFC; display: inline-block; padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); font-weight: 600; }
-  .tradingview-widget-container { height: 100%; min-height: 320px; width: 100%; margin-top: 6px; }
-  @media (max-width: 780px) { .grid-3, .grid-2 { grid-template-columns: 1fr; gap: 12px; } .pos-grid { grid-template-columns: 1fr 1fr; } .tradingview-widget-container { height: 45vh; } }
-
-  /* Upstox terminal inline styles (scoped) */
-  .upstox-terminal {
+  /* CHART CONTAINER - NOW HALF PAGE HEIGHT (50vh) */
+  .chart-container {
     background: white;
-    border-radius: 12px;
+    height: 600px;
+    border-radius: 10px;
     border: 1px solid var(--border);
-    margin-bottom: 18px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
     overflow: hidden;
-    font-family: 'SF Mono', 'Menlo', monospace;
-    font-size: 13px;
+    transition: all 0.2s;
   }
-  .upstox-terminal .term-root { font-family: monospace; color: #1e293b; }
-  .upstox-terminal .term-card { background: white; border: none; }
-  .upstox-terminal .term-header { background: #f8fafc; padding: 10px 14px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; }
-  .upstox-terminal .stat-row { display: grid; grid-template-columns: repeat(4,1fr); background: #e2e8f0; gap: 1px; }
-  .upstox-terminal .stat-cell { background: #f8fafc; padding: 8px 12px; }
-  .upstox-terminal .stat-label { font-size: 10px; color: #94a3b8; text-transform: uppercase; }
-  .upstox-terminal .stat-val { font-size: 14px; font-weight: 500; }
-  .upstox-terminal .stat-val.pos { color: #10b981; }
-  .upstox-terminal .stat-val.neg { color: #ef4444; }
-  .upstox-terminal .search-row { display: flex; gap: 8px; padding: 8px 12px; border-bottom: 1px solid #e2e8f0; }
-  .upstox-terminal .search-row input, .upstox-terminal .search-row select, .upstox-terminal .search-row button { font-size: 12px; padding: 5px 8px; height: 30px; border-radius: 4px; border: 1px solid #cbd5e1; background: white; }
-  .upstox-terminal .pos-table { width: 100%; border-collapse: collapse; }
-  .upstox-terminal .pos-table th { font-size: 10px; text-align: left; padding: 6px 12px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; color: #64748b; }
-  .upstox-terminal .pos-table td { padding: 8px 12px; border-bottom: 1px solid #e2e8f0; font-size: 12px; }
-  .upstox-terminal .pos-row:hover .action-btns { display: flex; }
-  .upstox-terminal .action-btns { display: none; gap: 4px; }
-  .upstox-terminal .btn-buy { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; border-radius: 4px; padding: 2px 8px; cursor: pointer; }
-  .upstox-terminal .btn-sell { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; border-radius: 4px; padding: 2px 8px; cursor: pointer; }
-  .upstox-terminal .btn-sq { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 8px; cursor: pointer; }
-  .upstox-terminal .badge-long { background: #e8f5e9; color: #2e7d32; border-radius: 3px; padding: 1px 5px; font-size: 10px; }
-  .upstox-terminal .badge-short { background: #ffebee; color: #c62828; border-radius: 3px; padding: 1px 5px; font-size: 10px; }
-  .upstox-terminal .ltp-up { color: #10b981; }
-  .upstox-terminal .ltp-down { color: #ef4444; }
-  .upstox-terminal .empty-row td { text-align: center; color: #94a3b8; padding: 20px; }
-  .upstox-terminal .dot { width: 7px; height: 7px; border-radius: 50%; background: #4caf50; display: inline-block; }
-  .upstox-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; z-index: 2000; display: none; }
+  .chart-header {
+    padding: 12px 18px 0 18px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: none;
+  }
+  .chart-header h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.3px;
+    background: #FAFBFC;
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    font-weight: 600;
+  }
+  .chart-header small {
+    color: var(--muted);
+    font-size: 11px;
+  }
+  /* KEY CHANGE: Height set to 50vh (half viewport height) for larger chart */
+  .tradingview-widget-container {
+    height: 100%;
+    min-height: 320px;
+    width: 100%;
+    margin-top: 6px;
+  }
+  .tradingview-widget-container__widget {
+    height: calc(100% - 10px);
+    width: 100%;
+  }
+  @media (max-width: 780px) {
+    .tradingview-widget-container { height: 45vh; min-height: 280px; }
+    .grid-3, .grid-2 { grid-template-columns: 1fr; gap: 12px; }
+    .pos-grid { grid-template-columns: 1fr 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -272,13 +243,14 @@
   <button onclick="window.location='/login'">🔐 Re-Auth</button>
 </nav>
 
-<!-- TradingView Chart Section -->
+<!-- TradingView Chart Section - Now large (half page height) -->
 <div class="main" style="padding-bottom: 0;">
   <div class="chart-container">
     <div class="chart-header">
       <h3>📈 XAU/USD Spot & Futures — Advanced Chart (TVC:GOLD)</h3>
       <small>15m interval · TradingView</small>
     </div>
+    <!-- TradingView Widget BEGIN (height adjusted to 50vh via CSS) -->
     <div class="tradingview-widget-container">
       <div class="tradingview-widget-container__widget"></div>
       <div class="tradingview-widget-copyright" style="font-size:10px;text-align:right;padding-right:12px;">
@@ -313,16 +285,23 @@
       }
       </script>
     </div>
+    <!-- TradingView Widget END -->
   </div>
 </div>
 
 <div class="main">
 
-  <!-- Live Position card -->
+  <!-- Live Position -->
   <div class="pos-card" id="pos-card" style="display:none">
     <div class="pos-header">
-      <div><span class="pos-dir" id="pos-dir">BUY</span><span style="color:var(--muted);margin-left:8px;font-size:13px;font-weight:500">GOLDTEN MCX</span></div>
-      <div style="display:flex;gap:10px;align-items:center"><span id="pos-pnl" style="font-size:20px;font-weight:800"></span><button class="btn btn-red" onclick="forceExit()">Exit Position</button></div>
+      <div>
+        <span class="pos-dir" id="pos-dir">BUY</span>
+        <span style="color:var(--muted);margin-left:8px;font-size:13px;font-weight:500">GOLDTEN MCX</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span id="pos-pnl" style="font-size:20px;font-weight:800"></span>
+        <button class="btn btn-red" onclick="forceExit()">Exit Position</button>
+      </div>
     </div>
     <div class="pos-grid">
       <div class="pos-item"><label>Entry (MCX)</label><span id="pos-entry">—</span></div>
@@ -338,538 +317,462 @@
 
   <!-- Top metrics -->
   <div class="grid-3">
-    <div class="card"><div class="card-title">XAU/USD Spot</div><div class="card-value text-gold" id="xau-price">—</div><div class="card-sub">$/oz · Twelve Data</div></div>
-    <div class="card"><div class="card-title">GOLDTEN MCX Futures</div><div class="card-value" id="goldten-price">—</div><div class="card-sub">₹/10gms · MCX 30JUN26</div></div>
-    <div class="card"><div class="card-title">HTF Bias (15m XAU/USD)</div><div style="margin-top:8px"><span class="bias NONE" id="htf-bias">NONE</span></div><div class="card-sub" style="margin-top:8px" id="htf-ref">No pivot reference</div></div>
+    <div class="card">
+      <div class="card-title">XAU/USD Spot</div>
+      <div class="card-value text-gold" id="xau-price">—</div>
+      <div class="card-sub">$/oz · Twelve Data</div>
+    </div>
+    <div class="card">
+      <div class="card-title">GOLDTEN MCX Futures</div>
+      <div class="card-value" id="goldten-price">—</div>
+      <div class="card-sub">₹/10gms · MCX 30JUN26</div>
+    </div>
+    <div class="card">
+      <div class="card-title">HTF Bias (15m XAU/USD)</div>
+      <div style="margin-top:8px"><span class="bias NONE" id="htf-bias">NONE</span></div>
+      <div class="card-sub" style="margin-top:8px" id="htf-ref">No pivot reference</div>
+    </div>
   </div>
 
   <div class="grid-3">
-    <div class="card"><div class="card-title">USDINR Futures</div><div class="card-value" id="usdinr-rate">—</div><div class="card-sub" id="usdinr-status">Live · NSE Futures</div></div>
-    <div class="card"><div class="card-title">EUR/USD <span style="font-size:10px;color:var(--muted);font-weight:400">(DXY proxy, inverted)</span></div><div class="card-value" id="dxy-val">—</div><div class="card-sub" id="dxy-sub">EUR/USD · Twelve Data</div></div>
-    <div class="card"><div class="card-title">Live Basis (Futures Premium)</div><div class="card-value" id="basis-val">—</div><div class="card-sub" id="basis-pct">GOLDTEN − XAU spot equiv</div></div>
+    <div class="card">
+      <div class="card-title">USDINR Futures</div>
+      <div class="card-value" id="usdinr-rate">—</div>
+      <div class="card-sub" id="usdinr-status">Live · NSE Futures</div>
+    </div>
+    <div class="card">
+      <div class="card-title">DXY <span style="font-size:10px;color:var(--muted);font-weight:400">US Dollar Index</span></div>
+      <div class="card-value" id="dxy-val">—</div>
+      <div class="card-sub" id="dxy-sub">DX-Y.NYB · Newsbot</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Live Basis (Futures Premium)</div>
+      <div class="card-value" id="basis-val">—</div>
+      <div class="card-sub" id="basis-pct">GOLDTEN − XAU spot equiv</div>
+    </div>
   </div>
 
-  <!-- TRADING TERMINAL — Live (Upstox) / Paper (engine sim) toggle -->
-  <div class="upstox-terminal" id="upstox-terminal">
-    <div class="term-root">
-      <div class="term-card">
+  <!-- Conversion + Config -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="sec-header">
+        <span class="sec-title">Live Conversion</span>
+        <span style="font-size:11px;color:var(--muted)">XAU/USD → MCX ₹</span>
+      </div>
+      <div class="conv-row">
+        <span class="conv-label">Formula</span>
+        <span class="conv-value" style="font-size:12px;color:var(--muted);font-weight:500">XAU × 0.35274 × USDINR</span>
+      </div>
+      <div class="conv-row">
+        <span class="conv-label">XAU/USD</span>
+        <span class="conv-value" id="conv-xau">—</span>
+      </div>
+      <div class="conv-row">
+        <span class="conv-label">× 0.35274 (oz → 10gms)</span>
+        <span class="conv-value" id="conv-mid">—</span>
+      </div>
+      <div class="conv-row">
+        <span class="conv-label">× USDINR <span id="conv-frozen-tag"></span></span>
+        <span class="conv-value" id="conv-usdinr">—</span>
+      </div>
+      <div class="conv-row" style="border-top:2px solid var(--gold);margin-top:4px;padding-top:12px">
+        <span class="conv-label" style="color:var(--gold);font-weight:700;font-size:13px">= MCX Spot Equiv</span>
+        <span class="conv-value text-gold" style="font-size:20px" id="conv-result">—</span>
+      </div>
+      <div class="conv-row">
+        <span class="conv-label">GOLDTEN Futures</span>
+        <span class="conv-value" id="conv-goldten">—</span>
+      </div>
+      <div class="conv-row">
+        <span class="conv-label">Basis (premium)</span>
+        <span class="conv-value" id="conv-basis">—</span>
+      </div>
+    </div>
 
-        <!-- Header with mode toggle -->
-        <div class="term-header">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <span class="dot" id="conn-dot"></span>
-            <span class="term-title" id="term-title-text">Trading Terminal</span>
-            <span id="last-sync" style="font-size:11px;color:#94a3b8;">—</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:12px;">
-            <!-- Mode toggle pill -->
-            <div id="mode-toggle-wrap" style="display:flex;align-items:center;gap:0;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:20px;padding:2px;font-size:11px;font-weight:600;">
-              <button id="btn-mode-paper" onclick="setTerminalMode('paper')"
-                style="background:#fff;border:1px solid #cbd5e1;border-radius:16px;padding:3px 12px;cursor:pointer;color:#475569;transition:all .15s;font-size:11px;font-weight:600;">
-                📝 Paper
-              </button>
-              <button id="btn-mode-live" onclick="setTerminalMode('live')"
-                style="background:none;border:1px solid transparent;border-radius:16px;padding:3px 12px;cursor:pointer;color:#94a3b8;transition:all .15s;font-size:11px;font-weight:600;">
-                ⚡ Live
-              </button>
-            </div>
-            <span id="ist-time" style="font-size:11px;color:#94a3b8;">—</span>
-          </div>
+    <div class="card">
+      <div class="sec-header">
+        <span class="sec-title">Strategy Config</span>
+        <button class="btn btn-gold" onclick="saveConfig()">Save</button>
+      </div>
+      <div class="config-grid">
+        <div class="cfg-row">
+          <label>Swing Threshold (%)</label>
+          <input type="number" id="cfg-threshold" step="0.05" min="0.1" max="2.0">
         </div>
-
-        <!-- Mode banner -->
-        <div id="term-mode-banner" style="padding:5px 14px;font-size:11px;font-weight:600;background:#FFFBEB;border-bottom:1px solid #FDE68A;color:#92400E;display:flex;align-items:center;gap:6px;">
-          <span>📝 Paper mode — showing simulated engine positions &amp; paper balance. Switch to ⚡ Live to trade real Upstox positions.</span>
+        <div class="cfg-row">
+          <label>Risk : Reward</label>
+          <input type="number" id="cfg-rr" step="0.5" min="2" max="20">
         </div>
-
-        <!-- Stats row -->
-        <div class="stat-row">
-          <div class="stat-cell"><div class="stat-label">Available</div><div class="stat-val neu" id="stat-balance">—</div></div>
-          <div class="stat-cell"><div class="stat-label">Day P&amp;L</div><div class="stat-val" id="stat-daypnl">—</div></div>
-          <div class="stat-cell"><div class="stat-label">Overall P&amp;L</div><div class="stat-val" id="stat-totalpnl">—</div></div>
-          <div class="stat-cell"><div class="stat-label">Open Positions</div><div class="stat-val neu" id="stat-pos-count">—</div></div>
+        <div class="cfg-row">
+          <label>Risk % / Trade</label>
+          <input type="number" id="cfg-risk" step="0.5" min="0.5" max="10">
         </div>
-
-        <!-- Search / add symbol (live mode only) -->
-        <div id="term-search-row" class="search-row" style="display:none;">
-          <input id="sym-input" placeholder="Symbol (e.g. GOLDTEN, NIFTY)" style="flex:1;text-transform:uppercase;" />
-          <select id="exchange-sel"><option value="MCX">MCX</option><option value="NSE">NSE</option><option value="BSE">BSE</option><option value="ALL">All</option></select>
-          <button id="add-sym-btn">➕ Add</button>
-          <button id="order-btn" style="background:#fff;">⚡ Order</button>
-          <button id="refresh-live-btn" title="Refresh" style="background:#fff;">🔄</button>
+        <div class="cfg-row">
+          <label>Max Lots</label>
+          <input type="number" id="cfg-maxlots" step="1" min="1" max="20">
         </div>
-
-        <!-- Positions table -->
-        <table class="pos-table">
-          <thead><tr><th>Symbol</th><th>Qty</th><th>Avg</th><th>LTP</th><th>Day P&amp;L</th><th>Overall P&amp;L</th><th style="width:120px;">Actions</th></tr></thead>
-          <tbody id="pos-tbody"><tr class="empty-row"><td colspan="7">Loading...</td></tr></tbody>
-        </table>
-
-        <!-- Watchlist (live mode only) -->
-        <div id="watchlist-section" style="display:none;border-top:1px solid #e2e8f0;">
-          <div style="padding:6px 12px;background:#f8fafc;font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.04em;">Watchlist</div>
-          <table class="pos-table"><thead><tr><th>Symbol</th><th>LTP</th><th>Change</th><th>Actions</th></tr></thead><tbody id="watch-tbody"></tbody></table>
+        <div class="cfg-row">
+          <label>Swing Max Age (hrs)</label>
+          <input type="number" id="cfg-swingage" step="1" min="4" max="168">
         </div>
-
-        <!-- Order modal (lives inside the terminal card for stacking context) -->
-        <div id="order-modal" style="display:none;position:fixed;inset:0;z-index:9000;align-items:center;justify-content:center;">
-          <div onclick="closeOrderModal()" style="position:absolute;inset:0;background:rgba(0,0,0,.35);"></div>
-          <div style="position:relative;z-index:1;background:#fff;border-radius:12px;border:1px solid #e2e8f0;padding:20px;width:320px;box-shadow:0 8px 32px rgba(0,0,0,.15);">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-              <span style="font-size:14px;font-weight:700;" id="modal-title-text">Place Order</span>
-              <button onclick="closeOrderModal()" style="background:none;border:none;cursor:pointer;font-size:18px;color:#94a3b8;">✕</button>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:10px;">
-              <div><div style="font-size:11px;color:#64748b;margin-bottom:3px;">Instrument Key</div><input id="ord-sym" placeholder="MCX_FO|GOLDTEN…" style="width:100%;padding:6px 9px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;font-family:monospace;" /></div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                <div><div style="font-size:11px;color:#64748b;margin-bottom:3px;">Order Type</div><select id="ord-type" style="width:100%;padding:6px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;"><option value="LIMIT">LIMIT</option><option value="MARKET">MARKET</option><option value="SL">SL</option><option value="SL-M">SL-M</option></select></div>
-                <div><div style="font-size:11px;color:#64748b;margin-bottom:3px;">Product</div><select id="ord-product" style="width:100%;padding:6px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;"><option value="D">NRML</option><option value="I">Intraday</option></select></div>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                <div><div style="font-size:11px;color:#64748b;margin-bottom:3px;">Price (₹)</div><input id="ord-price" type="number" placeholder="0" style="width:100%;padding:6px 9px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;" /></div>
-                <div><div style="font-size:11px;color:#64748b;margin-bottom:3px;">Qty (lots)</div><input id="ord-qty" type="number" value="1" min="1" style="width:100%;padding:6px 9px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;" /></div>
-              </div>
-            </div>
-            <div style="display:flex;gap:8px;margin-top:16px;">
-              <button onclick="submitLiveOrder('BUY')" style="flex:1;background:#1b5e20;color:#fff;border:none;border-radius:7px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;">▲ BUY</button>
-              <button onclick="submitLiveOrder('SELL')" style="flex:1;background:#b71c1c;color:#fff;border:none;border-radius:7px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;">▼ SELL</button>
-              <button onclick="closeOrderModal()" style="flex:1;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:7px;padding:9px;font-size:13px;cursor:pointer;">Cancel</button>
-            </div>
-          </div>
+        <div class="cfg-row">
+          <label>Mode</label>
+          <select id="cfg-paper">
+            <option value="true">📝 Paper (simulate)</option>
+            <option value="false">⚡ Live (real orders)</option>
+          </select>
         </div>
-
+        <div class="cfg-row">
+          <label>DXY Filter</label>
+          <select id="cfg-dxy">
+            <option value="true">Enabled</option>
+            <option value="false">Disabled</option>
+          </select>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Live Conversion and Strategy Config grid -->
-  <div class="grid-2">
-    <div class="card">
-      <div class="sec-header"><span class="sec-title">Live Conversion</span><span style="font-size:11px;color:var(--muted)">XAU/USD → MCX ₹</span></div>
-      <div class="conv-row"><span class="conv-label">Formula</span><span class="conv-value" style="font-size:12px;color:var(--muted);font-weight:500">XAU × 0.35274 × USDINR</span></div>
-      <div class="conv-row"><span class="conv-label">XAU/USD</span><span class="conv-value" id="conv-xau">—</span></div>
-      <div class="conv-row"><span class="conv-label">× 0.35274 (oz → 10gms)</span><span class="conv-value" id="conv-mid">—</span></div>
-      <div class="conv-row"><span class="conv-label">× USDINR <span id="conv-frozen-tag"></span></span><span class="conv-value" id="conv-usdinr">—</span></div>
-      <div class="conv-row" style="border-top:2px solid var(--gold);margin-top:4px;padding-top:12px"><span class="conv-label" style="color:var(--gold);font-weight:700;font-size:13px">= MCX Spot Equiv</span><span class="conv-value text-gold" style="font-size:20px" id="conv-result">—</span></div>
-      <div class="conv-row"><span class="conv-label">GOLDTEN Futures</span><span class="conv-value" id="conv-goldten">—</span></div>
-      <div class="conv-row"><span class="conv-label">Basis (premium)</span><span class="conv-value" id="conv-basis">—</span></div>
+  <!-- Swing levels -->
+  <div class="card mt-14" style="margin-bottom:14px">
+    <div class="sec-header">
+      <span class="sec-title">Active Swing Levels (XAU/USD → MCX)</span>
+      <span style="font-size:11px;color:var(--muted)">Threshold: <span id="threshold-label">0.30</span>%</span>
     </div>
-    <div class="card">
-      <div class="sec-header"><span class="sec-title">Strategy Config</span><button class="btn btn-gold" onclick="saveConfig()">Save</button></div>
-      <div class="config-grid"><div class="cfg-row"><label>Swing Threshold (%)</label><input type="number" id="cfg-threshold" step="0.05" min="0.1" max="2.0"></div><div class="cfg-row"><label>Risk : Reward</label><input type="number" id="cfg-rr" step="0.5" min="2" max="20"></div><div class="cfg-row"><label>Risk % / Trade</label><input type="number" id="cfg-risk" step="0.5" min="0.5" max="10"></div><div class="cfg-row"><label>Max Lots</label><input type="number" id="cfg-maxlots" step="1" min="1" max="20"></div><div class="cfg-row"><label>Swing Max Age (hrs)</label><input type="number" id="cfg-swingage" step="1" min="4" max="168"></div><div class="cfg-row"><label>Mode</label><select id="cfg-paper"><option value="true">📝 Paper (simulate)</option><option value="false">⚡ Live (real orders)</option></select></div><div class="cfg-row"><label>DXY Filter</label><select id="cfg-dxy"><option value="true">Enabled</option><option value="false">Disabled</option></select></div></div>
-    </div>
+    <table class="swing-table">
+      <thead>
+        <tr>
+          <th>Type</th><th>XAU/USD</th><th>MCX Equiv (₹)</th>
+          <th>USDINR</th><th>Time (IST)</th><th>Distance</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="swing-tbody">
+        <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">
+          Loading swing levels...
+        </td></tr>
+      </tbody>
+    </table>
   </div>
 
-  <!-- Swing levels & trade log unchanged -->
-  <div class="card mt-14" style="margin-bottom:14px"><div class="sec-header"><span class="sec-title">Active Swing Levels (XAU/USD → MCX)</span><span style="font-size:11px;color:var(--muted)">Threshold: <span id="threshold-label">0.30</span>%</span></div><table class="swing-table"><thead><tr><th>Type</th><th>XAU/USD</th><th>MCX Equiv (₹)</th><th>USDINR</th><th>Time (IST)</th><th>Distance</th><th>Status</th></tr></thead><tbody id="swing-tbody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">Loading swing levels...</td></tr></tbody></table></div>
-  <div class="card"><div class="sec-header"><span class="sec-title">Trade Log</span><span id="trade-count" style="font-size:11px;color:var(--muted);font-weight:500">—</span></div><table class="trade-table"><thead><tr><th>Time</th><th>Dir</th><th>XAU Entry</th><th>MCX Entry</th><th>Stop</th><th>Target</th><th>Qty</th><th>USDINR</th><th>PnL</th><th>Status</th></tr></thead><tbody id="trade-tbody"><tr><td colspan="10" style="text-align:center;color:var(--muted);padding:24px">No trades yet</td></tr></tbody></table></div>
-  <div class="card" style="margin-top:18px" id="intel-card"><div class="sec-header"><span class="sec-title">🧠 XAU Intelligence</span><span id="intel-ts" style="font-size:11px;color:var(--muted)">—</span></div><div id="intel-body"><div style="color:var(--muted);font-size:13px;padding:12px 0">Loading intelligence…</div></div></div>
-  <div class="card" style="margin-top:18px"><div class="sec-header"><span class="sec-title">📅 Macro Events</span><div class="events-header-row"><button class="events-window-btn active" onclick="setEventsWindow(7,this)">7d</button><button class="events-window-btn" onclick="setEventsWindow(14,this)">14d</button><button class="events-window-btn" onclick="setEventsWindow(30,this)">30d</button><span style="width:1px;height:14px;background:var(--border);display:inline-block;margin:0 2px"></span><button class="events-window-btn" id="flt-HIGH" onclick="toggleImpactFilter('HIGH',this)">HIGH</button><button class="events-window-btn" id="flt-MEDIUM" onclick="toggleImpactFilter('MEDIUM',this)">MED</button><button class="events-window-btn" id="flt-LOW" onclick="toggleImpactFilter('LOW',this)">LOW</button><span id="events-count" style="font-size:11px;color:var(--muted);margin-left:4px">—</span></div></div><ul class="events-list" id="events-list"><li class="events-empty">Loading…</li></ul></div>
+  <!-- Trade log -->
+  <div class="card">
+    <div class="sec-header">
+      <span class="sec-title">Trade Log</span>
+      <span id="trade-count" style="font-size:11px;color:var(--muted);font-weight:500">—</span>
+    </div>
+    <table class="trade-table">
+      <thead>
+        <tr>
+          <th>Time</th><th>Dir</th><th>XAU Entry</th><th>MCX Entry</th>
+          <th>Stop</th><th>Target</th><th>Qty</th><th>USDINR</th><th>PnL</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="trade-tbody">
+        <tr><td colspan="10" style="text-align:center;color:var(--muted);padding:24px">No trades yet</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Macro Events Calendar -->
+  <div class="card" style="margin-top:18px">
+    <div class="sec-header">
+      <span class="sec-title">📅 Macro Events</span>
+      <div class="events-header-row">
+        <button class="events-window-btn active" onclick="setEventsWindow(7,this)">7d</button>
+        <button class="events-window-btn" onclick="setEventsWindow(14,this)">14d</button>
+        <button class="events-window-btn" onclick="setEventsWindow(30,this)">30d</button>
+        <span id="events-count" style="font-size:11px;color:var(--muted);margin-left:4px">—</span>
+      </div>
+    </div>
+    <ul class="events-list" id="events-list">
+      <li class="events-empty">Loading…</li>
+    </ul>
+  </div>
+
 </div>
 
-<div id="upstox-toast" class="upstox-toast"></div>
-
 <script>
-// --------------------------------------------------------------
-// GOLDENGINE CORE (status, conversion, trades, intelligence, events)
-// --------------------------------------------------------------
 let statusData = {};
-let _fetchStatusStub = null; // overridden below by terminal block
-async function fetchConversion() { try { const r = await fetch('/api/conversion'); const d = await r.json(); renderConversion(d); } catch(e) {} }
-async function fetchTrades() { try { const r = await fetch('/api/trades'); const trades = await r.json(); renderTrades(trades); } catch(e) {} }
 
-function renderStatus(d) { 
-  document.getElementById('eng-badge').textContent = d.running ? 'LIVE' : 'IDLE'; document.getElementById('eng-badge').className = d.running ? 'badge live' : 'badge';
-  document.getElementById('kill-btn').style.opacity = d.kill_switch ? '0.5' : '1';
-  const pb = document.getElementById('paper-badge'); if(pb) { pb.textContent = d.paper_mode !== false ? '📝 PAPER' : '⚡ LIVE'; pb.style.background = d.paper_mode !== false ? '#FFFBEB' : '#F0FDF4'; }
-  document.getElementById('xau-price').textContent = d.xauusd_last ? `$${d.xauusd_last.toLocaleString('en-US',{minimumFractionDigits:3})}` : '—';
-  document.getElementById('goldten-price').textContent = d.goldten_last ? `₹${Math.round(d.goldten_last).toLocaleString('en-IN')}` : '—';
-  document.getElementById('dxy-val').textContent = d.dxy_last ? d.dxy_last.toFixed(5) : '—';
-  document.getElementById('basis-val').textContent = d.live_basis ? `₹${Math.round(d.live_basis).toLocaleString('en-IN')}` : '—';
-  const usdinr = d.usdinr_is_frozen ? d.usdinr_frozen : d.usdinr_live;
-  document.getElementById('usdinr-rate').textContent = usdinr ? `₹${usdinr.toFixed(4)}` : '—';
-  const bias = d.htf_bias?.bias || 'NONE';
-  const biasEl = document.getElementById('htf-bias'); biasEl.textContent = bias; biasEl.className = `bias ${bias}`;
-  document.getElementById('cfg-threshold').value = d.swing_threshold ?? 0.30; document.getElementById('threshold-label').textContent = (d.swing_threshold ?? 0.30).toFixed(2);
-  renderSwings(d.swing_levels || [], d.goldten_last || 0, d.swing_threshold || 0.30);
-  const pos = d.current_position; const posCard = document.getElementById('pos-card');
-  if(pos){ posCard.style.display='block'; document.getElementById('pos-dir').textContent=pos.direction; document.getElementById('pos-dir').className=`pos-dir ${pos.direction}`;
-    document.getElementById('pos-entry').textContent=`₹${Math.round(pos.entry_price).toLocaleString('en-IN')}`; document.getElementById('pos-stop').textContent=`₹${Math.round(pos.stop_price).toLocaleString('en-IN')}`;
-    document.getElementById('pos-target').textContent=`₹${Math.round(pos.target_price).toLocaleString('en-IN')}`; document.getElementById('pos-qty').textContent=pos.qty;
-    document.getElementById('pos-xau').textContent=`$${pos.xauusd_entry?.toFixed(3)}`; document.getElementById('pos-usdinr').textContent=`₹${pos.usdinr_rate?.toFixed(4)}`;
-    if(d.goldten_last && pos.entry_price){ const pnl = (d.goldten_last - pos.entry_price) * pos.qty * (pos.direction==='BUY'?1:-1); const el = document.getElementById('pos-pnl'); el.textContent=`₹${Math.round(pnl).toLocaleString('en-IN')}`; el.style.color = pnl>=0?'var(--green)':'var(--red)';}
-  } else { posCard.style.display='none'; }
-  ['cfg-rr','cfg-risk','cfg-maxlots','cfg-swingage','cfg-dxy','cfg-paper'].forEach(id=>{ if(document.getElementById(id)) document.getElementById(id).value = d[id.replace('cfg-','')] ?? (id==='cfg-dxy'?true:d[id]??''); });
-}
-
-function renderConversion(d){ document.getElementById('conv-xau').textContent=d.xauusd?`$${d.xauusd.toFixed(3)}`:'—'; document.getElementById('conv-mid').textContent=d.xauusd?`$${(d.xauusd*0.35274).toFixed(4)}/10gms`:'—'; document.getElementById('conv-usdinr').textContent=d.usdinr?`₹${d.usdinr.toFixed(4)}`:'—'; document.getElementById('conv-result').textContent=d.mcx_equiv?`₹${Math.round(d.mcx_equiv).toLocaleString('en-IN')}`:'—'; document.getElementById('conv-goldten').textContent=d.goldten_last?`₹${Math.round(d.goldten_last).toLocaleString('en-IN')}`:'—'; document.getElementById('conv-basis').textContent=d.live_basis!==undefined?`₹${Math.round(d.live_basis).toLocaleString('en-IN')} (${d.basis_pct?.toFixed(3)}%)`:'—'; document.getElementById('conv-frozen-tag').innerHTML=d.usdinr_frozen?'<span class="frozen-tag">🔒 FROZEN</span>':''; }
-
-function renderSwings(levels,goldten,threshold){ const tbody=document.getElementById('swing-tbody'); if(!levels||!levels.length){ tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">No swing levels</td></tr>'; return; } tbody.innerHTML=levels.map(lvl=>{ const mcq=Math.round(lvl.mcx_equiv||0); const dist=goldten>0?Math.abs(goldten-mcq)/mcq*100:null; const isNear=dist!==null&&dist<=threshold; return `<tr><td>${lvl.swing_type==='swing_high'?'<span class="tag tag-high">HIGH</span>':'<span class="tag tag-low">LOW</span>'}</td><td>$${parseFloat(lvl.xau_price).toFixed(3)}</td><td>₹${mcq.toLocaleString('en-IN')}${isNear?'<span class="near-tag">⚡ NEAR</span>':''}</td><td>₹${parseFloat(lvl.usdinr_rate||0).toFixed(4)}</td><td style="color:var(--muted);font-size:11px">${lvl.timestamp?new Date(lvl.timestamp).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour12:false}):'—'}</td><td>${dist!==null?dist.toFixed(3)+'%':'—'}</td><td>${lvl.touched?'Touched':'Active'}</td></tr>`; }).join(''); }
-
-function renderTrades(trades){ const tbody=document.getElementById('trade-tbody'); document.getElementById('trade-count').textContent=`${trades.length} trade(s)`; if(!trades.length){ tbody.innerHTML='<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:24px">No trades yet</td></tr>'; return; } tbody.innerHTML=trades.map(t=>{ const pnlCls=t.pnl!=null?(t.pnl>=0?'pnl-pos':'pnl-neg'):''; return `<tr><td style="color:var(--muted);font-size:11px">${new Date(t.entry_time).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour12:false})}</td><td style="color:${t.direction==='BUY'?'var(--bull)':'var(--bear)'};font-weight:800">${t.direction}</td><td>$${parseFloat(t.xauusd_entry||0).toFixed(3)}</td><td style="font-weight:600">₹${Math.round(t.entry_price||0).toLocaleString('en-IN')}</td><td style="color:var(--red)">₹${Math.round(t.stop_price||0).toLocaleString('en-IN')}</td><td style="color:var(--green)">₹${Math.round(t.target_price||0).toLocaleString('en-IN')}</td><td>${t.qty}</td><td>₹${parseFloat(t.usdinr_rate||0).toFixed(4)}</td><td class="${pnlCls}">${t.pnl!=null?`₹${Math.round(t.pnl).toLocaleString('en-IN')}`:'—'}</td><td>${t.status}</td></tr>`; }).join(''); }
-
-async function engineStart() { await fetch('/engine/start',{method:'POST'}); fetchStatus(); }
-async function engineStop() { await fetch('/engine/stop',{method:'POST'}); fetchStatus(); }
-async function forceExit() { if(confirm('Force close position at market price?')) await fetch('/engine/force-exit',{method:'POST'}); fetchStatus(); }
-async function toggleKill() { const url = statusData?.kill_switch ? '/engine/reset-kill-switch' : '/engine/kill-switch'; await fetch(url,{method:'POST'}); fetchStatus(); }
-async function saveConfig() { const payload = { swing_level_threshold_pct: parseFloat(document.getElementById('cfg-threshold').value), risk_reward: parseFloat(document.getElementById('cfg-rr').value), risk_pct: parseFloat(document.getElementById('cfg-risk').value), max_lots: parseInt(document.getElementById('cfg-maxlots').value), swing_max_age_hours: parseInt(document.getElementById('cfg-swingage').value), dxy_enabled: document.getElementById('cfg-dxy').value === 'true', paper_mode: document.getElementById('cfg-paper').value === 'true' }; await fetch('/config/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); alert('Saved'); fetchStatus(); }
-
-// Macro events & intelligence (simplified, same as original)
-let _eventsDays=7,_eventsAll=[],_impactFilter=new Set(['HIGH','MEDIUM','LOW']); function setEventsWindow(days,btn){ _eventsDays=days; document.querySelectorAll('.events-window-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); fetchMacroEvents(); } function toggleImpactFilter(impact,btn){ if(_impactFilter.has(impact)){ _impactFilter.delete(impact); btn.style.opacity='0.35'; } else { _impactFilter.add(impact); btn.style.opacity='1'; } const filtered=_eventsAll.filter(ev=>_impactFilter.has(ev.impact)); renderEvents(filtered); document.getElementById('events-count').textContent=`${filtered.length} events`; } async function fetchMacroEvents(){ try{ const r=await fetch(`/api/macro-events?days=${_eventsDays}`); const d=await r.json(); _eventsAll=d.events||[]; const filtered=_eventsAll.filter(ev=>_impactFilter.has(ev.impact)); renderEvents(filtered); document.getElementById('events-count').textContent=`${filtered.length} events`; }catch(e){ document.getElementById('events-list').innerHTML='<li class="events-empty">Failed to load events</li>'; } } function renderEvents(events){ const ul=document.getElementById('events-list'); if(!events.length){ ul.innerHTML='<li class="events-empty">No events in selected window</li>'; return; } const now=Date.now()/1000; const toISTDateStr=(epochSec)=>new Date(epochSec*1000).toLocaleDateString('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',year:'numeric'}); const todayIST=toISTDateStr(now); const groups={}; events.forEach(ev=>{ const dk=ev.date_ist; if(!groups[dk]) groups[dk]=[]; groups[dk].push(ev); }); let html=''; Object.keys(groups).sort().forEach(dateKey=>{ const isToday=dateKey===todayIST; html+=`<li class="event-date-group">${dateKey} ${isToday?'<span class="today-label">TODAY</span>':''}</li>`; groups[dateKey].forEach(ev=>{ const dotCls=`event-impact ${ev.impact}${isToday?' is-today-dot':''}`; const rowCls=`event-item${isToday?' is-today':''}`; const hrs=ev.in_hours; let countdown=''; if(hrs>=0&&hrs<1) countdown=' &nbsp;·&nbsp; <b>In &lt;1h ⚡</b>'; else if(hrs>=0&&hrs<24) countdown=` &nbsp;·&nbsp; In ${Math.round(hrs)}h`; html+=`<li class="${rowCls}"><span class="${dotCls}"></span><div class="event-body"><div class="event-title">${ev.title}</div><div class="event-meta">${ev.impact}${countdown}</div></div><span class="time-chip${isToday?' today':''}">${ev.time_ist}</span><span class="sev-badge sev-${ev.impact}">${ev.impact}</span></li>`; }); }); ul.innerHTML=html; } async function fetchIntelligence(){ try{ const r=await fetch('/api/intelligence'); const d=await r.json(); const body=document.getElementById('intel-body'); if(!d.available){ body.innerHTML='<div style="color:var(--muted);font-size:12px">No signal</div>'; return; } let html=`<div class="intel-card"><div><div class="intel-bias ${d.bias}"><span class="intel-dot ${d.bias}"></span> ${d.bias}</div><div>Score: ${d.score>0?'+':''}${d.score}</div></div><div class="intel-score-bar"><div class="intel-score-fill ${d.bias}" style="width:${Math.min(100,Math.abs(d.score)/20*100)}%"></div></div>`; if(d.price_note) html+=`<div class="intel-price-note">💹 ${d.price_note}</div>`; if(d.narrative) html+=`<div class="intel-narrative">${d.narrative}</div>`; if(d.reasons?.length){ html+=`<div style="margin-top:8px;font-weight:700">Key Drivers</div>`; d.reasons.forEach(r=>html+=`<div class="intel-reason">${r}</div>`); } html+=`</div>`; body.innerHTML=html; document.getElementById('intel-ts').innerHTML=d.timestamp?`<span style="font-size:10px;color:var(--muted)">${d.timestamp}${d.stale?' <span class="intel-stale">STALE</span>':''}</span>`:''; }catch(e){} }
-
-// ================================================================
-// TRADING TERMINAL — dual-mode (Paper / Live)
-// Paper mode: reads from statusData (engine sim, no real orders)
-// Live mode:  reads from /api/positions + /api/ltp, places real
-//             orders via /api/manual-order
-// ================================================================
-
-let termMode = 'paper';   // 'paper' | 'live'
-let liveWatchlist = [];
-let prevLtpMap = {};
-let liveRefreshTimer = null;
-
-// ── Mode switch ───────────────────────────────────────────────────────────────
-function setTerminalMode(mode) {
-  termMode = mode;
-  const isPaper = mode === 'paper';
-
-  // Toggle button styles
-  const btnP = document.getElementById('btn-mode-paper');
-  const btnL = document.getElementById('btn-mode-live');
-  btnP.style.background   = isPaper ? '#fff'   : 'none';
-  btnP.style.border       = isPaper ? '1px solid #cbd5e1' : '1px solid transparent';
-  btnP.style.color        = isPaper ? '#475569' : '#94a3b8';
-  btnL.style.background   = !isPaper ? '#fff'  : 'none';
-  btnL.style.border       = !isPaper ? '1px solid #10b981' : '1px solid transparent';
-  btnL.style.color        = !isPaper ? '#059669' : '#94a3b8';
-
-  // Banner
-  const banner = document.getElementById('term-mode-banner');
-  if (isPaper) {
-    banner.style.background = '#FFFBEB'; banner.style.borderBottomColor = '#FDE68A'; banner.style.color = '#92400E';
-    banner.innerHTML = '📝 <b>Paper mode</b> — simulated engine positions &amp; paper balance. Switch to ⚡ Live for real Upstox data.';
-  } else {
-    banner.style.background = '#F0FDF4'; banner.style.borderBottomColor = '#86EFAC'; banner.style.color = '#166534';
-    banner.innerHTML = '⚡ <b>Live mode</b> — showing real Upstox positions &amp; available margin. Orders go to exchange.';
-  }
-
-  // Show/hide live-only controls
-  document.getElementById('term-search-row').style.display  = isPaper ? 'none' : 'flex';
-  document.getElementById('watchlist-section').style.display = isPaper ? 'none' : (liveWatchlist.length ? 'block' : 'none');
-
-  // Render with current data source
-  if (isPaper) {
-    if (statusData && Object.keys(statusData).length) renderPaperTerminal(statusData);
-  } else {
-    refreshLiveTerminal();
-  }
-}
-
-// ── IST clock (shared) ────────────────────────────────────────────────────────
-function tickTerminalClock() {
-  const el = document.getElementById('ist-time');
-  if (el) el.textContent = new Date().toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata',hour12:false}) + ' IST';
-}
-setInterval(tickTerminalClock, 1000);
-tickTerminalClock();
-
-// ── PAPER MODE ────────────────────────────────────────────────────────────────
-// Called from fetchStatus() → renderStatus() — no clash with live path
-function renderPaperTerminal(data) {
-  if (termMode !== 'paper') return;
-
-  // Balance: use paper capital, NOT Upstox margin
-  const bal = data.capital ?? data.balance ?? data.available_balance;
-  setTermStat('stat-balance', bal !== undefined ? '₹' + Math.round(Number(bal)).toLocaleString('en-IN') : '—', 'neu');
-
-  // Build position list from engine's current_position
-  const positions = [];
-  if (data.current_position && data.current_position.direction) {
-    const pos = data.current_position;
-    const ltp  = data.goldten_last || 0;
-    const qty  = pos.qty || 0;
-    const mult = pos.direction === 'BUY' ? 1 : -1;
-    const pnl  = ltp && pos.entry_price ? (ltp - pos.entry_price) * qty * mult : 0;
-    positions.push({
-      tradingsymbol:  'GOLDTEN',
-      exchange:       'MCX',
-      net_quantity:   qty * mult,
-      average_price:  pos.entry_price || 0,
-      last_price:     ltp,
-      instrument_key: data.goldten_instrument_key || 'MCX_FO|GOLDTEN',
-      day_pnl:        pnl,
-      unrealised:     pnl,
-      _paper:         true,
-    });
-  }
-
-  renderPositionRows(positions, /* isPaper */ true);
-
-  let totalDay = 0, totalOverall = 0;
-  positions.forEach(p => { totalDay += (p.day_pnl || 0); totalOverall += (p.unrealised || 0); });
-  setTermStat('stat-pos-count', positions.length, 'neu');
-  setTermStat('stat-daypnl',    fmtPnlText(totalDay),    totalDay  >= 0 ? 'pos' : 'neg');
-  setTermStat('stat-totalpnl',  fmtPnlText(totalOverall), totalOverall >= 0 ? 'pos' : 'neg');
-
-  document.getElementById('last-sync').textContent = 'paper · ' + new Date().toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata'});
-  document.getElementById('conn-dot').className = 'dot';
-}
-
-// ── LIVE MODE ────────────────────────────────────────────────────────────────
-async function refreshLiveTerminal() {
-  if (termMode !== 'live') return;
-  document.getElementById('conn-dot').className = 'dot';
-  document.getElementById('last-sync').textContent = 'syncing…';
-
+async function fetchStatus() {
   try {
-    // Fetch Upstox positions
-    const r = await fetch('/api/positions');
-    if (!r.ok) throw new Error('positions ' + r.status);
-    const positions = await r.json();
-
-    // Fetch Upstox balance via /api/status (balance key set by BalanceUpdater)
-    const rs = await fetch('/api/status');
-    const sd = await rs.json();
-    // Live balance = Upstox available margin (set by start_balance_updater in upstox_client.py)
-    const liveBal = sd.balance ?? sd.available_balance;
-    setTermStat('stat-balance', liveBal !== undefined ? '₹' + Math.round(Number(liveBal)).toLocaleString('en-IN') : '—', 'neu');
-
-    renderPositionRows(positions, /* isPaper */ false);
-
-    let totalDay = 0, totalOverall = 0;
-    positions.forEach(p => {
-      const qty = p.net_quantity || 0;
-      const avg = p.average_price || 0;
-      const ltp = p.last_price || 0;
-      const mult = qty >= 0 ? 1 : -1;
-      const pnl  = (ltp - avg) * Math.abs(qty) * mult;
-      totalDay     += p.day_pnl     != null ? Number(p.day_pnl)     : pnl;
-      totalOverall += p.unrealised  != null ? Number(p.unrealised)  : pnl;
-    });
-    setTermStat('stat-pos-count', positions.length, 'neu');
-    setTermStat('stat-daypnl',    fmtPnlText(totalDay),    totalDay    >= 0 ? 'pos' : 'neg');
-    setTermStat('stat-totalpnl',  fmtPnlText(totalOverall), totalOverall >= 0 ? 'pos' : 'neg');
-    document.getElementById('last-sync').textContent = 'live · ' + new Date().toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata'});
-
-    // Also refresh watchlist LTPs
-    await refreshWatchlistLtps();
-  } catch(e) {
-    document.getElementById('last-sync').textContent = 'error: ' + e.message;
-    document.getElementById('conn-dot').className = 'dot' + (e.message.includes('401') ? ' red' : '');
-  }
+    const r = await fetch('/api/status');
+    statusData = await r.json();
+    renderStatus(statusData);
+  } catch(e) { console.error(e); }
 }
 
-// ── Shared position row renderer ──────────────────────────────────────────────
-function renderPositionRows(positions, isPaper) {
-  const tbody = document.getElementById('pos-tbody');
-  if (!positions.length) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">${isPaper ? 'No paper position' : 'No open positions'}</td></tr>`;
+async function fetchConversion() {
+  try {
+    const r = await fetch('/api/conversion');
+    const d = await r.json();
+    renderConversion(d);
+  } catch(e) {}
+}
+
+async function fetchTrades() {
+  try {
+    const r = await fetch('/api/trades');
+    const trades = await r.json();
+    renderTrades(trades);
+  } catch(e) {}
+}
+
+function renderStatus(d) {
+  const badge = document.getElementById('eng-badge');
+  badge.textContent = d.running ? 'LIVE' : 'IDLE';
+  badge.className = d.running ? 'badge live' : 'badge';
+
+  document.getElementById('kill-btn').style.opacity = d.kill_switch ? '0.5' : '1';
+
+  const pb = document.getElementById('paper-badge');
+  if (pb) {
+    pb.textContent = d.paper_mode !== false ? '📝 PAPER' : '⚡ LIVE';
+    pb.style.background   = d.paper_mode !== false ? '#FFFBEB' : '#F0FDF4';
+    pb.style.borderColor  = d.paper_mode !== false ? '#FCD34D' : '#86EFAC';
+    pb.style.color        = d.paper_mode !== false ? '#92400E' : '#15803D';
+  }
+
+  document.getElementById('xau-price').textContent     = d.xauusd_last  ? `$${d.xauusd_last.toLocaleString('en-US',{minimumFractionDigits:3})}` : '—';
+  document.getElementById('goldten-price').textContent = d.goldten_last ? `₹${Math.round(d.goldten_last).toLocaleString('en-IN')}` : '—';
+  document.getElementById('dxy-val').textContent       = d.dxy_last     ? d.dxy_last.toFixed(2) : '—';
+  const dxyChg = d.dxy_change_pct || 0;
+  document.getElementById('dxy-sub').textContent       = d.dxy_last
+    ? (dxyChg > 0.15  ? `↑ DXY rising (+${dxyChg.toFixed(2)}%) — bearish gold`
+    : dxyChg < -0.15  ? `↓ DXY falling (${dxyChg.toFixed(2)}%) — bullish gold`
+    : `DXY neutral (${dxyChg > 0 ? '+' : ''}${dxyChg.toFixed(2)}%) · Newsbot`)
+    : 'DX-Y.NYB · Newsbot';
+  document.getElementById('basis-val').textContent     = d.live_basis   ? `₹${Math.round(d.live_basis).toLocaleString('en-IN')}` : '—';
+
+  const usdinr = d.usdinr_is_frozen ? d.usdinr_frozen : d.usdinr_live;
+  document.getElementById('usdinr-rate').textContent   = usdinr ? `₹${usdinr.toFixed(4)}` : '—';
+  document.getElementById('usdinr-status').textContent = d.usdinr_is_frozen ? '🔒 Frozen · Evening session' : 'Live · NSE Futures';
+  document.getElementById('usdinr-status').style.color = d.usdinr_is_frozen ? 'var(--gold)' : 'var(--muted)';
+
+  const bias = d.htf_bias?.bias || 'NONE';
+  const biasEl = document.getElementById('htf-bias');
+  biasEl.textContent = bias;
+  biasEl.className = `bias ${bias}`;
+  const rh = d.htf_bias?.ref_high, rl = d.htf_bias?.ref_low;
+  document.getElementById('htf-ref').textContent =
+    rh ? `Ref High: $${rh.toFixed(3)}` : rl ? `Ref Low: $${rl.toFixed(3)}` : 'No pivot reference';
+
+  document.getElementById('cfg-threshold').value = d.swing_threshold ?? 0.30;
+  document.getElementById('threshold-label').textContent = (d.swing_threshold ?? 0.30).toFixed(2);
+
+  const now = new Date();
+  const ist = new Date(now.toLocaleString('en-US', {timeZone:'Asia/Kolkata'}));
+  const hm = ist.getHours() * 60 + ist.getMinutes();
+  const sb = document.getElementById('session-badge');
+  if (hm >= 9*60 && hm < 17*60) {
+    sb.textContent = '🟡 Morning (USDINR live)';
+  } else if (hm >= 17*60 && hm <= 23*60+25) {
+    sb.textContent = '🌙 Evening (USDINR frozen)';
+    sb.style.background = '#FFFBEB'; sb.style.borderColor = '#FCD34D'; sb.style.color = '#92400E';
+  } else {
+    sb.textContent = '⬛ Market closed';
+  }
+
+  renderSwings(d.swing_levels || [], d.goldten_last || 0, d.swing_threshold || 0.30);
+
+  const pos = d.current_position;
+  const posCard = document.getElementById('pos-card');
+  if (pos) {
+    posCard.style.display = 'block';
+    document.getElementById('pos-dir').textContent = pos.direction;
+    document.getElementById('pos-dir').className = `pos-dir ${pos.direction}`;
+    document.getElementById('pos-entry').textContent  = `₹${Math.round(pos.entry_price).toLocaleString('en-IN')}`;
+    document.getElementById('pos-stop').textContent   = `₹${Math.round(pos.stop_price).toLocaleString('en-IN')}`;
+    document.getElementById('pos-target').textContent = `₹${Math.round(pos.target_price).toLocaleString('en-IN')}`;
+    document.getElementById('pos-qty').textContent    = pos.qty;
+    document.getElementById('pos-xau').textContent    = `$${pos.xauusd_entry?.toFixed(3)}`;
+    document.getElementById('pos-usdinr').textContent = `₹${pos.usdinr_rate?.toFixed(4)}`;
+    document.getElementById('pos-basis').textContent  = `₹${Math.round(pos.basis||0).toLocaleString('en-IN')}`;
+    document.getElementById('pos-goldten').textContent = d.goldten_last ? `₹${Math.round(d.goldten_last).toLocaleString('en-IN')}` : '—';
+    if (d.goldten_last && pos.entry_price) {
+      const pnl = (d.goldten_last - pos.entry_price) * pos.qty * (pos.direction==='BUY'?1:-1);
+      const el = document.getElementById('pos-pnl');
+      el.textContent = `₹${Math.round(pnl).toLocaleString('en-IN')}`;
+      el.style.color = pnl >= 0 ? 'var(--green)' : 'var(--red)';
+    }
+  } else {
+    posCard.style.display = 'none';
+  }
+
+  if (document.getElementById('cfg-rr'))       document.getElementById('cfg-rr').value       = d.risk_reward ?? 5;
+  if (document.getElementById('cfg-risk'))     document.getElementById('cfg-risk').value     = d.risk_pct ?? 2;
+  if (document.getElementById('cfg-maxlots'))  document.getElementById('cfg-maxlots').value  = d.max_lots ?? 5;
+  if (document.getElementById('cfg-swingage')) document.getElementById('cfg-swingage').value = d.swing_max_age_hours ?? 48;
+  if (document.getElementById('cfg-dxy'))      document.getElementById('cfg-dxy').value      = d.dxy_enabled ? 'true' : 'false';
+  if (document.getElementById('cfg-paper'))    document.getElementById('cfg-paper').value    = d.paper_mode !== false ? 'true' : 'false';
+}
+
+function renderConversion(d) {
+  document.getElementById('conv-xau').textContent     = d.xauusd    ? `$${d.xauusd.toFixed(3)}` : '—';
+  document.getElementById('conv-mid').textContent     = d.xauusd    ? `$${(d.xauusd*0.35274).toFixed(4)}/10gms` : '—';
+  document.getElementById('conv-usdinr').textContent  = d.usdinr    ? `₹${d.usdinr.toFixed(4)}` : '—';
+  document.getElementById('conv-result').textContent  = d.mcx_equiv ? `₹${Math.round(d.mcx_equiv).toLocaleString('en-IN')}` : '—';
+  document.getElementById('conv-goldten').textContent = d.goldten_last ? `₹${Math.round(d.goldten_last).toLocaleString('en-IN')}` : '—';
+  document.getElementById('conv-basis').textContent   = d.live_basis !== undefined
+    ? `₹${Math.round(d.live_basis).toLocaleString('en-IN')} (${d.basis_pct?.toFixed(3)}%)` : '—';
+  document.getElementById('conv-frozen-tag').innerHTML = d.usdinr_frozen
+    ? '<span class="frozen-tag">🔒 FROZEN</span>' : '';
+}
+
+function renderSwings(levels, goldten, threshold) {
+  const tbody = document.getElementById('swing-tbody');
+  if (!levels || levels.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">No swing levels detected yet</td></tr>';
     return;
   }
-  tbody.innerHTML = '';
-  positions.forEach(pos => {
-    const sym   = pos.tradingsymbol || pos.instrument_key || '—';
-    const qty   = pos.net_quantity ?? 0;
-    const avg   = Number(pos.average_price || 0);
-    const ltp   = Number(pos.last_price || 0);
-    const side  = qty > 0 ? 'LONG' : qty < 0 ? 'SHORT' : 'FLAT';
-    const badge = side === 'LONG' ? '<span class="badge-long">L</span>' : side === 'SHORT' ? '<span class="badge-short">S</span>' : '';
-    const mult  = qty >= 0 ? 1 : -1;
-    const pnl   = pos.day_pnl     != null ? Number(pos.day_pnl)    : (ltp - avg) * Math.abs(qty) * mult;
-    const overall = pos.unrealised != null ? Number(pos.unrealised) : pnl;
-    const ltpCls = (prevLtpMap[sym] !== undefined) ? (ltp > prevLtpMap[sym] ? 'ltp-up' : ltp < prevLtpMap[sym] ? 'ltp-down' : '') : '';
-    prevLtpMap[sym] = ltp;
-    const instrKey = pos.instrument_key || sym;
-
-    const tr = document.createElement('tr'); tr.className = 'pos-row';
-    if (isPaper) {
-      // Paper: B/S open the paper toast, SQ fires engine force-exit
-      tr.innerHTML = `<td><b>${sym}</b>${badge}</td><td>${Math.abs(qty)}</td><td>₹${avg.toFixed(0)}</td>
-        <td class="${ltpCls}">₹${ltp.toFixed(0)}</td>
-        <td class="${pnl>=0?'pos':'neg'}">${fmtPnlText(pnl)}</td>
-        <td class="${overall>=0?'pos':'neg'}">${fmtPnlText(overall)}</td>
-        <td><div class="action-btns">
-          <button class="btn-buy"  onclick="paperOrderToast('BUY','${sym}',${ltp})">B</button>
-          <button class="btn-sell" onclick="paperOrderToast('SELL','${sym}',${ltp})">S</button>
-          <button class="btn-sq"   onclick="paperSqOff('${sym}')">SQ</button>
-        </div></td>`;
-    } else {
-      // Live: B/S open real order modal, SQ fires market order
-      tr.innerHTML = `<td><b>${sym}</b>${badge}</td><td>${Math.abs(qty)}</td><td>₹${avg.toFixed(0)}</td>
-        <td class="${ltpCls}">₹${ltp.toFixed(0)}</td>
-        <td class="${pnl>=0?'pos':'neg'}">${fmtPnlText(pnl)}</td>
-        <td class="${overall>=0?'pos':'neg'}">${fmtPnlText(overall)}</td>
-        <td><div class="action-btns">
-          <button class="btn-buy"  onclick="openOrderModal('${instrKey}','${sym}','BUY',${ltp})">B</button>
-          <button class="btn-sell" onclick="openOrderModal('${instrKey}','${sym}','SELL',${ltp})">S</button>
-          <button class="btn-sq"   onclick="liveSquareOff('${instrKey}','${sym}',${qty},${ltp})">SQ</button>
-        </div></td>`;
-    }
-    tbody.appendChild(tr);
-  });
-}
-
-// ── Paper action handlers ─────────────────────────────────────────────────────
-function paperOrderToast(side, sym, ltp) {
-  upstoxToast(`📝 Paper: ${side} ${sym} @ ₹${Math.round(ltp)} — switch to ⚡ Live to place real orders`);
-}
-function paperSqOff(sym) {
-  if (confirm(`Paper mode: force-close ${sym} position?`)) {
-    fetch('/engine/force-exit', {method:'POST'}).then(() => { fetchStatus(); upstoxToast(`📝 Paper position closed`); });
-  }
-}
-
-// ── Live order modal ──────────────────────────────────────────────────────────
-function openOrderModal(key, sym, side, ltp) {
-  document.getElementById('ord-sym').value   = key || sym;
-  document.getElementById('ord-price').value = ltp ? Math.round(ltp) : '';
-  document.getElementById('ord-qty').value   = 1;
-  document.getElementById('modal-title-text').textContent = `Order — ${sym}`;
-  document.getElementById('order-modal').style.display = 'flex';
-}
-function closeOrderModal() {
-  document.getElementById('order-modal').style.display = 'none';
-}
-
-async function submitLiveOrder(direction) {
-  const instrKey  = document.getElementById('ord-sym').value.trim();
-  const price     = parseFloat(document.getElementById('ord-price').value) || 0;
-  const qty       = parseInt(document.getElementById('ord-qty').value) || 1;
-  const orderType = document.getElementById('ord-type').value;
-  const product   = document.getElementById('ord-product').value;
-  if (!instrKey) { upstoxToast('⚠ Enter instrument key'); return; }
-  closeOrderModal();
-  try {
-    const r = await fetch('/api/manual-order', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({direction, instrument_key: instrKey, qty, price, order_type: orderType, product})
-    });
-    const d = await r.json();
-    if (d.order_id || d.ok) {
-      upstoxToast(`✅ ${direction} ${qty}× ${instrKey} → ${d.order_id || 'ok'}`);
-      setTimeout(refreshLiveTerminal, 1500);
-    } else {
-      upstoxToast(`❌ ${d.error || 'Order failed'}`);
-    }
-  } catch(e) { upstoxToast('❌ Network error'); }
-}
-
-async function liveSquareOff(key, sym, qty, ltp) {
-  const side = qty >= 0 ? 'SELL' : 'BUY';
-  const absQty = Math.abs(qty);
-  if (!confirm(`Square off ${absQty}× ${sym} at market?`)) return;
-  try {
-    const r = await fetch('/api/manual-order', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({direction: side, instrument_key: key, qty: absQty, order_type: 'MARKET', product: 'D', price: 0})
-    });
-    const d = await r.json();
-    if (d.order_id || d.ok) { upstoxToast(`✅ SQ ${sym} ${side} → ${d.order_id || 'ok'}`); setTimeout(refreshLiveTerminal, 1500); }
-    else upstoxToast(`❌ ${d.error || 'SQ failed'}`);
-  } catch(e) { upstoxToast('❌ Network error'); }
-}
-
-// ── Watchlist (live mode) ─────────────────────────────────────────────────────
-async function addWatchlistSymbol() {
-  const raw = document.getElementById('sym-input').value.trim().toUpperCase();
-  const exchange = document.getElementById('exchange-sel').value;
-  if (!raw) return;
-  try {
-    const r = await fetch(`/api/search-instrument?query=${encodeURIComponent(raw)}&exchange=${exchange}`);
-    const d = r.ok ? await r.json() : {data:[]};
-    const results = d.data || d.results || [];
-    const item = results[0];
-    const key = item?.instrument_key || raw;
-    const sym = item?.trading_symbol || raw;
-    if (!liveWatchlist.find(w => w.key === key)) {
-      liveWatchlist.push({sym, key, exchange: item?.exchange || exchange, ltp: 0, change: 0});
-      upstoxToast(`➕ Added ${sym}`);
-      await refreshWatchlistLtps();
-      renderWatchlist();
-    } else { upstoxToast(`${sym} already in watchlist`); }
-  } catch(e) {
-    liveWatchlist.push({sym: raw, key: raw, exchange, ltp: 0, change: 0});
-    renderWatchlist();
-  }
-  document.getElementById('sym-input').value = '';
-}
-
-async function refreshWatchlistLtps() {
-  for (const item of liveWatchlist) {
-    try {
-      const r = await fetch(`/api/ltp?instrument_key=${encodeURIComponent(item.key)}`);
-      if (r.ok) { const d = await r.json(); item.ltp = d.ltp || item.ltp; }
-    } catch(e) {}
-  }
-  if (liveWatchlist.length) renderWatchlist();
-}
-
-function renderWatchlist() {
-  const sec = document.getElementById('watchlist-section');
-  const tbody = document.getElementById('watch-tbody');
-  if (!liveWatchlist.length || termMode !== 'live') { sec.style.display = 'none'; return; }
-  sec.style.display = 'block';
-  tbody.innerHTML = liveWatchlist.map((item, idx) => {
-    const ltpCls = item.change > 0 ? 'ltp-up' : item.change < 0 ? 'ltp-down' : '';
-    return `<tr class="pos-row">
-      <td><b>${item.sym}</b> <span style="font-size:9px;background:#f1f5f9;padding:1px 4px;border-radius:2px;color:#64748b;">${item.exchange}</span></td>
-      <td class="${ltpCls}">${item.ltp ? '₹' + Math.round(item.ltp).toLocaleString('en-IN') : '—'}</td>
-      <td>${item.change ? (item.change>=0?'+':'') + item.change.toFixed(2) : '—'}</td>
-      <td><div class="action-btns" style="display:flex;">
-        <button class="btn-buy"  onclick="openOrderModal('${item.key}','${item.sym}','BUY',${item.ltp||0})">B</button>
-        <button class="btn-sell" onclick="openOrderModal('${item.key}','${item.sym}','SELL',${item.ltp||0})">S</button>
-        <button class="btn-sq"   onclick="removeWatchlistItem(${idx})" style="background:#fff;border:1px solid #e2e8f0;font-size:10px;" title="Remove">✕</button>
-      </div></td>
+  const sorted = [...levels].sort((a,b) => new Date(b.timestamp)-new Date(a.timestamp));
+  tbody.innerHTML = sorted.map(lvl => {
+    const mcq    = Math.round(lvl.mcx_equiv || 0);
+    const dist   = goldten > 0 ? Math.abs(goldten - mcq) / mcq * 100 : null;
+    const isNear = dist !== null && dist <= threshold;
+    const tag    = lvl.swing_type === 'swing_high'
+      ? '<span class="tag tag-high">HIGH</span>'
+      : '<span class="tag tag-low">LOW</span>';
+    const nearTag = isNear ? '<span class="near-tag">⚡ NEAR</span>' : '';
+    const ts = lvl.timestamp ? new Date(lvl.timestamp).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour12:false}) : '—';
+    return `<tr>
+      <td>${tag}</td>
+      <td style="font-weight:600">$${parseFloat(lvl.xau_price).toFixed(3)}</td>
+      <td style="font-weight:600">₹${mcq.toLocaleString('en-IN')}${nearTag}</td>
+      <td>₹${parseFloat(lvl.usdinr_rate||0).toFixed(4)}</td>
+      <td style="color:var(--muted);font-size:11px">${ts}</td>
+      <td style="font-weight:${isNear?'700':'400'};color:${isNear?'var(--green)':'var(--muted)'}">${dist!==null?dist.toFixed(3)+'%':'—'}</td>
+      <td><span style="color:${lvl.touched?'var(--muted)':'var(--green)'};font-weight:600">${lvl.touched?'Touched':'Active'}</span></td>
     </tr>`;
   }).join('');
 }
 
-function removeWatchlistItem(idx) { liveWatchlist.splice(idx, 1); renderWatchlist(); }
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function fmtPnlText(n) {
-  if (n === null || n === undefined || isNaN(n)) return '—';
-  const v = Number(n);
-  return (v >= 0 ? '+' : '') + '₹' + Math.abs(Math.round(v)).toLocaleString('en-IN');
+function renderTrades(trades) {
+  const tbody = document.getElementById('trade-tbody');
+  document.getElementById('trade-count').textContent = `${trades.length} trade(s)`;
+  if (!trades || trades.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:24px">No trades yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = trades.map(t => {
+    const pnl    = t.pnl != null ? t.pnl : null;
+    const pnlStr = pnl != null ? `₹${Math.round(pnl).toLocaleString('en-IN')}` : '—';
+    const pnlCls = pnl == null ? '' : pnl >= 0 ? 'pnl-pos' : 'pnl-neg';
+    const ts     = new Date(t.entry_time).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour12:false});
+    const dc     = t.direction==='BUY' ? 'var(--bull)' : 'var(--bear)';
+    return `<tr>
+      <td style="color:var(--muted);font-size:11px">${ts}</td>
+      <td style="color:${dc};font-weight:800">${t.direction}</td>
+      <td>$${parseFloat(t.xauusd_entry||0).toFixed(3)}</td>
+      <td style="font-weight:600">₹${Math.round(t.entry_price||0).toLocaleString('en-IN')}</td>
+      <td style="color:var(--red)">₹${Math.round(t.stop_price||0).toLocaleString('en-IN')}</td>
+      <td style="color:var(--green)">₹${Math.round(t.target_price||0).toLocaleString('en-IN')}</td>
+      <td>${t.qty}</td>
+      <td>₹${parseFloat(t.usdinr_rate||0).toFixed(4)}</td>
+      <td class="${pnlCls}">${pnlStr}</td>
+      <td><span style="color:${t.status==='OPEN'?'var(--gold)':'var(--muted)'};font-weight:600">${t.status}</span></td>
+    </tr>`;
+  }).join('');
 }
-function setTermStat(id, text, cls) {
-  const el = document.getElementById(id); if (!el) return;
-  el.textContent = text;
-  if (cls) el.className = 'stat-val ' + cls;
+
+async function engineStart() { await fetch('/engine/start',{method:'POST'}); fetchStatus(); }
+async function engineStop()  { await fetch('/engine/stop', {method:'POST'}); fetchStatus(); }
+async function forceExit() {
+  if (!confirm('Force close position at market price?')) return;
+  await fetch('/engine/force-exit',{method:'POST'}); fetchStatus();
+}
+async function toggleKill() {
+  const url = statusData?.kill_switch ? '/engine/reset-kill-switch' : '/engine/kill-switch';
+  await fetch(url,{method:'POST'}); fetchStatus();
+}
+async function saveConfig() {
+  const payload = {
+    swing_level_threshold_pct: parseFloat(document.getElementById('cfg-threshold').value),
+    risk_reward:               parseFloat(document.getElementById('cfg-rr').value),
+    risk_pct:                  parseFloat(document.getElementById('cfg-risk').value),
+    max_lots:                  parseInt(document.getElementById('cfg-maxlots').value),
+    swing_max_age_hours:       parseInt(document.getElementById('cfg-swingage').value),
+    dxy_enabled:               document.getElementById('cfg-dxy').value === 'true',
+    paper_mode:                document.getElementById('cfg-paper').value === 'true',
+  };
+  const r = await fetch('/config/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const d = await r.json();
+  alert('Saved: ' + Object.keys(d.updated).join(', '));
+  fetchStatus();
 }
 
-function upstoxToast(msg) {
-  const t = document.getElementById('upstox-toast');
-  t.textContent = msg; t.style.display = 'block';
-  clearTimeout(upstoxToast._timer);
-  upstoxToast._timer = setTimeout(() => t.style.display = 'none', 3000);
+async function tick() { await fetchStatus(); await fetchConversion(); }
+tick(); fetchTrades();
+setInterval(tick, 5000);
+setInterval(fetchTrades, 15000);
+
+// ── Macro Events Calendar ────────────────────────────────────────────────────
+
+let _eventsDays = 7;
+
+function setEventsWindow(days, btn) {
+  _eventsDays = days;
+  document.querySelectorAll('.events-window-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  fetchMacroEvents();
 }
 
-// ── Wire up live-mode buttons ─────────────────────────────────────────────────
-document.getElementById('add-sym-btn')?.addEventListener('click', addWatchlistSymbol);
-document.getElementById('sym-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') addWatchlistSymbol(); });
-document.getElementById('order-btn')?.addEventListener('click', () => openOrderModal('', 'GOLDTEN', 'BUY', statusData?.goldten_last || 0));
-document.getElementById('refresh-live-btn')?.addEventListener('click', refreshLiveTerminal);
-
-// ── fetchStatus (paper terminal updates on every poll) ───────────────────────
-async function fetchStatus() {
+async function fetchMacroEvents() {
   try {
-    const r = await fetch('/api/status'); statusData = await r.json();
-    renderStatus(statusData);
-    if (termMode === 'paper') renderPaperTerminal(statusData);
-  } catch(e) {}
+    const r = await fetch(`/api/macro-events?days=${_eventsDays}`);
+    const d = await r.json();
+    renderEvents(d.events || []);
+    document.getElementById('events-count').textContent = `${d.count} events`;
+  } catch(e) {
+    document.getElementById('events-list').innerHTML =
+      '<li class="events-empty">Failed to load events</li>';
+  }
 }
 
-// ── Live auto-refresh every 15s ───────────────────────────────────────────────
-setInterval(() => { if (termMode === 'live') refreshLiveTerminal(); }, 15000);
+function renderEvents(events) {
+  const ul  = document.getElementById('events-list');
+  const now = Date.now() / 1000;
 
-// Initialise in paper mode
-setTerminalMode('paper');
-// Initial fetch and interval
-fetchStatus(); fetchConversion(); fetchTrades(); fetchIntelligence(); fetchMacroEvents();
-setInterval(fetchStatus, 5000); setInterval(fetchConversion, 5000); setInterval(fetchTrades, 15000);
-setInterval(fetchIntelligence, 1800000); setInterval(fetchMacroEvents, 3600000);
+  if (!events.length) {
+    ul.innerHTML = '<li class="events-empty">No events in selected window</li>';
+    return;
+  }
+
+  const IMPACT_DOT = { HIGH: '#EF4444', MEDIUM: '#F59E0B', LOW: '#9CA3AF' };
+
+  ul.innerHTML = events.map(ev => {
+    const dot     = IMPACT_DOT[ev.impact] || '#9CA3AF';
+    const hrs     = ev.in_hours;
+    const isSoon  = hrs >= 0 && hrs <= 48;
+    const badgeClass = isSoon ? 'event-badge event-soon' : 'event-badge';
+
+    let timeLabel;
+    if (hrs < 0)          timeLabel = `${ev.date_ist}`;
+    else if (hrs < 1)     timeLabel = 'In &lt;1h';
+    else if (hrs < 24)    timeLabel = `In ${Math.round(hrs)}h`;
+    else                  timeLabel = ev.date_ist;
+
+    const badge = isSoon
+      ? `<span class="${badgeClass}">⚡ ${ev.time_ist}</span>`
+      : `<span class="${badgeClass}">${ev.time_ist}</span>`;
+
+    const src = ev.source === 'finnhub' ? '' :
+                ev.source === 'fed_rss' ? ' · Fed RSS' : '';
+
+    return `
+      <li class="event-item">
+        <span class="event-impact" style="background:${dot}"></span>
+        <div class="event-body">
+          <div class="event-title" title="${ev.title}">${ev.title}</div>
+          <div class="event-meta">${ev.impact} · ${timeLabel}${src}</div>
+        </div>
+        ${badge}
+      </li>`;
+  }).join('');
+}
+
+fetchMacroEvents();
+setInterval(fetchMacroEvents, 3600000);  // refresh every hour
 </script>
 </body>
 </html>

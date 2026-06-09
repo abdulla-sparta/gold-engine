@@ -154,7 +154,7 @@ class GoldEngine:
             log.debug("[GoldEngine] BUY near swing_high — skip (wrong level type)")
             return
 
-        # 6. DXY confluence
+        # 6. DXY confluence — uses real DXY from newsbot (CONFIG["dxy_last"] + CONFIG["dxy_change_pct"])
         dxy_candles = dxy_feed.buf_15m.all_closed()
         if not dxy_confluence(dxy_candles, direction):
             return
@@ -351,6 +351,7 @@ class GoldEngine:
             "swing_threshold":  CONFIG.get("swing_level_threshold_pct"),
             "paper_mode":       CONFIG.get("paper_mode", True),
             "dxy_last":         CONFIG.get("dxy_last"),
+            "dxy_change_pct":   CONFIG.get("dxy_change_pct", 0.0),  # real DXY from newsbot
             # Live Upstox balance — populated by start_background_updaters().
             # Paper mode: paper capital. Live mode: real Upstox available margin.
             "balance":          CONFIG.get("balance", CONFIG.get("capital", 0)),

@@ -41,10 +41,42 @@ _EMPTY = {
 }
 
 
+def _fetch_prices(base_url: str):
+    """
+    Pull /api/prices/ from newsbot and update CONFIG["dxy_last"] with real DXY
+    (DX-Y.NYB via yfinance — not the EUR/USD proxy used by Twelve Data).
+    Also syncs xauusd_last if newsbot has a fresher price.
+    """
+    try:
+        r = requests.get(base_url.rstrip("/") + "/api/prices/", timeout=10)
+        if not r.ok:
+            return
+        data = r.json()
+
+        # Real DXY — update CONFIG so dxy_confluence() uses it
+        dxy = data.get("dxy", {})
+        if dxy.get("price"):
+            CONFIG["dxy_last"]       = dxy["price"]
+            CONFIG["dxy_change_pct"] = dxy.get("change_pct", 0.0)
+            log.info(f"[Intelligence] DXY updated from newsbot: {dxy['price']:.2f} "
+                     f"({dxy.get('change_pct', 0):+.3f}%)")
+
+        # XAU spot — only overwrite if we don't have a fresher value from Twelve Data
+        xau = data.get("xau", {})
+        if xau.get("price") and not CONFIG.get("xauusd_last"):
+            CONFIG["xauusd_last"] = xau["price"]
+
+    except Exception as e:
+        log.warning(f"[Intelligence] /api/prices/ fetch error: {e}")
+
+
 def _fetch() -> dict:
     url = CONFIG.get("newsbot_url", "")
     if not url:
         return _EMPTY.copy()
+
+    # Always sync DXY + prices regardless of intelligence signal availability
+    _fetch_prices(url)
 
     endpoint = url.rstrip("/") + "/api/intelligence/"
     try:

@@ -54,7 +54,7 @@ CONFIG = {
 
     # ── Confluence filters ────────────────────────────────────────────────────
     "dxy_enabled":            True,       # use DXY as confluence filter
-    "dxy_symbol":             "EUR/USD", # EUR/USD used as DXY proxy (inverted, EUR=57.6% of DXY)
+    "dxy_symbol":             "DX-Y.NYB", # Real DXY from newsbot /api/prices/ (yfinance)
     "usdinr_trend_enabled":   True,
 
     # ── Telegram ──────────────────────────────────────────────────────────────
@@ -74,6 +74,7 @@ CONFIG = {
     "usdinr_is_frozen":    False,
     "xauusd_last":         0.0,
     "dxy_last":            0.0,
+    "dxy_change_pct":      0.0,         # % change from newsbot
     "goldten_last":        0.0,
     "live_basis":          0.0,          # GOLDTEN - converted XAU spot
     "current_position":    None,         # active trade dict or None

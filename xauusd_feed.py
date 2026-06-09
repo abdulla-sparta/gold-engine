@@ -1,6 +1,7 @@
 """
-xauusd_feed.py — Twelve Data polling feed for XAU/USD and DXY
-Polls every 60 seconds (free tier safe: 800 credits/day, uses ~24/day for XAU + DXY).
+xauusd_feed.py — Twelve Data polling feed for XAU/USD only.
+DXY is now sourced from the newsbot /api/prices/ endpoint (real DX-Y.NYB, not EUR/USD proxy).
+This saves ~400 Twelve Data credits/day.
 Builds 1m, 5m, 15m OHLC candle buffers internally.
 """
 import time
@@ -179,12 +180,8 @@ def seed_buffers():
         _xauusd.push_1m_candle(c)
     log.info(f"[TwelveData] XAU/USD seeded with {len(xau_candles)} 1m candles")
 
-    if CONFIG.get("dxy_enabled"):
-        log.info("[TwelveData] Seeding DXY buffer...")
-        dxy_candles = _fetch_historical(_dxy.twelve_symbol, outputsize=100)
-        for c in dxy_candles:
-            _dxy.push_1m_candle(c)
-        log.info(f"[TwelveData] DXY seeded with {len(dxy_candles)} 1m candles")
+    # DXY is now sourced from newsbot /api/prices/ — no Twelve Data credits used
+    log.info("[TwelveData] DXY polling disabled — using newsbot real DXY (DX-Y.NYB)")
 
     # Seed 5m/15m from historical 5m endpoint too
     _seed_higher_tf(_xauusd, "5min", 60)
@@ -237,14 +234,7 @@ def _poll_loop():
                 CONFIG["xauusd_last"] = c["close"]
                 log.debug(f"[TwelveData] XAU/USD 1m close={c['close']:.3f}")
 
-            # DXY (every other poll to save credits)
-            if CONFIG.get("dxy_enabled"):
-                c_dxy = _fetch_latest_candle(_dxy.twelve_symbol)
-                if c_dxy and c_dxy["timestamp"] != _last_dxy_ts:
-                    _last_dxy_ts = c_dxy["timestamp"]
-                    with _lock:
-                        _dxy.push_1m_candle(c_dxy)
-                    CONFIG["dxy_last"] = c_dxy["close"]
+            # DXY now comes from newsbot intelligence_client — no polling here
 
         except Exception as e:
             log.warning(f"[TwelveData] Poll error: {e}")
