@@ -40,9 +40,10 @@ def startup():
         start_intel_polling()
         log.info("[Startup] Intelligence client started")
 
-    from upstox_client import start_goldten_ws, start_usdinr_poller
+    from upstox_client import start_goldten_ws, start_usdinr_poller, start_background_updaters
     start_goldten_ws()
     start_usdinr_poller()
+    start_background_updaters()   # <-- ADDED: updates balance every minute
 
     # Restore position from DB
     pos = db.get("current_position")
@@ -95,25 +96,7 @@ def index():
     return render_template("dashboard.html")
 
 
-
-"""
-trading_terminal_routes.py
-──────────────────────────
-Paste these routes into app.py (before the `if __name__ == "__main__":` block).
-
-They back the trading terminal widget:
-  GET  /api/positions          — open positions from Upstox
-  GET  /api/ltp                — LTP for a given instrument_key
-  GET  /api/search-instrument  — instrument search (proxied from Upstox)
-  POST /api/manual-order       — place a manual BUY/SELL order
-"""
-
-
-
-log = logging.getLogger(__name__)
-
-
-# ── Positions ─────────────────────────────────────────────────────────────────
+# ── Positions API (with debug logging) ───────────────────────────────────────
 
 @app.route("/api/positions")
 def api_positions():
@@ -123,6 +106,11 @@ def api_positions():
     """
     from upstox_client import get_positions
     positions = get_positions()
+    log.info(f"[DEBUG /api/positions] response type: {type(positions)}, count: {len(positions)}")
+    if positions:
+        log.info(f"[DEBUG /api/positions] first position: {positions[0]}")
+    else:
+        log.warning("[DEBUG /api/positions] No positions returned from Upstox")
 
     # Enrich with live LTP where missing
     goldten_last = CONFIG.get("goldten_last", 0)
@@ -286,7 +274,7 @@ def api_manual_order():
             return jsonify({"error": err_msg}), 400
     except Exception as e:
         log.error(f"[ManualOrder] exception: {e}")
-        return jsonify({"error": str(e)}), 500    
+        return jsonify({"error": str(e)}), 500
 
 
 # ── Engine control ────────────────────────────────────────────────────────────
@@ -362,7 +350,9 @@ def update_config():
 @app.route("/api/status")
 def api_status():
     from gold_engine import get_engine
-    return jsonify(get_engine().get_status())
+    status = get_engine().get_status()
+    log.info(f"[DEBUG /api/status] balance={status.get('balance')}, goldten_last={status.get('goldten_last')}")
+    return jsonify(status)
 
 
 @app.route("/api/trades")

@@ -4,6 +4,7 @@ Also handles:
   - Live margin fetch for GOLDTEN
   - Order placement on MCX
   - Ledger balance fetch
+  - Real‑time balance and positions for dashboard
 """
 import os
 import json
@@ -29,24 +30,60 @@ def _headers():
 BASE = "https://api.upstox.com/v2"
 
 
+# ── Balance & Positions (live) ─────────────────────────────────────────────────
+
 def fetch_ledger_balance() -> float:
     """Fetch available cash balance from Upstox ledger."""
+    token = CONFIG.get("upstox_access_token")
+    if not token:
+        log.warning("[Balance] No Upstox token - returning fallback")
+        return CONFIG.get("capital", 200000)
+
     try:
         r = requests.get(f"{BASE}/user/fund-and-margin", headers=_headers(), timeout=10)
         if r.status_code != 200:
-            log.warning(f"[Upstox] ledger fetch failed: {r.status_code}")
+            log.warning(f"[Balance] fetch failed: {r.status_code} {r.text[:200]}")
             return CONFIG.get("capital", 200000)
+
         data = r.json()
         # equity segment available margin
         equity = data.get("data", {}).get("equity", {})
         available = equity.get("available_margin", 0)
         if available:
-            log.info(f"[Upstox] Available balance: ₹{available:,.0f}")
+            log.info(f"[Balance] Available: ₹{available:,.0f}")
             return float(available)
+
+        # fallback: total balance
+        total = equity.get("total_balance", 0)
+        if total:
+            return float(total)
+
         return CONFIG.get("capital", 200000)
     except Exception as e:
-        log.warning(f"[Upstox] balance fetch error: {e}")
+        log.warning(f"[Balance] error: {e}")
         return CONFIG.get("capital", 200000)
+
+
+def get_positions() -> list:
+    """Fetch current open positions from Upstox portfolio."""
+    token = CONFIG.get("upstox_access_token")
+    if not token:
+        log.warning("[Positions] No token")
+        return []
+
+    try:
+        r = requests.get(f"{BASE}/portfolio/short-term-positions", headers=_headers(), timeout=10)
+        if r.status_code != 200:
+            log.warning(f"[Positions] HTTP {r.status_code}: {r.text[:200]}")
+            return []
+
+        data = r.json()
+        positions = data.get("data", [])
+        log.info(f"[Positions] Found {len(positions)} open positions")
+        return positions
+    except Exception as e:
+        log.exception("[Positions] Exception")
+        return []
 
 
 def fetch_margin_for_goldten(qty: int = 1) -> float:
@@ -70,15 +107,15 @@ def fetch_margin_for_goldten(qty: int = 1) -> float:
             timeout=10
         )
         if r.status_code != 200:
-            log.warning(f"[Upstox] margin fetch failed: {r.status_code} {r.text[:200]}")
+            log.warning(f"[Margin] fetch failed: {r.status_code} {r.text[:200]}")
             return 15000.0   # fallback estimate
         data = r.json()
         total = data.get("data", {}).get("required_margin", 0)
         per_lot = float(total) / qty if qty > 0 else float(total)
-        log.info(f"[Upstox] GOLDTEN margin per lot: ₹{per_lot:,.0f}")
+        log.info(f"[Margin] GOLDTEN per lot: ₹{per_lot:,.0f}")
         return per_lot
     except Exception as e:
-        log.warning(f"[Upstox] margin fetch error: {e}")
+        log.warning(f"[Margin] error: {e}")
         return 15000.0
 
 
@@ -105,7 +142,7 @@ def fetch_usdinr_rate() -> float:
             timeout=8
         )
         if r.status_code != 200:
-            log.warning(f"[Upstox] USDINR fetch failed: {r.status_code}")
+            log.warning(f"[USDINR] fetch failed: {r.status_code}")
             return CONFIG.get("usdinr_live", 85.0)
         resp_data = r.json().get("data", {})
         item = resp_data.get(instrument_key)
@@ -118,7 +155,7 @@ def fetch_usdinr_rate() -> float:
         log.warning(f"[USDINR] LTP not found in response: {r.text[:150]}")
         return CONFIG.get("usdinr_live", 85.0)
     except Exception as e:
-        log.warning(f"[Upstox] USDINR fetch error: {e}")
+        log.warning(f"[USDINR] fetch error: {e}")
         return CONFIG.get("usdinr_live", 85.0)
 
 
@@ -167,13 +204,13 @@ def place_order(direction: str, qty: int, price: float, order_type: str = "LIMIT
             timeout=10
         )
         if r.status_code != 200:
-            log.error(f"[Upstox] Order failed: {r.status_code} — {r.text[:300]}")
+            log.error(f"[Order] failed: {r.status_code} — {r.text[:300]}")
             return None
         order_id = r.json().get("data", {}).get("order_id")
-        log.info(f"[Upstox] Order placed: {direction} {qty}x GOLDTEN @ ₹{price:.0f} → {order_id}")
+        log.info(f"[Order] placed: {direction} {qty}x GOLDTEN @ ₹{price:.0f} → {order_id}")
         return order_id
     except Exception as e:
-        log.error(f"[Upstox] place_order error: {e}")
+        log.error(f"[Order] exception: {e}")
         return None
 
 
@@ -187,20 +224,8 @@ def cancel_order(order_id: str) -> bool:
         )
         return r.status_code == 200
     except Exception as e:
-        log.warning(f"[Upstox] cancel_order error: {e}")
+        log.warning(f"[Cancel] error: {e}")
         return False
-
-
-def get_positions() -> list:
-    """Fetch current open positions."""
-    try:
-        r = requests.get(f"{BASE}/portfolio/short-term-positions",
-                         headers=_headers(), timeout=8)
-        if r.status_code != 200:
-            return []
-        return r.json().get("data", [])
-    except Exception:
-        return []
 
 
 # ── WebSocket feed for GOLDTEN live price ─────────────────────────────────────
@@ -308,3 +333,33 @@ def start_usdinr_poller():
     t.start()
     log.info("[Upstox] USDINR poller started")
     return t
+
+
+# ── Background updater for balance & positions (dashboard) ─────────────────────
+
+def start_balance_updater():
+    """
+    Periodically fetches live balance and updates CONFIG["capital"].
+    This makes the dashboard show real‑time available funds.
+    """
+    def _update():
+        while True:
+            try:
+                balance = fetch_ledger_balance()
+                if balance > 0:
+                    CONFIG["capital"] = balance
+                    CONFIG["balance"] = balance   # alias for dashboard
+                    log.debug(f"[BalanceUpdater] Updated capital: ₹{balance:,.0f}")
+            except Exception as e:
+                log.warning(f"[BalanceUpdater] error: {e}")
+            time.sleep(60)   # update every minute
+
+    t = threading.Thread(target=_update, daemon=True, name="BalanceUpdater")
+    t.start()
+    log.info("[Upstox] Balance updater started (every 60s)")
+
+
+# Call this at startup (after token is ready)
+def start_background_updaters():
+    start_balance_updater()
+    # Positions are fetched on demand via /api/positions, no background needed
