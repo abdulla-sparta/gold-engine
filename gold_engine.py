@@ -351,6 +351,10 @@ class GoldEngine:
             "swing_threshold":  CONFIG.get("swing_level_threshold_pct"),
             "paper_mode":       CONFIG.get("paper_mode", True),
             "dxy_last":         CONFIG.get("dxy_last"),
+            # Live Upstox balance — populated by start_background_updaters().
+            # Paper mode: paper capital. Live mode: real Upstox available margin.
+            "balance":          CONFIG.get("balance", CONFIG.get("capital", 0)),
+            "capital":          CONFIG.get("capital", 0),
         }
 
 
