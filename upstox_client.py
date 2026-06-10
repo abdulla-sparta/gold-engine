@@ -36,13 +36,23 @@ def _json_headers() -> dict:
 def get_usdinr() -> float:
     """
     Return the current USDINR rate.
-    Uses frozen rate during evening MCX session (after NSE currency close),
-    otherwise returns the live rate from CONFIG.
-    Returns 0.0 if unavailable.
+    Priority:
+      1. usdinr_frozen  — set at 17:00 IST from last Upstox NCD_FO LTP
+      2. usdinr_live    — live Upstox NCD_FO futures LTP (polled every 30s)
+      3. usdinr_spot    — TwelveData USD/INR forex spot (fallback when market
+                          is closed or futures poller hasn't run yet)
+    Returns 0.0 only if all three are unavailable.
     """
     if CONFIG.get("usdinr_is_frozen"):
-        return float(CONFIG.get("usdinr_frozen", 0) or 0)
-    return float(CONFIG.get("usdinr_live", 0) or 0)
+        frozen = float(CONFIG.get("usdinr_frozen", 0) or 0)
+        if frozen > 0:
+            return frozen
+    live = float(CONFIG.get("usdinr_live", 0) or 0)
+    if live > 0:
+        return live
+    # Fallback: TwelveData forex spot (continuous, not frozen at 17:00)
+    spot = float(CONFIG.get("usdinr_spot", 0) or 0)
+    return spot
 
 
 def fetch_usdinr_ltp() -> float:
@@ -81,11 +91,19 @@ def xau_to_mcx(xau_price: float) -> float:
     """
     Convert XAU/USD spot price ($/oz) to MCX GOLDTEN equivalent (₹/10gms).
     Formula: XAU × 0.35274 × USDINR
+    USDINR source priority: frozen → Upstox NCD_FO live → TwelveData spot
     """
     usdinr = get_usdinr()
     if usdinr <= 0:
-        log.warning("[upstox_client] xau_to_mcx: USDINR is 0 — conversion unreliable")
+        log.warning("[upstox_client] xau_to_mcx: USDINR unavailable from all sources")
         return 0.0
+    # Log source at DEBUG level so we can see which rate is being used
+    source = (
+        "frozen" if CONFIG.get("usdinr_is_frozen") and float(CONFIG.get("usdinr_frozen", 0) or 0) > 0
+        else "upstox_futures" if float(CONFIG.get("usdinr_live", 0) or 0) > 0
+        else "td_spot"
+    )
+    log.debug(f"[upstox_client] xau_to_mcx: USDINR={usdinr:.4f} ({source})")
     return xau_price * OZ_TO_10G * usdinr
 
 
@@ -375,18 +393,29 @@ def start_goldten_ws():
 
 
 def start_usdinr_poller():
-    """Start a background thread that refreshes USDINR LTP every 30 seconds."""
+    """
+    Start a background thread that refreshes USDINR LTP every 30 seconds.
+    Also does an immediate first fetch so usdinr_live is populated before
+    the first xau_to_mcx call.  If Upstox returns 0 (market closed / key
+    not ready), the TwelveData usdinr_spot fallback in get_usdinr() covers it.
+    """
     def _loop():
+        # Immediate first attempt — eliminates the startup window where
+        # usdinr_live=0 causes repeated xau_to_mcx warnings
+        try:
+            fetch_usdinr_ltp()
+        except Exception as e:
+            log.warning(f"[upstox_client] usdinr initial fetch error: {e}")
         while True:
+            _time.sleep(30)
             try:
                 fetch_usdinr_ltp()
             except Exception as e:
                 log.warning(f"[upstox_client] usdinr poll error: {e}")
-            _time.sleep(30)
 
     t = threading.Thread(target=_loop, name="usdinr-ltp-poller", daemon=True)
     t.start()
-    log.info("[upstox_client] USDINR LTP poller started (30s interval)")
+    log.info("[upstox_client] USDINR LTP poller started (30s interval, immediate first fetch)")
 
 
 def start_background_updaters():
