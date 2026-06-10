@@ -14,8 +14,13 @@ CONFIG = {
     "upstox_redirect_uri": os.getenv("UPSTOX_REDIRECT_URI", ""),
     "upstox_access_token": "",   # filled at runtime after OAuth
 
-    # ── Twelve Data ───────────────────────────────────────────────────────────
-    "twelve_data_api_key": os.getenv("TWELVE_DATA_API_KEY", ""),
+    # ── Twelve Data — 3-key rotation ─────────────────────────────────────────
+    # Set TWELVE_DATA_API_KEY, TWELVE_DATA_API_KEY_2, TWELVE_DATA_API_KEY_3
+    # in Railway env vars.  Keys are tried in order; a rate-limit response
+    # marks a key exhausted for 60 s then automatically falls back.
+    "twelve_data_api_key":   os.getenv("TWELVE_DATA_API_KEY", ""),
+    "twelve_data_api_key_2": os.getenv("TWELVE_DATA_API_KEY_2", ""),
+    "twelve_data_api_key_3": os.getenv("TWELVE_DATA_API_KEY_3", ""),
     "xauusd_poll_interval": 60,   # seconds — free tier safe
 
     # ── Instruments ───────────────────────────────────────────────────────────
@@ -62,10 +67,9 @@ CONFIG = {
     "telegram_chat_id":   os.getenv("TELEGRAM_CHAT_ID", ""),
 
     # ── Newsbot Intelligence ──────────────────────────────────────────────────
-    # URL of the deployed Django newsbot service (e.g. https://newsbot.up.railway.app)
     "newsbot_url":                 os.getenv("NEWSBOT_URL", ""),
     "intelligence_poll_interval":  1800,   # seconds — 30 min
-    "intelligence_filter_enabled": True,   # if True, skip entries that conflict with intel bias
+    "intelligence_filter_enabled": True,
 
     # ── Runtime state (not persisted) ────────────────────────────────────────
     "engine_running":      False,
@@ -74,11 +78,11 @@ CONFIG = {
     "usdinr_is_frozen":    False,
     "xauusd_last":         0.0,
     "dxy_last":            0.0,
-    "dxy_change_pct":      0.0,         # % change from newsbot
+    "dxy_change_pct":      0.0,
     "goldten_last":        0.0,
-    "live_basis":          0.0,          # GOLDTEN - converted XAU spot
-    "current_position":    None,         # active trade dict or None
+    "live_basis":          0.0,
+    "current_position":    None,
     "kill_switch":         False,
-    "paper_mode":          True,    # True = simulate orders, False = live execution
-    "intelligence":        {},      # populated by intelligence_client.py at runtime
+    "paper_mode":          True,
+    "intelligence":        {},
 }

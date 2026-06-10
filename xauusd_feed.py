@@ -3,6 +3,11 @@ xauusd_feed.py — Twelve Data polling feed for XAU/USD only.
 DXY is now sourced from the newsbot /api/prices/ endpoint (real DX-Y.NYB, not EUR/USD proxy).
 This saves ~400 Twelve Data credits/day.
 Builds 1m, 5m, 15m OHLC candle buffers internally.
+
+Key rotation: up to 3 Twelve Data API keys (TWELVE_DATA_API_KEY,
+TWELVE_DATA_API_KEY_2, TWELVE_DATA_API_KEY_3) are tried in order.
+When a key hits the per-minute rate limit it is marked exhausted for 60 s,
+and the next available key is used automatically.
 """
 import time
 import threading
@@ -15,6 +20,71 @@ from config import CONFIG
 log = logging.getLogger(__name__)
 
 IST = timezone(timedelta(hours=5, minutes=30))
+
+# ── API key rotation ──────────────────────────────────────────────────────────
+
+_key_lock         = threading.Lock()
+_key_index        = 0                # which key slot is currently preferred
+_key_exhausted_until = [0.0, 0.0, 0.0]  # epoch timestamps; 0 = available
+
+_KEY_NAMES = [
+    "twelve_data_api_key",
+    "twelve_data_api_key_2",
+    "twelve_data_api_key_3",
+]
+_RATE_LIMIT_COOLDOWN = 65   # seconds to park an exhausted key (1 full minute + buffer)
+
+
+def _all_keys() -> list[str]:
+    """Return non-empty keys in config order."""
+    return [k for k in (_KEY_NAMES) if CONFIG.get(k, "")]
+
+
+def _get_api_key() -> str:
+    """
+    Return the current best API key.
+    Starts from _key_index, skips any key still in cooldown.
+    If all keys are exhausted returns the one whose cooldown expires soonest
+    (caller will get a rate-limit error again but won't crash).
+    """
+    global _key_index
+    with _key_lock:
+        keys = _all_keys()
+        if not keys:
+            return ""
+        now = time.time()
+        n   = len(keys)
+        # Walk from current index, find first available
+        for i in range(n):
+            idx = (_key_index + i) % n
+            if now >= _key_exhausted_until[idx]:
+                _key_index = idx
+                return CONFIG.get(_KEY_NAMES[idx], "")
+        # All exhausted — return the one that recovers soonest
+        soonest = min(range(n), key=lambda i: _key_exhausted_until[i])
+        return CONFIG.get(_KEY_NAMES[soonest], "")
+
+
+def _mark_key_exhausted(key: str):
+    """Mark a specific key as exhausted for _RATE_LIMIT_COOLDOWN seconds."""
+    global _key_index
+    with _key_lock:
+        keys = _all_keys()
+        for i, name in enumerate(_KEY_NAMES):
+            if CONFIG.get(name, "") == key:
+                _key_exhausted_until[i] = time.time() + _RATE_LIMIT_COOLDOWN
+                log.warning(
+                    f"[TwelveData] Key slot {i+1} exhausted — cooling down {_RATE_LIMIT_COOLDOWN}s"
+                )
+                # Advance preferred index to next slot
+                _key_index = (i + 1) % max(len(keys), 1)
+                break
+
+
+def _is_rate_limit_error(data: dict) -> bool:
+    msg = (data.get("message") or "").lower()
+    return "run out of api credits" in msg or "rate limit" in msg
+
 
 # ── Candle buffer ─────────────────────────────────────────────────────────────
 
@@ -29,7 +99,6 @@ class CandleBuffer:
     def push_1m(self, candle_1m: dict):
         """Accept a 1m OHLC dict and aggregate into this buffer's timeframe."""
         ts = candle_1m["timestamp"]  # datetime
-        # Which N-min bucket does this 1m belong to?
         bucket_min = (ts.minute // self.tf_min) * self.tf_min
         bucket_ts  = ts.replace(minute=bucket_min, second=0, microsecond=0)
 
@@ -50,7 +119,6 @@ class CandleBuffer:
             c["close"] = candle_1m["close"]
 
     def latest(self, n: int = 1):
-        """Return latest N closed candles (excludes current forming candle)."""
         lst = list(self.candles)
         return lst[-n:] if n > 1 else (lst[-1] if lst else None)
 
@@ -92,82 +160,81 @@ def get_dxy() -> SymbolFeed:
     return _dxy
 
 
-# ── Twelve Data REST fetch ────────────────────────────────────────────────────
+# ── Twelve Data REST fetch (with key rotation) ────────────────────────────────
+
+def _td_get(params: dict, timeout: int = 10) -> dict | None:
+    """
+    Execute a Twelve Data GET request with automatic key rotation on rate limits.
+    Injects the current best key into params, retries with next key if exhausted.
+    Returns the parsed JSON dict, or None on failure.
+    """
+    keys_tried = set()
+    n_keys = len(_all_keys())
+    if n_keys == 0:
+        log.warning("[TwelveData] No API keys configured")
+        return None
+
+    for attempt in range(n_keys + 1):   # +1 so we always try at least once
+        key = _get_api_key()
+        if not key or key in keys_tried:
+            break
+        keys_tried.add(key)
+        try:
+            p = {**params, "apikey": key, "format": "JSON"}
+            r = requests.get("https://api.twelvedata.com/time_series", params=p, timeout=timeout)
+            data = r.json()
+            if _is_rate_limit_error(data):
+                log.warning(f"[TwelveData] {params.get('symbol','')}: {data.get('message')} — rotating key")
+                _mark_key_exhausted(key)
+                continue   # retry with next key
+            if data.get("status") == "error":
+                log.warning(f"[TwelveData] {params.get('symbol','')}: {data.get('message')}")
+                return None
+            return data
+        except Exception as e:
+            log.warning(f"[TwelveData] request error: {e}")
+            return None
+
+    log.warning("[TwelveData] All keys exhausted or failed — skipping fetch")
+    return None
+
 
 def _fetch_latest_candle(twelve_symbol: str) -> dict | None:
     """Fetch the most recent completed 1m candle from Twelve Data."""
-    api_key = CONFIG.get("twelve_data_api_key", "")
-    if not api_key:
-        log.warning("[TwelveData] API key not set")
+    data = _td_get({"symbol": twelve_symbol, "interval": "1min", "outputsize": 2})
+    if data is None:
         return None
-    try:
-        url = "https://api.twelvedata.com/time_series"
-        params = {
-            "symbol":     twelve_symbol,
-            "interval":   "1min",
-            "outputsize": 2,        # get 2 so we always have 1 closed candle
-            "apikey":     api_key,
-            "format":     "JSON",
-        }
-        r = requests.get(url, params=params, timeout=10)
-        data = r.json()
-        if data.get("status") == "error":
-            log.warning(f"[TwelveData] {twelve_symbol}: {data.get('message')}")
-            return None
-        values = data.get("values", [])
-        if len(values) < 2:
-            return None
-        # values[0] = newest (possibly still forming), values[1] = last closed
-        raw = values[1]
-        ts_str = raw["datetime"]   # "2026-06-06 14:32:00"
-        # Twelve Data returns in exchange timezone — XAU/USD is UTC
-        ts = datetime.strptime(ts_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
-        return {
+    values = data.get("values", [])
+    if len(values) < 2:
+        return None
+    # values[0] = newest (possibly still forming), values[1] = last closed
+    raw = values[1]
+    ts = datetime.strptime(raw["datetime"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+    return {
+        "timestamp": ts,
+        "open":  float(raw["open"]),
+        "high":  float(raw["high"]),
+        "low":   float(raw["low"]),
+        "close": float(raw["close"]),
+    }
+
+
+def _fetch_historical(twelve_symbol: str, outputsize: int = 100) -> list:
+    """Seed the buffer with historical 1m candles on startup."""
+    data = _td_get({"symbol": twelve_symbol, "interval": "1min", "outputsize": outputsize}, timeout=15)
+    if data is None:
+        return []
+    candles = []
+    for raw in reversed(data.get("values", [])[1:]):   # oldest first, skip forming candle
+        ts = datetime.strptime(raw["datetime"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+        candles.append({
             "timestamp": ts,
             "open":  float(raw["open"]),
             "high":  float(raw["high"]),
             "low":   float(raw["low"]),
             "close": float(raw["close"]),
-        }
-    except Exception as e:
-        log.warning(f"[TwelveData] fetch error for {twelve_symbol}: {e}")
-        return None
-
-
-def _fetch_historical(twelve_symbol: str, outputsize: int = 100) -> list:
-    """Seed the buffer with historical 1m candles on startup."""
-    api_key = CONFIG.get("twelve_data_api_key", "")
-    if not api_key:
-        return []
-    try:
-        url = "https://api.twelvedata.com/time_series"
-        params = {
-            "symbol":     twelve_symbol,
-            "interval":   "1min",
-            "outputsize": outputsize,
-            "apikey":     api_key,
-            "format":     "JSON",
-        }
-        r = requests.get(url, params=params, timeout=15)
-        data = r.json()
-        if data.get("status") == "error":
-            log.warning(f"[TwelveData] historical {twelve_symbol}: {data.get('message')}")
-            return []
-        values = data.get("values", [])
-        candles = []
-        for raw in reversed(values[1:]):   # oldest first, skip newest (forming)
-            ts = datetime.strptime(raw["datetime"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
-            candles.append({
-                "timestamp": ts,
-                "open":  float(raw["open"]),
-                "high":  float(raw["high"]),
-                "low":   float(raw["low"]),
-                "close": float(raw["close"]),
-            })
-        return candles
-    except Exception as e:
-        log.warning(f"[TwelveData] historical fetch error: {e}")
-        return []
+        })
+    return candles
 
 
 # ── Seed buffers on startup ───────────────────────────────────────────────────
@@ -183,49 +250,42 @@ def seed_buffers():
     # DXY is now sourced from newsbot /api/prices/ — no Twelve Data credits used
     log.info("[TwelveData] DXY polling disabled — using newsbot real DXY (DX-Y.NYB)")
 
-    # Seed 5m/15m from historical 5m endpoint too
-    _seed_higher_tf(_xauusd, "5min", 60)
+    # Seed 5m/15m from historical higher-TF endpoints
+    _seed_higher_tf(_xauusd, "5min",  60)
     _seed_higher_tf(_xauusd, "15min", 50)
 
 
 def _seed_higher_tf(feed: SymbolFeed, interval: str, size: int):
     """Directly fetch 5m/15m candles to pre-populate aggregated buffers."""
-    api_key = CONFIG.get("twelve_data_api_key", "")
-    if not api_key:
+    data = _td_get({"symbol": feed.twelve_symbol, "interval": interval, "outputsize": size}, timeout=15)
+    if data is None:
         return
-    try:
-        r = requests.get("https://api.twelvedata.com/time_series", params={
-            "symbol": feed.twelve_symbol, "interval": interval,
-            "outputsize": size, "apikey": api_key, "format": "JSON"
-        }, timeout=15)
-        data = r.json()
-        if data.get("status") == "error":
-            return
-        buf = feed.buf_5m if interval == "5min" else feed.buf_15m
-        for raw in reversed(data.get("values", [])[1:]):
-            ts = datetime.strptime(raw["datetime"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
-            c = {"timestamp": ts, "open": float(raw["open"]), "high": float(raw["high"]),
-                 "low": float(raw["low"]), "close": float(raw["close"])}
-            buf.candles.append(c)
-        log.info(f"[TwelveData] {feed.symbol} {interval} seeded with {len(buf.candles)} candles")
-    except Exception as e:
-        log.warning(f"[TwelveData] seed_higher_tf error: {e}")
+    buf = feed.buf_5m if interval == "5min" else feed.buf_15m
+    for raw in reversed(data.get("values", [])[1:]):
+        ts = datetime.strptime(raw["datetime"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+        c = {
+            "timestamp": ts,
+            "open":  float(raw["open"]),
+            "high":  float(raw["high"]),
+            "low":   float(raw["low"]),
+            "close": float(raw["close"]),
+        }
+        buf.candles.append(c)
+    log.info(f"[TwelveData] {feed.symbol} {interval} seeded with {len(buf.candles)} candles")
 
 
 # ── Polling thread ────────────────────────────────────────────────────────────
 
 _last_xau_ts = None
-_last_dxy_ts = None
 
 
 def _poll_loop():
-    global _last_xau_ts, _last_dxy_ts
+    global _last_xau_ts
     interval = CONFIG.get("xauusd_poll_interval", 60)
     log.info(f"[TwelveData] Poll loop started — interval={interval}s")
 
     while True:
         try:
-            # XAU/USD
             c = _fetch_latest_candle(_xauusd.twelve_symbol)
             if c and c["timestamp"] != _last_xau_ts:
                 _last_xau_ts = c["timestamp"]
@@ -233,9 +293,6 @@ def _poll_loop():
                     _xauusd.push_1m_candle(c)
                 CONFIG["xauusd_last"] = c["close"]
                 log.debug(f"[TwelveData] XAU/USD 1m close={c['close']:.3f}")
-
-            # DXY now comes from newsbot intelligence_client — no polling here
-
         except Exception as e:
             log.warning(f"[TwelveData] Poll error: {e}")
 

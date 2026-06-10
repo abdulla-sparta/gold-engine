@@ -349,3 +349,56 @@ def get_goldten_ltp() -> float:
     if ltp > 0:
         CONFIG["goldten_last"] = ltp
     return ltp
+
+
+# ── Background pollers ─────────────────────────────────────────────────────────
+import threading
+import time as _time
+
+
+def start_goldten_ws():
+    """
+    Start a background thread that polls GOLDTEN LTP every 5 seconds.
+    Named *_ws for API compatibility; uses REST polling (no WebSocket needed).
+    """
+    def _loop():
+        while True:
+            try:
+                get_goldten_ltp()
+            except Exception as e:
+                log.warning(f"[upstox_client] goldten ltp poll error: {e}")
+            _time.sleep(5)
+
+    t = threading.Thread(target=_loop, name="goldten-ltp-poller", daemon=True)
+    t.start()
+    log.info("[upstox_client] GOLDTEN LTP poller started (5s interval)")
+
+
+def start_usdinr_poller():
+    """Start a background thread that refreshes USDINR LTP every 30 seconds."""
+    def _loop():
+        while True:
+            try:
+                fetch_usdinr_ltp()
+            except Exception as e:
+                log.warning(f"[upstox_client] usdinr poll error: {e}")
+            _time.sleep(30)
+
+    t = threading.Thread(target=_loop, name="usdinr-ltp-poller", daemon=True)
+    t.start()
+    log.info("[upstox_client] USDINR LTP poller started (30s interval)")
+
+
+def start_background_updaters():
+    """Start a background thread that refreshes ledger balance every 60 seconds."""
+    def _loop():
+        while True:
+            try:
+                fetch_ledger_balance()
+            except Exception as e:
+                log.warning(f"[upstox_client] balance updater error: {e}")
+            _time.sleep(60)
+
+    t = threading.Thread(target=_loop, name="balance-updater", daemon=True)
+    t.start()
+    log.info("[upstox_client] Balance updater started (60s interval)")
