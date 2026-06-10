@@ -323,6 +323,11 @@ def get_positions() -> list:
     """
     Fetch all open positions from Upstox.
     Returns a list of position dicts, or [] on error.
+
+    Fix: Upstox V2 does not return net_quantity — compute it from
+    overnight_quantity + day_buy_quantity - day_sell_quantity.
+    Also fixes average_price=0 for pure short positions by falling
+    back to sell_price.
     """
     try:
         r = requests.get(f"{BASE}/portfolio/short-term-positions",
@@ -331,6 +336,15 @@ def get_positions() -> list:
             log.warning(f"[upstox_client] positions API {r.status_code}")
             return []
         data = r.json().get("data", []) or []
+        for p in data:
+            o  = int(p.get("overnight_quantity", 0) or 0)
+            db = int(p.get("day_buy_quantity",   0) or 0)
+            ds = int(p.get("day_sell_quantity",  0) or 0)
+            net = o + db - ds
+            p["net_quantity"] = net
+            # average_price is 0 for pure short positions — fall back to sell_price
+            if float(p.get("average_price", 0) or 0) == 0 and net < 0:
+                p["average_price"] = float(p.get("sell_price", 0) or 0)
         return data
     except Exception as e:
         log.warning(f"[upstox_client] get_positions error: {e}")
