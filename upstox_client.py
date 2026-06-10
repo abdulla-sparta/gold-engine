@@ -1,366 +1,351 @@
 """
-upstox_client.py — Upstox V3 WebSocket for GOLDTEN MCX + USDINR futures
-Also handles:
-  - Live margin fetch for GOLDTEN
-  - Order placement on MCX
-  - Ledger balance fetch (fixed endpoint)
-  - Background balance updater for dashboard
+upstox_client.py — Upstox V2 API wrapper for GoldEngine.
+
+All functions read CONFIG for auth token and cached state.
+Key fix (UDAPI1026): place_order() now validates instrument_key before
+sending to Upstox, with an automatic live re-resolve attempt if it's empty.
 """
-import os
-import json
-import time
-import threading
 import logging
 import requests
 from datetime import datetime, timezone, timedelta
 from config import CONFIG
 
 log = logging.getLogger(__name__)
-IST = timezone(timedelta(hours=5, minutes=30))
+BASE  = "https://api.upstox.com/v2"
+IST   = timezone(timedelta(hours=5, minutes=30))
 
-# ── REST helpers ──────────────────────────────────────────────────────────────
+# Oz → 10gms conversion factor (1 troy oz = 31.1035g, contract = 10g)
+OZ_TO_10G = 0.35274
 
-def _headers():
+
+# ── Auth header ───────────────────────────────────────────────────────────────
+
+def _headers() -> dict:
+    token = CONFIG.get("upstox_access_token", "")
     return {
-        "Authorization": f"Bearer {CONFIG.get('upstox_access_token', '')}",
+        "Authorization": f"Bearer {token}",
         "Accept":        "application/json",
-        "Api-Version":   "2.0",
     }
 
-BASE = "https://api.upstox.com/v2"
+def _json_headers() -> dict:
+    return {**_headers(), "Content-Type": "application/json"}
 
 
-# ── Balance & Positions (live) ─────────────────────────────────────────────────
+# ── USDINR ────────────────────────────────────────────────────────────────────
+
+def get_usdinr() -> float:
+    """
+    Return the current USDINR rate.
+    Uses frozen rate during evening MCX session (after NSE currency close),
+    otherwise returns the live rate from CONFIG.
+    Returns 0.0 if unavailable.
+    """
+    if CONFIG.get("usdinr_is_frozen"):
+        return float(CONFIG.get("usdinr_frozen", 0) or 0)
+    return float(CONFIG.get("usdinr_live", 0) or 0)
+
+
+def fetch_usdinr_ltp() -> float:
+    """Fetch live USDINR futures LTP from Upstox and cache in CONFIG."""
+    key = CONFIG.get("usdinr_instrument_key", "")
+    if not key:
+        log.debug("[upstox_client] USDINR instrument key not resolved yet")
+        return 0.0
+    try:
+        r = requests.get(
+            f"{BASE}/market-quote/ltp",
+            headers=_headers(),
+            params={"instrument_key": key},
+            timeout=8,
+        )
+        if r.status_code != 200:
+            log.warning(f"[upstox_client] USDINR LTP fetch failed {r.status_code}")
+            return 0.0
+        data = r.json().get("data", {})
+        # Response: { "data": { "<key>": { "last_price": ... } } }
+        ltp = 0.0
+        for v in data.values():
+            ltp = float(v.get("last_price", 0) or 0)
+            break
+        if ltp > 0:
+            CONFIG["usdinr_live"] = ltp
+        return ltp
+    except Exception as e:
+        log.warning(f"[upstox_client] fetch_usdinr_ltp error: {e}")
+        return 0.0
+
+
+# ── XAU → MCX conversion ──────────────────────────────────────────────────────
+
+def xau_to_mcx(xau_price: float) -> float:
+    """
+    Convert XAU/USD spot price ($/oz) to MCX GOLDTEN equivalent (₹/10gms).
+    Formula: XAU × 0.35274 × USDINR
+    """
+    usdinr = get_usdinr()
+    if usdinr <= 0:
+        log.warning("[upstox_client] xau_to_mcx: USDINR is 0 — conversion unreliable")
+        return 0.0
+    return xau_price * OZ_TO_10G * usdinr
+
+
+# ── Account / margin ──────────────────────────────────────────────────────────
 
 def fetch_ledger_balance() -> float:
-    """Fetch available cash balance from Upstox ledger using correct endpoint."""
-    token = CONFIG.get("upstox_access_token")
-    if not token:
-        log.warning("[Balance] No Upstox token - returning fallback")
-        return CONFIG.get("capital", 200000)
-
+    """
+    Fetch available cash balance from Upstox funds API.
+    Falls back to CONFIG["capital"] if the API call fails.
+    """
     try:
-        # Correct endpoint: /user/get-funds-and-margin
-        r = requests.get(f"{BASE}/user/get-funds-and-margin", headers=_headers(), timeout=10)
+        r = requests.get(f"{BASE}/user/get-funds-and-margin",
+                         headers=_headers(), timeout=8)
         if r.status_code != 200:
-            log.warning(f"[Balance] fetch failed: {r.status_code} {r.text[:200]}")
-            return CONFIG.get("capital", 200000)
-
-        data = r.json()
-        # equity segment available margin
-        equity = data.get("data", {}).get("equity", {})
-        available = equity.get("available_margin", 0)
-        if available:
-            log.info(f"[Balance] Available: ₹{available:,.0f}")
-            return float(available)
-
-        # fallback: total balance
-        total = equity.get("total_balance", 0)
-        if total:
-            return float(total)
-
-        return CONFIG.get("capital", 200000)
+            log.warning(f"[upstox_client] funds API {r.status_code} — using CONFIG capital")
+            return float(CONFIG.get("capital", 0))
+        d = r.json().get("data", {})
+        # equity.available_margin or commodity.available_margin
+        commodity = d.get("commodity", {})
+        equity    = d.get("equity", {})
+        bal = float(
+            commodity.get("available_margin")
+            or equity.get("available_margin")
+            or CONFIG.get("capital", 0)
+        )
+        CONFIG["balance"] = bal
+        return bal
     except Exception as e:
-        log.warning(f"[Balance] error: {e}")
-        return CONFIG.get("capital", 200000)
-
-
-def get_positions() -> list:
-    """Fetch current open positions from Upstox portfolio."""
-    token = CONFIG.get("upstox_access_token")
-    if not token:
-        log.warning("[Positions] No token")
-        return []
-
-    try:
-        r = requests.get(f"{BASE}/portfolio/short-term-positions", headers=_headers(), timeout=10)
-        if r.status_code != 200:
-            log.warning(f"[Positions] HTTP {r.status_code}: {r.text[:200]}")
-            return []
-
-        data = r.json()
-        positions = data.get("data", [])
-        log.info(f"[Positions] Found {len(positions)} open positions")
-        return positions
-    except Exception as e:
-        log.exception("[Positions] Exception")
-        return []
+        log.warning(f"[upstox_client] fetch_ledger_balance error: {e}")
+        return float(CONFIG.get("capital", 0))
 
 
 def fetch_margin_for_goldten(qty: int = 1) -> float:
     """
-    Fetch SPAN+Exposure margin required for qty lots of GOLDTEN MCX futures.
-    Returns margin per lot.
+    Fetch the SPAN+exposure margin required for qty lots of GOLDTEN.
+    Falls back to CONFIG["goldten_margin_per_lot"] if set, else 15000.
     """
+    key = CONFIG.get("goldten_instrument_key", "")
+    if not key:
+        return float(CONFIG.get("goldten_margin_per_lot", 15000))
     try:
-        instrument_key = CONFIG.get("goldten_instrument_key")
-        r = requests.post(
-            f"{BASE}/charges/margin",
-            headers={**_headers(), "Content-Type": "application/json"},
-            json={
-                "instruments": [{
-                    "instrument_key": instrument_key,
+        payload = {
+            "instruments": [
+                {
+                    "instrument_key": key,
                     "quantity":       qty,
                     "transaction_type": "BUY",
-                    "product":        "D",   # delivery/NRML for MCX
-                }]
-            },
-            timeout=10
+                    "product":        "D",   # NRML
+                }
+            ]
+        }
+        r = requests.post(
+            f"{BASE}/charges/margin",
+            headers=_json_headers(),
+            json=payload,
+            timeout=8,
         )
         if r.status_code != 200:
-            log.warning(f"[Margin] fetch failed: {r.status_code} {r.text[:200]}")
-            return 15000.0   # fallback estimate
-        data = r.json()
-        total = data.get("data", {}).get("required_margin", 0)
-        per_lot = float(total) / qty if qty > 0 else float(total)
-        log.info(f"[Margin] GOLDTEN per lot: ₹{per_lot:,.0f}")
-        return per_lot
+            log.warning(f"[upstox_client] margin API {r.status_code}")
+            return float(CONFIG.get("goldten_margin_per_lot", 15000))
+        data = r.json().get("data", {})
+        total = float(data.get("required_margin", 0) or 0)
+        if total > 0:
+            CONFIG["goldten_margin_per_lot"] = total
+        return total or float(CONFIG.get("goldten_margin_per_lot", 15000))
     except Exception as e:
-        log.warning(f"[Margin] error: {e}")
-        return 15000.0
+        log.warning(f"[upstox_client] fetch_margin_for_goldten error: {e}")
+        return float(CONFIG.get("goldten_margin_per_lot", 15000))
 
 
 def calc_max_lots(balance: float, margin_per_lot: float) -> int:
-    """Calculate max lots we can take given balance and per-lot margin."""
+    """
+    Calculate max lots tradeable given balance and per-lot margin.
+    Respects CONFIG["max_lots"] cap.
+    Uses 90% of balance as usable margin (10% buffer).
+    """
     if margin_per_lot <= 0:
-        return 1
-    hard_cap  = CONFIG.get("max_lots", 5)
-    risk_pct  = CONFIG.get("risk_pct", 2.0)
-    # Use risk_pct of balance as max deployment
-    deploy    = balance * (risk_pct / 100) * 10   # 10x leverage allowance
-    max_by_margin = int(deploy / margin_per_lot)
-    return max(1, min(max_by_margin, hard_cap))
-
-
-def fetch_usdinr_rate() -> float:
-    """Fetch last traded price of USDINR futures from Upstox LTP endpoint."""
-    try:
-        instrument_key = CONFIG.get("usdinr_instrument_key")
-        r = requests.get(
-            f"{BASE}/market-quote/ltp",
-            headers=_headers(),
-            params={"instrument_key": instrument_key},
-            timeout=8
-        )
-        if r.status_code != 200:
-            log.warning(f"[USDINR] fetch failed: {r.status_code}")
-            return CONFIG.get("usdinr_live", 85.0)
-        resp_data = r.json().get("data", {})
-        item = resp_data.get(instrument_key)
-        if not item:
-            item = next(iter(resp_data.values()), None) if resp_data else None
-        ltp = item.get("last_price", 0) if item else 0
-        if ltp:
-            log.info(f"[USDINR] ₹{ltp:.4f}")
-            return float(ltp)
-        log.warning(f"[USDINR] LTP not found in response: {r.text[:150]}")
-        return CONFIG.get("usdinr_live", 85.0)
-    except Exception as e:
-        log.warning(f"[USDINR] fetch error: {e}")
-        return CONFIG.get("usdinr_live", 85.0)
-
-
-def get_usdinr() -> float:
-    """Return the correct USDINR rate — frozen after 5 PM."""
-    if CONFIG.get("usdinr_is_frozen"):
-        return CONFIG.get("usdinr_frozen", CONFIG.get("usdinr_live", 85.0))
-    return CONFIG.get("usdinr_live", 85.0)
-
-
-def xau_to_mcx(xau_price: float) -> float:
-    """Convert XAU/USD price ($/oz) to MCX GOLDTEN equivalent (₹/10gms)."""
-    usdinr  = get_usdinr()
-    oz_conv = CONFIG.get("oz_to_10gms", 0.35274)
-    return round(xau_price * oz_conv * usdinr, 0)
+        return 0
+    usable    = balance * 0.90
+    raw_lots  = int(usable // margin_per_lot)
+    max_cap   = int(CONFIG.get("max_lots", 5))
+    risk_pct  = float(CONFIG.get("risk_pct", 2.0))
+    # Also cap by risk % of capital
+    capital   = float(CONFIG.get("capital", balance))
+    risk_lots = max(1, int((capital * risk_pct / 100) // margin_per_lot)) if capital > 0 else raw_lots
+    return max(0, min(raw_lots, risk_lots, max_cap))
 
 
 # ── Order placement ───────────────────────────────────────────────────────────
 
-def place_order(direction: str, qty: int, price: float, order_type: str = "LIMIT") -> str | None:
+def place_order(
+    direction:  str,
+    qty:        int,
+    price:      float,
+    order_type: str = "LIMIT",
+    product:    str = "D",
+    instrument_key: str = None,
+) -> str | None:
     """
-    Place MCX GOLDTEN order via Upstox.
-    direction: "BUY" or "SELL"
-    qty: number of lots
-    price: limit price in ₹
-    Returns order_id or None on failure.
+    Place a BUY or SELL order on Upstox for GOLDTEN MCX futures.
+
+    Args:
+        direction:      "BUY" or "SELL"
+        qty:            number of lots
+        price:          limit price in ₹ (ignored for MARKET orders)
+        order_type:     "LIMIT" | "MARKET" | "SL" | "SL-M"
+        product:        "D" (NRML) | "I" (Intraday)
+        instrument_key: override key (uses CONFIG["goldten_instrument_key"] if None)
+
+    Returns:
+        order_id string on success, None on failure.
+
+    Fix: validates instrument_key before sending — attempts a live re-resolve
+    if CONFIG key is empty, then aborts with None (not an empty-string order).
     """
+    # ── 1. Resolve instrument key ─────────────────────────────────────────────
+    if not instrument_key:
+        instrument_key = CONFIG.get("goldten_instrument_key", "")
+
+    if not instrument_key:
+        # Last-resort live re-resolve (catches post-startup auth refresh)
+        log.warning("[place_order] instrument_key empty — attempting live re-resolve before abort")
+        try:
+            from instrument_resolver import ensure_goldten_key
+            instrument_key = ensure_goldten_key()
+        except Exception as e:
+            log.error(f"[place_order] re-resolve import failed: {e}")
+
+    if not instrument_key:
+        log.error(
+            "[place_order] ❌ UDAPI1026 guard: instrument_key is empty after re-resolve. "
+            "Cannot place order. Re-Auth via dashboard to refresh the token and instrument key."
+        )
+        return None
+
+    # Sanity-check format (Upstox V2 format: "MCX_FO|<token>" or "NSE_FO|<token>")
+    if "|" not in instrument_key:
+        log.warning(
+            f"[place_order] instrument_key '{instrument_key}' looks wrong "
+            "(expected 'MCX_FO|<token>'). Proceeding anyway."
+        )
+
+    # ── 2. Validate other inputs ──────────────────────────────────────────────
+    if qty < 1:
+        log.error(f"[place_order] qty={qty} is invalid — must be ≥ 1")
+        return None
+
+    direction = direction.upper()
+    if direction not in ("BUY", "SELL"):
+        log.error(f"[place_order] direction='{direction}' invalid")
+        return None
+
+    order_type = order_type.upper()
+    # For MARKET orders, Upstox requires price=0
+    if order_type == "MARKET":
+        price = 0
+
+    # ── 3. Build payload ──────────────────────────────────────────────────────
+    payload = {
+        "instrument_token":  instrument_key,   # Upstox V2 field name
+        "transaction_type":  direction,
+        "order_type":        order_type,
+        "product":           product,
+        "quantity":          qty,
+        "price":             round(float(price), 2) if order_type == "LIMIT" else 0,
+        "trigger_price":     0,
+        "disclosed_quantity": 0,
+        "validity":          "DAY",
+        "is_amo":            False,
+        "slice":             False,
+        "tag":               "GoldEngine",
+    }
+
+    log.info(
+        f"[place_order] Sending {direction} {qty}× GOLDTEN @ ₹{price:.0f} "
+        f"[{order_type}] key={instrument_key}"
+    )
+
+    # ── 4. Send to Upstox ─────────────────────────────────────────────────────
     try:
-        instrument_key = CONFIG.get("goldten_instrument_key")
-        payload = {
-            "instrument_key":    instrument_key,
-            "transaction_type":  direction,
-            "order_type":        order_type,
-            "product":           "D",           # NRML for MCX overnight
-            "quantity":          qty,
-            "price":             round(price, 0) if order_type == "LIMIT" else 0,
-            "validity":          "DAY",
-            "disclosed_quantity": 0,
-            "trigger_price":     0,
-            "is_amo":            False,
-        }
         r = requests.post(
             f"{BASE}/order/place",
-            headers={**_headers(), "Content-Type": "application/json"},
+            headers=_json_headers(),
             json=payload,
-            timeout=10
+            timeout=10,
         )
-        if r.status_code != 200:
-            log.error(f"[Order] failed: {r.status_code} — {r.text[:300]}")
-            return None
-        order_id = r.json().get("data", {}).get("order_id")
-        log.info(f"[Order] placed: {direction} {qty}x GOLDTEN @ ₹{price:.0f} → {order_id}")
-        return order_id
+        resp = r.json()
+
+        if r.status_code == 200 and resp.get("status") == "success":
+            order_id = resp.get("data", {}).get("order_id", "")
+            log.info(f"[place_order] ✅ Order placed: {order_id}")
+            return order_id
+
+        # Extract error details for logging
+        errors  = resp.get("errors", [])
+        err_msg = "; ".join(
+            f"{e.get('errorCode','?')}: {e.get('message','?')}" for e in errors
+        ) if errors else resp.get("message", str(resp))
+
+        log.error(
+            f"[place_order] ❌ Order rejected [{r.status_code}]: {err_msg}\n"
+            f"  Payload sent: {payload}"
+        )
+        return None
+
+    except requests.exceptions.Timeout:
+        log.error("[place_order] Request timed out")
+        return None
     except Exception as e:
-        log.error(f"[Order] exception: {e}")
+        log.error(f"[place_order] Unexpected error: {e}")
         return None
 
 
-def cancel_order(order_id: str) -> bool:
+# ── Positions ─────────────────────────────────────────────────────────────────
+
+def get_positions() -> list:
+    """
+    Fetch all open positions from Upstox.
+    Returns a list of position dicts, or [] on error.
+    """
     try:
-        r = requests.delete(
-            f"{BASE}/order/cancel",
-            headers=_headers(),
-            params={"order_id": order_id},
-            timeout=8
-        )
-        return r.status_code == 200
+        r = requests.get(f"{BASE}/portfolio/short-term-positions",
+                         headers=_headers(), timeout=8)
+        if r.status_code != 200:
+            log.warning(f"[upstox_client] positions API {r.status_code}")
+            return []
+        data = r.json().get("data", []) or []
+        return data
     except Exception as e:
-        log.warning(f"[Cancel] error: {e}")
-        return False
+        log.warning(f"[upstox_client] get_positions error: {e}")
+        return []
 
 
-# ── WebSocket feed for GOLDTEN live price ─────────────────────────────────────
-
-def start_goldten_ws():
-    """
-    Subscribe to GOLDTEN MCX live feed via Upstox V3 WebSocket.
-    Updates CONFIG["goldten_last"] and CONFIG["live_basis"] on each tick.
-    """
-    import websocket
-
-    def _on_message(ws, message):
-        try:
-            # Upstox V3 sends protobuf — decode via REST LTP for simplicity
-            pass
-        except Exception as e:
-            log.debug(f"[WS] message error: {e}")
-
-    def _poll_goldten_ltp():
-        """Lightweight fallback: poll LTP every 5 seconds."""
-        while True:
-            try:
-                token = CONFIG.get("upstox_access_token", "")
-                instrument_key = CONFIG.get("goldten_instrument_key", "")
-                if token and instrument_key:
-                    r = requests.get(
-                        f"{BASE}/market-quote/ltp",
-                        headers=_headers(),
-                        params={"instrument_key": instrument_key},
-                        timeout=5
-                    )
-                    if r.status_code == 200:
-                        data = r.json().get("data", {})
-                        # Key in response may be exact instrument_key
-                        # Try direct key first, then iterate all values
-                        item = data.get(instrument_key)
-                        if not item:
-                            # Fallback: grab first item in data dict
-                            item = next(iter(data.values()), None) if data else None
-                        ltp = item.get("last_price", 0) if item else 0
-                        if ltp:
-                            CONFIG["goldten_last"] = float(ltp)
-                            xau = CONFIG.get("xauusd_last", 0)
-                            if xau > 0:
-                                spot_equiv = xau_to_mcx(xau)
-                                CONFIG["live_basis"] = round(float(ltp) - spot_equiv, 0)
-                            log.info(f"[GoldtenLTP] ₹{ltp:.0f}")
-                    elif r.status_code != 200:
-                        log.warning(f"[GoldtenLTP] {r.status_code}: {r.text[:100]}")
-            except Exception as e:
-                log.debug(f"[GoldtenLTP] poll error: {e}")
-            time.sleep(5)
-
-    t = threading.Thread(target=_poll_goldten_ltp, daemon=True, name="GoldtenLTP")
-    t.start()
-    log.info("[Upstox] GOLDTEN LTP poller started")
-    return t
+def get_ltp(instrument_key: str) -> float:
+    """Fetch last traded price for a single instrument key."""
+    if not instrument_key:
+        return 0.0
+    try:
+        r = requests.get(
+            f"{BASE}/market-quote/ltp",
+            headers=_headers(),
+            params={"instrument_key": instrument_key},
+            timeout=6,
+        )
+        if r.status_code != 200:
+            return 0.0
+        data = r.json().get("data", {})
+        for v in data.values():
+            return float(v.get("last_price", 0) or 0)
+        return 0.0
+    except Exception:
+        return 0.0
 
 
-# ── USDINR poller + freeze logic ──────────────────────────────────────────────
-
-def start_usdinr_poller():
-    """
-    Polls USDINR futures every 30s during market hours.
-    At 17:00 IST, freezes the rate and stops polling.
-    """
-    def _loop():
-        while True:
-            now_ist = datetime.now(IST)
-            hour    = now_ist.hour
-            minute  = now_ist.minute
-
-            # Freeze at 17:00 IST
-            if hour == 17 and minute == 0 and not CONFIG.get("usdinr_is_frozen"):
-                frozen = CONFIG.get("usdinr_live", 0.0)
-                if frozen > 0:
-                    CONFIG["usdinr_frozen"]    = frozen
-                    CONFIG["usdinr_is_frozen"] = True
-                    log.info(f"[USDINR] Frozen at ₹{frozen:.4f} — evening session mode")
-                    from telegram_alerts import send_message
-                    send_message(
-                        f"🔒 <b>USDINR Frozen</b>\n"
-                        f"Rate locked at <b>{frozen:.4f}</b> for evening session.\n"
-                        f"Gold engine continues till 23:25 IST."
-                    )
-
-            # Reset freeze at midnight
-            if hour == 0 and minute == 1 and CONFIG.get("usdinr_is_frozen"):
-                CONFIG["usdinr_is_frozen"] = False
-                CONFIG["usdinr_frozen"]    = 0.0
-                log.info("[USDINR] Freeze reset — morning session")
-
-            # Only fetch if not frozen and during USDINR trading hours (9 AM–5 PM IST)
-            if not CONFIG.get("usdinr_is_frozen") and 9 <= hour < 17:
-                if not CONFIG.get("upstox_access_token"):
-                    pass   # skip silently — no token yet
-                else:
-                    rate = fetch_usdinr_rate()
-                    if rate > 0:
-                        CONFIG["usdinr_live"] = rate
-
-            time.sleep(30)
-
-    t = threading.Thread(target=_loop, daemon=True, name="USDINRPoller")
-    t.start()
-    log.info("[Upstox] USDINR poller started")
-    return t
-
-
-# ── Background updater for balance & positions (dashboard) ─────────────────────
-
-def start_balance_updater():
-    """
-    Periodically fetches live balance and updates CONFIG["capital"].
-    This makes the dashboard show real‑time available funds.
-    """
-    def _update():
-        while True:
-            try:
-                balance = fetch_ledger_balance()
-                if balance > 0:
-                    CONFIG["capital"] = balance
-                    CONFIG["balance"] = balance   # alias for dashboard
-                    log.debug(f"[BalanceUpdater] Updated capital: ₹{balance:,.0f}")
-            except Exception as e:
-                log.warning(f"[BalanceUpdater] error: {e}")
-            time.sleep(60)   # update every minute
-
-    t = threading.Thread(target=_update, daemon=True, name="BalanceUpdater")
-    t.start()
-    log.info("[Upstox] Balance updater started (every 60s)")
-
-
-def start_background_updaters():
-    """Call this from app startup to start all background updaters."""
-    start_balance_updater()
-    # Positions are fetched on demand via /api/positions, no background needed
+def get_goldten_ltp() -> float:
+    """Convenience wrapper — fetch GOLDTEN MCX futures LTP and cache in CONFIG."""
+    key = CONFIG.get("goldten_instrument_key", "")
+    if not key:
+        return float(CONFIG.get("goldten_last", 0))
+    ltp = get_ltp(key)
+    if ltp > 0:
+        CONFIG["goldten_last"] = ltp
+    return ltp
