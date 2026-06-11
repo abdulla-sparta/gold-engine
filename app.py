@@ -112,18 +112,58 @@ def api_positions():
     else:
         log.warning("[DEBUG /api/positions] No positions returned from Upstox")
 
-    # Enrich with live LTP where missing
+    # ── Normalize Upstox V2 field names → dashboard-expected names ──────────
+    # Upstox short-term-positions returns:
+    #   quantity            (net, day+overnight combined)
+    #   average_price       ✓
+    #   pnl                 (day realised P&L)
+    #   unrealised          (unrealised P&L if position open)
+    #   day_buy_quantity / day_sell_quantity  (intraday trades only)
+    #   overnight_buy_quantity / overnight_sell_quantity
+    # Dashboard JS expects: net_quantity, average_price, day_pnl, unrealised
     goldten_last = CONFIG.get("goldten_last", 0)
     for p in positions:
+        # ── net_quantity ──────────────────────────────────────────────────────
+        # Upstox field is "quantity" (net day+overnight). Map to net_quantity
+        # so JS doesn't need to know both names.
+        if "net_quantity" not in p:
+            p["net_quantity"] = int(p.get("quantity", 0) or 0)
+
+        # ── average_price ─────────────────────────────────────────────────────
+        # Upstox `average_price` is a known buggy field that returns 0 for
+        # overnight positions (community-confirmed).  Resolution order:
+        #   1. buy_price   — Upstox's own weighted avg price field (most accurate)
+        #   2. average_price — if non-zero
+        #   3. buy_value / quantity — calculated fallback
+        buy_price  = float(p.get("buy_price",    0) or 0)
+        avg_price  = float(p.get("average_price", 0) or 0)
+        buy_val    = float(p.get("buy_value",     0) or 0)
+        qty_f      = float(p.get("quantity",      0) or 0)
+        if buy_price > 0:
+            p["average_price"] = round(buy_price, 2)
+        elif avg_price > 0:
+            p["average_price"] = round(avg_price, 2)
+        elif buy_val > 0 and qty_f > 0:
+            p["average_price"] = round(buy_val / qty_f, 2)
+
+        # ── day_pnl ───────────────────────────────────────────────────────────
+        # Upstox returns "pnl" = day realised P&L on short-term-positions.
+        if "day_pnl" not in p:
+            p["day_pnl"] = float(p.get("pnl", 0) or 0)
+
+        # ── last_price ────────────────────────────────────────────────────────
         sym = (p.get("tradingsymbol") or "").upper()
         if "GOLDTEN" in sym and not p.get("last_price"):
             p["last_price"] = goldten_last
-        # Compute unrealised P&L if absent
-        if "unrealised" not in p and p.get("last_price") and p.get("average_price"):
-            qty = p.get("net_quantity", 0)
-            p["unrealised"] = round(
-                (float(p["last_price"]) - float(p["average_price"])) * int(qty), 2
-            )
+
+        # ── unrealised ────────────────────────────────────────────────────────
+        # Use Upstox's own unrealised if present, otherwise compute.
+        if not p.get("unrealised") and p.get("last_price") and p.get("average_price"):
+            qty  = int(p.get("net_quantity", 0))
+            ltp  = float(p["last_price"])
+            avg  = float(p["average_price"])
+            mult = 1 if qty >= 0 else -1
+            p["unrealised"] = round((ltp - avg) * abs(qty) * mult, 2)
 
     return jsonify(positions)
 
@@ -371,18 +411,20 @@ def api_swings():
 def api_conversion():
     """Live conversion calc — useful for manual verification."""
     from upstox_client import xau_to_mcx, get_usdinr
-    xau   = CONFIG.get("xauusd_last", 0)
-    usdinr = get_usdinr()
+    xau       = CONFIG.get("xauusd_last", 0)
+    usdinr    = get_usdinr()
     mcx_equiv = xau_to_mcx(xau) if xau else 0
     return jsonify({
         "xauusd":          xau,
-        "usdinr":          usdinr,
+        "usdinr":          usdinr,               # Upstox NCD_FO futures rate (frozen after 17:00)
+        "usdinr_spot":     CONFIG.get("usdinr_spot", 0),   # TwelveData forex spot (continuous)
         "usdinr_frozen":   CONFIG.get("usdinr_is_frozen"),
         "oz_to_10gms":     CONFIG.get("oz_to_10gms"),
         "mcx_equiv":       mcx_equiv,
         "goldten_last":    CONFIG.get("goldten_last"),
         "live_basis":      CONFIG.get("live_basis"),
         "basis_pct":       round(CONFIG.get("live_basis", 0) / mcx_equiv * 100, 3) if mcx_equiv else 0,
+        "wti_last":        CONFIG.get("wti_last", 0),      # WTI crude spot (USD/bbl)
     })
 
 

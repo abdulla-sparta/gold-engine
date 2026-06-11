@@ -34,7 +34,10 @@
                letter-spacing: 0.5px; margin-right: 6px; }
   nav .badge { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px;
                background: #F1F3F8; border: 1px solid var(--border); color: var(--muted); }
-  nav .badge.live { background: var(--green-bg); border-color: #86EFAC; color: var(--green); }
+  nav .badge.live    { background: var(--green-bg); border-color: #86EFAC; color: var(--green); }
+  nav .badge.morning { background: #FFF7ED; border-color: #FCD34D; color: #92400E; }
+  nav .badge.evening { background: #EEF2FF; border-color: #A5B4FC; color: #3730A3; }
+  nav .badge.closed  { background: #F1F3F8; border-color: var(--border); color: var(--muted); }
   nav .spacer { flex: 1; }
   nav button { background: #F8F9FB; border: 1px solid var(--border); color: var(--text);
                padding: 6px 14px; border-radius: 7px; cursor: pointer; font-size: 13px;
@@ -638,6 +641,13 @@ function renderStatus(d) {
   document.getElementById('kill-btn').style.opacity = d.kill_switch ? '0.5' : '1';
   const pb = document.getElementById('paper-badge');
   if (pb) { pb.textContent = d.paper_mode !== false ? '📝 PAPER' : '⚡ LIVE'; pb.style.background = d.paper_mode !== false ? '#FFFBEB' : '#F0FDF4'; }
+  const sb = document.getElementById('session-badge');
+  if (sb) {
+    const sess = d.market_session || 'Closed';
+    const sessMap = { 'Morning': '🌅 Morning', 'Evening': '🌆 Evening', 'Closed': '🔴 Closed' };
+    sb.textContent = sessMap[sess] || sess;
+    sb.className = 'badge ' + sess.toLowerCase();
+  }
   document.getElementById('xau-price').textContent = d.xauusd_last ? `$${d.xauusd_last.toLocaleString('en-US', {minimumFractionDigits:3})}` : '—';
   document.getElementById('goldten-price').textContent = d.goldten_last ? `₹${Math.round(d.goldten_last).toLocaleString('en-IN')}` : '—';
   document.getElementById('dxy-val').textContent = d.dxy_last ? d.dxy_last.toFixed(2) : '—';

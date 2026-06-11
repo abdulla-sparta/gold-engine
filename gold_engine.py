@@ -47,24 +47,41 @@ class GoldEngine:
     def start_passive_analysis(self):
         """
         Runs HTF/LTF bias + swing scan continuously regardless of engine running state.
-        This ensures HTF Bias shows on dashboard even when engine is IDLE.
+        This ensures HTF Bias, swing levels, and live basis show on dashboard even when IDLE.
         """
         def _passive_loop():
+            _usdinr_refreshed = False   # track first successful USDINR for mcx_equiv refresh
             while True:
                 try:
-                    xau_feed = get_xauusd()
+                    xau_feed    = get_xauusd()
                     candles_15m = xau_feed.buf_15m.all_closed()
                     candles_5m  = xau_feed.buf_5m.all_closed()
+
                     if len(candles_15m) >= 10:
                         self.htf.update(candles_15m)
                         usdinr = get_usdinr()
+
                         if usdinr > 0:
                             self.swings.scan(candles_15m, usdinr)
+
+                            # One-time fix: refresh any ₹0 MCX equivs saved during startup race
+                            if not _usdinr_refreshed:
+                                self.swings.refresh_mcx_equivs(usdinr)
+                                _usdinr_refreshed = True
+
+                        # Update live basis in CONFIG so dashboard always shows it
+                        xau     = CONFIG.get("xauusd_last", 0)
+                        goldten = CONFIG.get("goldten_last", 0)
+                        if xau > 0 and usdinr > 0 and goldten > 0:
+                            mcx_eq = xau_to_mcx(xau)
+                            if mcx_eq > 0:
+                                CONFIG["live_basis"] = round(goldten - mcx_eq, 2)
+
                     if len(candles_5m) >= 8:
-                        # Update LTF pivots passively (no signal firing)
                         htf_bias = self.htf.bias
                         if htf_bias != "NONE":
                             self.ltf.check(candles_5m, htf_bias)
+
                 except Exception as e:
                     log.debug(f"[PassiveAnalysis] error: {e}")
                 time.sleep(30)
@@ -87,20 +104,15 @@ class GoldEngine:
                 self._tick()
             except Exception as e:
                 log.error(f"[GoldEngine] tick error: {e}")
-            time.sleep(15)   # check every 15s (candles update every 60s)
+            time.sleep(15)
 
     def _tick(self):
         now_ist = datetime.now(IST)
 
-        # Session guard — only trade during MCX gold hours
         if not self._is_trading_session(now_ist):
             return
-
-        # Kill switch
         if CONFIG.get("kill_switch"):
             return
-
-        # Already in a position — check exit
         if CONFIG.get("current_position"):
             self._check_exit()
             return
@@ -114,25 +126,19 @@ class GoldEngine:
         if len(candles_15m) < 10 or len(candles_5m) < 8:
             return
 
-        # Only process on new 5m candle close
         latest_5m_ts = candles_5m[-1]["timestamp"]
         if latest_5m_ts == self._last_candle_ts:
             return
         self._last_candle_ts = latest_5m_ts
 
-        # 1. Update swing level tracker (runs on 15m)
         usdinr = get_usdinr()
         self.swings.scan(candles_15m, usdinr)
 
-        # 2. HTF bias
         htf_bias = self.htf.update(candles_15m)
-
-        # 3. LTF entry signal
-        signal = self.ltf.check(candles_5m, htf_bias)
+        signal   = self.ltf.check(candles_5m, htf_bias)
         if not signal:
             return
 
-        # 4. Swing level confluence — must be near a key level
         goldten = CONFIG.get("goldten_last", 0)
         if goldten <= 0:
             return
@@ -142,33 +148,27 @@ class GoldEngine:
             log.debug(f"[GoldEngine] Signal {signal['direction']} — not near any swing level, skip")
             return
 
-        # Pick the closest level
         best_level = min(nearby, key=lambda x: x["dist_pct"])
+        direction  = signal["direction"]
 
-        # 5. Direction must match swing type
-        direction = signal["direction"]
         if direction == "SELL" and best_level["swing_type"] != "swing_high":
-            log.debug("[GoldEngine] SELL near swing_low — skip (wrong level type)")
+            log.debug("[GoldEngine] SELL near swing_low — skip")
             return
-        if direction == "BUY" and best_level["swing_type"] != "swing_low":
-            log.debug("[GoldEngine] BUY near swing_high — skip (wrong level type)")
+        if direction == "BUY"  and best_level["swing_type"] != "swing_low":
+            log.debug("[GoldEngine] BUY near swing_high — skip")
             return
 
-        # 6. DXY confluence — uses real DXY from newsbot (CONFIG["dxy_last"] + CONFIG["dxy_change_pct"])
         dxy_candles = dxy_feed.buf_15m.all_closed()
         if not dxy_confluence(dxy_candles, direction):
             return
 
-        # 7. USDINR trend filter
         if CONFIG.get("usdinr_trend_enabled"):
             if not self._usdinr_aligns(direction):
                 log.info("[GoldEngine] USDINR trend conflict — skip")
                 return
 
-        # 8. Build MCX entry, stop, target
-        xau_entry = signal["xau_price"]
-        xau_stop  = signal["xau_stop"]
-
+        xau_entry  = signal["xau_price"]
+        xau_stop   = signal["xau_stop"]
         mcx_entry  = xau_to_mcx(xau_entry)
         mcx_stop   = xau_to_mcx(xau_stop)
         stop_dist  = abs(mcx_entry - mcx_stop)
@@ -181,16 +181,14 @@ class GoldEngine:
         mcx_target = (mcx_entry + rr * stop_dist) if direction == "BUY" \
                      else (mcx_entry - rr * stop_dist)
 
-        # 9. Sizing — fetch live margin
-        balance       = fetch_ledger_balance()
+        balance        = fetch_ledger_balance()
         margin_per_lot = fetch_margin_for_goldten(qty=1)
-        qty           = calc_max_lots(balance, margin_per_lot)
+        qty            = calc_max_lots(balance, margin_per_lot)
 
         if qty < 1:
             log.warning("[GoldEngine] Insufficient margin for even 1 lot — skip")
             return
 
-        # 10. Place order (or simulate in paper mode)
         paper_mode = CONFIG.get("paper_mode", True)
         if paper_mode:
             order_id = f"PAPER-{int(time.time())}"
@@ -201,11 +199,9 @@ class GoldEngine:
                 log.error("[GoldEngine] Order placement failed")
                 return
 
-        # 11. Mark swing level as touched
         if best_level.get("id"):
             self.swings.mark_touched(best_level["id"])
 
-        # 12. Save trade to DB
         trade = {
             "direction":    direction,
             "entry_price":  mcx_entry,
@@ -227,7 +223,6 @@ class GoldEngine:
         }
         db.set("current_position", CONFIG["current_position"])
 
-        # 13. Telegram alert
         frozen_tag = " 🔒frozen" if CONFIG.get("usdinr_is_frozen") else ""
         paper_tag  = " 📝 PAPER" if CONFIG.get("paper_mode", True) else ""
         send_message(
@@ -263,17 +258,13 @@ class GoldEngine:
                      (direction == "SELL" and goldten <= target)
 
         reason = None
-        if hit_stop:
-            reason = "STOP"
-        elif hit_target:
-            reason = "TARGET"
+        if hit_stop:   reason = "STOP"
+        elif hit_target: reason = "TARGET"
 
         if reason:
-            entry = pos.get("entry_price")
-            qty   = pos.get("qty", 1)
-            pnl   = (goldten - entry) * qty * (1 if direction == "BUY" else -1)
-
-            # Close via opposite market order
+            entry     = pos.get("entry_price")
+            qty       = pos.get("qty", 1)
+            pnl       = (goldten - entry) * qty * (1 if direction == "BUY" else -1)
             close_dir = "SELL" if direction == "BUY" else "BUY"
             if not CONFIG.get("paper_mode", True):
                 place_order(close_dir, qty, goldten, order_type="MARKET")
@@ -292,7 +283,7 @@ class GoldEngine:
             )
             log.info(f"[GoldEngine] {reason} exit — PnL ₹{pnl:,.0f}")
 
-    # ── Force exit (manual) ───────────────────────────────────────────────────
+    # ── Force exit ────────────────────────────────────────────────────────────
 
     def force_exit(self) -> bool:
         pos = CONFIG.get("current_position")
@@ -316,24 +307,17 @@ class GoldEngine:
     # ── Session check ─────────────────────────────────────────────────────────
 
     def _is_trading_session(self, now_ist: datetime) -> bool:
-        h = now_ist.hour
-        m = now_ist.minute
-        # MCX gold: 09:00 – 23:25 IST (Mon–Fri), 09:00–14:00 Sat
-        if now_ist.weekday() >= 6:   # Sunday
+        h  = now_ist.hour
+        m  = now_ist.minute
+        if now_ist.weekday() >= 6:
             return False
-        if now_ist.weekday() == 5:   # Saturday
+        if now_ist.weekday() == 5:
             return 9 <= h < 14
         hm = h * 60 + m
         return (9 * 60) <= hm <= (23 * 60 + 25)
 
     def _usdinr_aligns(self, direction: str) -> bool:
-        """USDINR rising = dollar strong = bearish gold in INR terms."""
-        live   = CONFIG.get("usdinr_live", 0)
-        frozen = CONFIG.get("usdinr_frozen", 0)
-        rate   = CONFIG.get("usdinr_live", 0)
-        # Simple check: if rate moved >0.2% today, use as trend signal
-        # Real trend tracking would need previous day close — kept simple for now
-        return True   # pass through, can refine later
+        return True   # pass-through; refine later with previous-day close
 
     def get_status(self) -> dict:
         return {
@@ -351,15 +335,11 @@ class GoldEngine:
             "swing_threshold":  CONFIG.get("swing_level_threshold_pct"),
             "paper_mode":       CONFIG.get("paper_mode", True),
             "dxy_last":         CONFIG.get("dxy_last"),
-            "dxy_change_pct":   CONFIG.get("dxy_change_pct", 0.0),  # real DXY from newsbot
-            # Live Upstox balance — populated by start_background_updaters().
-            # Paper mode: paper capital. Live mode: real Upstox available margin.
+            "dxy_change_pct":   CONFIG.get("dxy_change_pct", 0.0),
             "balance":          CONFIG.get("balance", CONFIG.get("capital", 0)),
             "capital":          CONFIG.get("capital", 0),
-            # Instrument keys — resolved at startup by instrument_resolver.
-            # Exposed here so the dashboard order modal can pre-fill the key.
-            "goldten_instrument_key":  CONFIG.get("goldten_instrument_key", ""),
-            "goldten_trading_symbol":  CONFIG.get("goldten_trading_symbol", ""),
+            "goldten_instrument_key": CONFIG.get("goldten_instrument_key", ""),
+            "goldten_trading_symbol": CONFIG.get("goldten_trading_symbol", ""),
         }
 
 
