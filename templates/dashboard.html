@@ -48,6 +48,19 @@
   nav button.primary { background: var(--gold); color: #fff; border-color: var(--gold); font-weight: 600; }
   nav button.primary:hover { background: #B07208; border-color: #B07208; }
 
+  /* ── Page tabs ── */
+  .page-tabs { background: var(--nav-bg); border-bottom: 1px solid var(--border);
+               padding: 0 24px; display: flex; gap: 0; }
+  .page-tab { padding: 10px 18px; font-size: 13px; font-weight: 500; cursor: pointer;
+              border-bottom: 2px solid transparent; color: var(--muted); transition: all .15s;
+              user-select: none; }
+  .page-tab:hover { color: var(--text); }
+  .page-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  /* ── Pages ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
   /* Layout */
   .main { padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
   .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 14px; }
@@ -126,7 +139,7 @@
   .trade-table tr:last-child td { border-bottom: none; }
   .trade-table tbody tr:hover { background: #FAFBFC; }
 
-  /* ── Macro Events History Table ── */
+  /* Macro Events History Table */
   .meh-table { width: 100%; border-collapse: collapse; font-size: 12px; }
   .meh-table th { font-size: 11px; color: var(--muted); text-align: left;
                   padding: 7px 12px; border-bottom: 1px solid var(--border);
@@ -142,6 +155,8 @@
                padding: 2px 8px; border-radius: 3px; white-space: nowrap; }
   .meh-fomc   { background: #EFF6FF; color: #1D4ED8; border: 1px solid #93C5FD; }
   .meh-cpi    { background: #F0FDF4; color: #15803D; border: 1px solid #86EFAC; }
+  .meh-wpi    { background: #EFF6FF; color: #1D4ED8; border: 1px solid #93C5FD; }
+  .meh-rbi    { background: #F5F3FF; color: #5B21B6; border: 1px solid #C4B5FD; }
   .meh-vh     { background: #FEF2F2; color: #991B1B; border: 1px solid #FCA5A5; }
   .meh-hi     { background: #FFF7ED; color: #C2410C; border: 1px solid #FDBA74; }
   .meh-cut    { background: #F0FDF4; color: #065F46; border: 1px solid #6EE7B7; }
@@ -158,7 +173,7 @@
   .meh-filter-btn.active, .meh-filter-btn:hover {
     background: var(--gold-bg); border-color: var(--gold); color: var(--gold); }
 
-  /* ── Live Macro Events Card ── */
+  /* Live Macro Events Card */
   .events-list { list-style: none; margin: 0; padding: 0; }
   .event-item { display: flex; align-items: flex-start; gap: 10px;
                 padding: 9px 0; border-bottom: 1px solid #F1F3F6; }
@@ -276,8 +291,77 @@
                   background: #1e293b; color: white; padding: 6px 12px;
                   border-radius: 20px; font-size: 12px; z-index: 2000; display: none; }
 
+  /* ── Macro page styles ── */
+  .macro-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .macro-metric-row { display: grid; grid-template-columns: repeat(6,1fr); gap: 10px; margin-bottom: 14px; }
+  .macro-metric { background: #FAFBFC; border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+  .macro-metric-label { font-size: 11px; color: var(--muted); margin-bottom: 5px; }
+  .macro-metric-val { font-size: 18px; font-weight: 700; color: var(--text); }
+  .macro-metric-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .macro-rate-row { display: flex; justify-content: space-between; align-items: center;
+                    padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .macro-rate-row:last-child { border-bottom: none; }
+  .macro-badge { display: inline-block; font-size: 10px; font-weight: 700;
+                 padding: 2px 8px; border-radius: 3px; white-space: nowrap; }
+  .mb-cut   { background: #F0FDF4; color: #065F46; border: 1px solid #6EE7B7; }
+  .mb-hike  { background: #FEF2F2; color: #991B1B; border: 1px solid #FCA5A5; }
+  .mb-hold  { background: #F1F3F8; color: var(--muted); border: 1px solid var(--border); }
+  .mb-hot   { background: #FEF2F2; color: #991B1B; border: 1px solid #FCA5A5; }
+  .mb-cool  { background: #F0FDF4; color: #15803D; border: 1px solid #86EFAC; }
+  .mb-warm  { background: #FFF7ED; color: #C2410C; border: 1px solid #FDBA74; }
+  .mb-bull  { background: #F0FDF4; color: #15803D; border: 1px solid #86EFAC; font-size:11px; padding:3px 10px; border-radius:20px; }
+  .mb-bear  { background: #FEF2F2; color: #991B1B; border: 1px solid #FCA5A5; font-size:11px; padding:3px 10px; border-radius:20px; }
+  .mb-neut  { background: #F1F3F8; color: var(--muted); border: 1px solid var(--border); font-size:11px; padding:3px 10px; border-radius:20px; }
+  .corr-row { display: flex; justify-content: space-between; align-items: center;
+              padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .corr-row:last-child { border-bottom: none; }
+  .corr-bar-wrap { width: 80px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .corr-bar { height: 100%; border-radius: 3px; }
+  .macro-event-row { display: flex; align-items: flex-start; gap: 10px;
+                     padding: 9px 0; border-bottom: 1px solid #F1F3F6; }
+  .macro-event-row:last-child { border-bottom: none; }
+  .macro-event-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+  .macro-event-body { flex: 1; }
+  .macro-event-name { font-weight: 600; font-size: 13px; }
+  .macro-event-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .macro-event-exp  { font-size: 11px; color: var(--text); margin-top: 3px; }
+  .days-left { font-size: 11px; padding: 2px 8px; border-radius: 20px;
+               background: #F1F3F6; border: 1px solid var(--border); color: var(--muted); white-space: nowrap; margin-top: 2px; }
+  .days-soon { background: #FEF3C7; border-color: #FCD34D; color: #92400E; }
+  .macro-score-box { text-align: center; padding: 10px 0; }
+  .macro-score-num { font-size: 48px; font-weight: 800; color: #15803D; line-height: 1; }
+  .macro-comp-row { display: flex; justify-content: space-between; padding: 5px 0;
+                    border-bottom: 1px solid #F1F3F6; font-size: 13px; }
+  .macro-comp-row:last-child { border-bottom: none; }
+  .up { color: #15803D; font-weight: 600; }
+  .down { color: #DC2626; font-weight: 600; }
+  .neu { color: var(--muted); }
+  .macro-news-row { display: flex; gap: 10px; padding: 9px 0;
+                    border-bottom: 1px solid #F1F3F6; cursor: pointer; }
+  .macro-news-row:last-child { border-bottom: none; }
+  .macro-news-row:hover .macro-news-title { color: var(--gold); }
+  .macro-news-src { font-size: 10px; padding: 2px 6px; border-radius: 3px;
+                    background: #F1F3F6; color: var(--muted); white-space: nowrap; height: fit-content; margin-top: 2px; }
+  .macro-news-title { font-size: 13px; line-height: 1.4; color: var(--text); }
+  .macro-news-time { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .macro-hist-row { padding: 9px 0; border-bottom: 1px solid #F1F3F6; }
+  .macro-hist-row:last-child { border-bottom: none; }
+  .macro-hist-title { display: flex; justify-content: space-between; font-weight: 600; font-size: 13px; }
+  .macro-hist-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .news-filter-bar { display: flex; gap: 6px; margin-bottom: 12px; }
+  .news-filter-btn { font-size: 11px; padding: 3px 10px; border-radius: 20px; cursor: pointer;
+                     background: #F1F3F6; border: 1px solid var(--border); color: var(--muted); transition: all .15s; }
+  .news-filter-btn.active, .news-filter-btn:hover { background: var(--gold-bg); border-color: var(--gold); color: var(--gold); }
+  .macro-live-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px;
+                      padding: 3px 8px; border-radius: 20px; background: var(--green-bg);
+                      border: 1px solid #86EFAC; color: var(--green); }
+  .pulse { width: 6px; height: 6px; border-radius: 50%; background: #15803D;
+           animation: pulse 1.5s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
   @media (max-width: 780px) {
-    .grid-3, .grid-2 { grid-template-columns: 1fr; gap: 12px; }
+    .grid-3, .grid-2, .macro-grid-2 { grid-template-columns: 1fr; gap: 12px; }
+    .macro-metric-row { grid-template-columns: 1fr 1fr 1fr; }
     .pos-grid { grid-template-columns: 1fr 1fr; }
     .tradingview-widget-container { height: 45vh; }
     .meh-table th:nth-child(5), .meh-table td:nth-child(5) { display: none; }
@@ -298,230 +382,448 @@
   <button onclick="window.location='/login'">🔐 Re-Auth</button>
 </nav>
 
-<!-- TradingView Chart -->
-<div class="main" style="padding-bottom:0;">
-  <div class="chart-container">
-    <div class="chart-header">
-      <h3>📈 XAU/USD Spot & Futures — Advanced Chart (TVC:GOLD)</h3>
-      <small>15m interval · TradingView</small>
-    </div>
-    <div class="tradingview-widget-container">
-      <div class="tradingview-widget-container__widget"></div>
-      <div class="tradingview-widget-copyright" style="font-size:10px;text-align:right;padding-right:12px;">
-        <a href="https://www.tradingview.com/symbols/GOLD/?exchange=TVC" rel="noopener nofollow" target="_blank" style="color:var(--muted);text-decoration:none;">
-          <span class="blue-text">GOLD chart</span> by TradingView
-        </a>
-      </div>
-      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
-      {"allow_symbol_change":true,"calendar":false,"details":false,"hide_side_toolbar":true,"hide_top_toolbar":false,"hide_legend":false,"hide_volume":false,"hotlist":false,"interval":"15","locale":"en","save_image":true,"style":"1","symbol":"TVC:GOLD","theme":"light","timezone":"Etc/UTC","backgroundColor":"#ffffff","gridColor":"rgba(46,46,46,0.06)","watchlist":[],"withdateranges":false,"compareSymbols":[],"studies":[],"autosize":true}
-      </script>
-    </div>
-  </div>
+<!-- Page tabs -->
+<div class="page-tabs">
+  <div class="page-tab active" onclick="switchTab('engine',this)">⚡ Engine</div>
+  <div class="page-tab" onclick="switchTab('macro',this)">📊 Macro Intelligence</div>
 </div>
 
+<!-- ═══════════════════════ ENGINE PAGE ═══════════════════════ -->
+<div id="page-engine" class="page active">
+
+  <!-- TradingView Chart -->
+  <div class="main" style="padding-bottom:0;">
+    <div class="chart-container">
+      <div class="chart-header">
+        <h3>📈 XAU/USD Spot & Futures — Advanced Chart (TVC:GOLD)</h3>
+        <small>15m interval · TradingView</small>
+      </div>
+      <div class="tradingview-widget-container">
+        <div class="tradingview-widget-container__widget"></div>
+        <div class="tradingview-widget-copyright" style="font-size:10px;text-align:right;padding-right:12px;">
+          <a href="https://www.tradingview.com/symbols/GOLD/?exchange=TVC" rel="noopener nofollow" target="_blank" style="color:var(--muted);text-decoration:none;">
+            <span class="blue-text">GOLD chart</span> by TradingView
+          </a>
+        </div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+        {"allow_symbol_change":true,"calendar":false,"details":false,"hide_side_toolbar":true,"hide_top_toolbar":false,"hide_legend":false,"hide_volume":false,"hotlist":false,"interval":"15","locale":"en","save_image":true,"style":"1","symbol":"TVC:GOLD","theme":"light","timezone":"Etc/UTC","backgroundColor":"#ffffff","gridColor":"rgba(46,46,46,0.06)","watchlist":[],"withdateranges":false,"compareSymbols":[],"studies":[],"autosize":true}
+        </script>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- Live Position card -->
+    <div class="pos-card" id="pos-card" style="display:none">
+      <div class="pos-header">
+        <div><span class="pos-dir" id="pos-dir">BUY</span><span style="color:var(--muted);margin-left:8px;font-size:13px;font-weight:500">GOLDTEN MCX</span></div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span id="pos-pnl" style="font-size:20px;font-weight:800"></span>
+          <button class="btn btn-red" onclick="forceExit()">Exit Position</button>
+        </div>
+      </div>
+      <div class="pos-grid">
+        <div class="pos-item"><label>Entry (MCX)</label><span id="pos-entry">—</span></div>
+        <div class="pos-item"><label>Stop</label><span id="pos-stop" style="color:var(--red)">—</span></div>
+        <div class="pos-item"><label>Target</label><span id="pos-target" style="color:var(--green)">—</span></div>
+        <div class="pos-item"><label>Qty (lots)</label><span id="pos-qty">—</span></div>
+        <div class="pos-item"><label>XAU/USD Entry</label><span id="pos-xau">—</span></div>
+        <div class="pos-item"><label>USDINR at Entry</label><span id="pos-usdinr">—</span></div>
+        <div class="pos-item"><label>Basis at Entry</label><span id="pos-basis">—</span></div>
+        <div class="pos-item"><label>Current GOLDTEN</label><span id="pos-goldten">—</span></div>
+      </div>
+    </div>
+
+    <!-- Top metrics -->
+    <div class="grid-3">
+      <div class="card"><div class="card-title">XAU/USD Spot</div><div class="card-value text-gold" id="xau-price">—</div><div class="card-sub">$/oz · Twelve Data</div></div>
+      <div class="card"><div class="card-title">GOLDTEN MCX Futures</div><div class="card-value" id="goldten-price">—</div><div class="card-sub">₹/10gms · MCX 30JUN26</div></div>
+      <div class="card"><div class="card-title">HTF Bias (15m XAU/USD)</div><div style="margin-top:8px"><span class="bias NONE" id="htf-bias">NONE</span></div><div class="card-sub" style="margin-top:8px" id="htf-ref">No pivot reference</div></div>
+    </div>
+
+    <!-- Second metrics row -->
+    <div class="grid-3">
+      <div class="card"><div class="card-title">USDINR Futures</div><div class="card-value" id="usdinr-rate">—</div><div class="card-sub" id="usdinr-status">Live · NSE Futures</div></div>
+      <div class="card"><div class="card-title">DXY <span style="font-size:10px;color:var(--muted);font-weight:400">US Dollar Index</span></div><div class="card-value" id="dxy-val">—</div><div class="card-sub" id="dxy-sub">DX-Y.NYB · Newsbot</div></div>
+      <div class="card"><div class="card-title">Live Basis (Futures Premium)</div><div class="card-value" id="basis-val">—</div><div class="card-sub" id="basis-pct">GOLDTEN − XAU spot equiv</div></div>
+    </div>
+
+    <!-- Trading Terminal -->
+    <div class="upstox-terminal" id="upstox-terminal">
+      <div class="term-root"><div class="term-card">
+        <div class="term-header">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="dot" id="conn-dot"></span>
+            <span id="term-title-text">Trading Terminal</span>
+            <span id="last-sync" style="font-size:11px;color:#94a3b8;">—</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="display:flex;align-items:center;gap:0;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:20px;padding:2px;font-size:11px;font-weight:600;">
+              <button id="btn-mode-paper" onclick="setTerminalMode('paper')" style="background:#fff;border:1px solid #cbd5e1;border-radius:16px;padding:3px 12px;cursor:pointer;color:#475569;">📝 Paper</button>
+              <button id="btn-mode-live"  onclick="setTerminalMode('live')"  style="background:none;border:1px solid transparent;border-radius:16px;padding:3px 12px;cursor:pointer;color:#94a3b8;">⚡ Live</button>
+            </div>
+            <span id="ist-time" style="font-size:11px;color:#94a3b8;">—</span>
+          </div>
+        </div>
+        <div id="term-mode-banner" style="padding:5px 14px;font-size:11px;font-weight:600;background:#FFFBEB;border-bottom:1px solid #FDE68A;color:#92400E;">
+          📝 Paper mode — simulated engine positions &amp; paper balance. Switch to ⚡ Live for real Upstox data.
+        </div>
+        <div class="stat-row">
+          <div class="stat-cell"><div class="stat-label">Available</div><div class="stat-val neu" id="stat-balance">—</div></div>
+          <div class="stat-cell"><div class="stat-label">Day P&L</div><div class="stat-val" id="stat-daypnl">—</div></div>
+          <div class="stat-cell"><div class="stat-label">Overall P&L</div><div class="stat-val" id="stat-totalpnl">—</div></div>
+          <div class="stat-cell"><div class="stat-label">Open Positions</div><div class="stat-val neu" id="stat-pos-count">—</div></div>
+        </div>
+        <div id="term-search-row" class="search-row" style="display:none;">
+          <input id="sym-input" placeholder="Symbol (e.g. GOLDTEN, NIFTY)" style="flex:1;text-transform:uppercase;" />
+          <select id="exchange-sel"><option value="MCX">MCX</option><option value="NSE">NSE</option><option value="BSE">BSE</option><option value="ALL">All</option></select>
+          <button id="add-sym-btn">➕ Add</button>
+          <button id="order-btn" style="background:#fff;">⚡ Order</button>
+          <button id="refresh-live-btn" title="Refresh" style="background:#fff;">🔄</button>
+        </div>
+        <table class="pos-table">
+          <thead><tr><th>Symbol</th><th>Qty</th><th>Avg</th><th>LTP</th><th>Day P&L</th><th>Overall P&L</th><th style="width:120px;">Actions</th></tr></thead>
+          <tbody id="pos-tbody"><tr class="empty-row"><td colspan="7">Loading...</td></tr></tbody>
+        </table>
+        <div id="watchlist-section" style="display:none;border-top:1px solid #e2e8f0;">
+          <div style="padding:6px 12px;background:#f8fafc;font-size:10px;font-weight:600;color:#64748b;">Watchlist</div>
+          <table class="pos-table"><thead><tr><th>Symbol</th><th>LTP</th><th>Change</th><th>Actions</th></tr></thead><tbody id="watch-tbody"></tbody></table>
+        </div>
+        <!-- Order modal -->
+        <div id="order-modal" style="display:none;position:fixed;inset:0;z-index:9000;align-items:center;justify-content:center;">
+          <div onclick="closeOrderModal()" style="position:absolute;inset:0;background:rgba(0,0,0,.35);"></div>
+          <div style="position:relative;background:#fff;border-radius:12px;border:1px solid #e2e8f0;padding:20px;width:320px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:14px;">
+              <span style="font-weight:700;" id="modal-title-text">Place Order</span>
+              <button onclick="closeOrderModal()" style="background:none;border:none;cursor:pointer;font-size:18px;">✕</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div><div style="font-size:11px;color:#64748b;">Instrument Key</div><input id="ord-sym" placeholder="MCX_FO|GOLDTEN…" style="width:100%;padding:6px;border:1px solid #cbd5e1;border-radius:6px;" /></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <div><div style="font-size:11px;color:#64748b;">Order Type</div><select id="ord-type" style="width:100%;padding:6px;"><option value="LIMIT">LIMIT</option><option value="MARKET">MARKET</option><option value="SL">SL</option><option value="SL-M">SL-M</option></select></div>
+                <div><div style="font-size:11px;color:#64748b;">Product</div><select id="ord-product" style="width:100%;padding:6px;"><option value="D">NRML</option><option value="I">Intraday</option></select></div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <div><div style="font-size:11px;color:#64748b;">Price (₹)</div><input id="ord-price" type="number" placeholder="0" style="width:100%;padding:6px;" /></div>
+                <div><div style="font-size:11px;color:#64748b;">Qty (lots)</div><input id="ord-qty" type="number" value="1" min="1" style="width:100%;padding:6px;" /></div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:16px;">
+              <button onclick="submitLiveOrder('BUY')"  style="flex:1;background:#1b5e20;color:#fff;border:none;border-radius:6px;padding:8px;font-weight:bold;">▲ BUY</button>
+              <button onclick="submitLiveOrder('SELL')" style="flex:1;background:#b71c1c;color:#fff;border:none;border-radius:6px;padding:8px;font-weight:bold;">▼ SELL</button>
+              <button onclick="closeOrderModal()" style="flex:1;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:6px;padding:8px;">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- Live Conversion + Strategy Config -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="sec-header"><span class="sec-title">Live Conversion</span><span style="font-size:11px;color:var(--muted)">XAU/USD → MCX ₹</span></div>
+        <div class="conv-row"><span class="conv-label">Formula</span><span class="conv-value" style="font-size:12px;color:var(--muted);font-weight:500">XAU × 0.35274 × USDINR</span></div>
+        <div class="conv-row"><span class="conv-label">XAU/USD</span><span class="conv-value" id="conv-xau">—</span></div>
+        <div class="conv-row"><span class="conv-label">× 0.35274 (oz → 10gms)</span><span class="conv-value" id="conv-mid">—</span></div>
+        <div class="conv-row"><span class="conv-label">× USDINR <span id="conv-frozen-tag"></span></span><span class="conv-value" id="conv-usdinr">—</span></div>
+        <div class="conv-row" style="border-top:2px solid var(--gold);margin-top:4px;padding-top:12px"><span class="conv-label" style="color:var(--gold);font-weight:700;">= MCX Spot Equiv</span><span class="conv-value text-gold" style="font-size:20px" id="conv-result">—</span></div>
+        <div class="conv-row"><span class="conv-label">GOLDTEN Futures</span><span class="conv-value" id="conv-goldten">—</span></div>
+        <div class="conv-row"><span class="conv-label">Basis (premium)</span><span class="conv-value" id="conv-basis">—</span></div>
+      </div>
+      <div class="card">
+        <div class="sec-header"><span class="sec-title">Strategy Config</span><button class="btn btn-gold" onclick="saveConfig()">Save</button></div>
+        <div class="config-grid">
+          <div class="cfg-row"><label>Swing Threshold (%)</label><input type="number" id="cfg-threshold" step="0.05" min="0.1" max="2.0"></div>
+          <div class="cfg-row"><label>Risk : Reward</label><input type="number" id="cfg-rr" step="0.5" min="2" max="20"></div>
+          <div class="cfg-row"><label>Risk % / Trade</label><input type="number" id="cfg-risk" step="0.5" min="0.5" max="10"></div>
+          <div class="cfg-row"><label>Max Lots</label><input type="number" id="cfg-maxlots" step="1" min="1" max="20"></div>
+          <div class="cfg-row"><label>Swing Max Age (hrs)</label><input type="number" id="cfg-swingage" step="1" min="4" max="168"></div>
+          <div class="cfg-row"><label>Mode</label><select id="cfg-paper"><option value="true">📝 Paper (simulate)</option><option value="false">⚡ Live (real orders)</option></select></div>
+          <div class="cfg-row"><label>DXY Filter</label><select id="cfg-dxy"><option value="true">Enabled</option><option value="false">Disabled</option></select></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Swing levels -->
+    <div class="card mt-14" style="margin-bottom:14px">
+      <div class="sec-header"><span class="sec-title">Active Swing Levels (XAU/USD → MCX)</span><span style="font-size:11px;color:var(--muted)">Threshold: <span id="threshold-label">0.30</span>%</span></div>
+      <table class="swing-table"><thead><tr><th>Type</th><th>XAU/USD</th><th>MCX Equiv (₹)</th><th>USDINR</th><th>Time (IST)</th><th>Distance</th><th>Status</th></tr></thead><tbody id="swing-tbody"><tr><td colspan="7" style="text-align:center;padding:24px;">Loading swing levels...</td></tr></tbody></table>
+    </div>
+
+    <!-- Trade log -->
+    <div class="card">
+      <div class="sec-header"><span class="sec-title">Trade Log</span><span id="trade-count" style="font-size:11px;color:var(--muted);">—</span></div>
+      <table class="trade-table"><thead><tr><th>Time</th><th>Dir</th><th>XAU Entry</th><th>MCX Entry</th><th>Stop</th><th>Target</th><th>Qty</th><th>USDINR</th><th>PnL</th><th>Status</th></tr></thead><tbody id="trade-tbody"><tr><td colspan="10" style="text-align:center;padding:24px;">No trades yet</td></tr></tbody></table>
+    </div>
+
+    <!-- XAU Intelligence -->
+    <div class="card" style="margin-top:18px" id="intel-card">
+      <div class="sec-header"><span class="sec-title">🧠 XAU Intelligence</span><span id="intel-ts" style="font-size:11px;color:var(--muted);">—</span></div>
+      <div id="intel-body"><div style="color:var(--muted);padding:12px 0;">Loading intelligence…</div></div>
+    </div>
+
+    <!-- Macro Events History Table -->
+    <div class="card" style="margin-top:18px">
+      <div class="sec-header">
+        <span class="sec-title">📊 Macro Events History</span>
+        <div class="meh-filter-bar">
+          <button class="meh-filter-btn active" onclick="mehFilter('ALL',this)">All</button>
+          <button class="meh-filter-btn" onclick="mehFilter('FOMC',this)">FOMC</button>
+          <button class="meh-filter-btn" onclick="mehFilter('CPI',this)">CPI</button>
+          <button class="meh-filter-btn" onclick="mehFilter('UPCOMING',this)">Upcoming</button>
+          <span id="meh-count" style="font-size:11px;color:var(--muted);margin-left:4px;"></span>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="meh-table" id="meh-table">
+          <thead><tr><th>Date</th><th>Type</th><th>Details</th><th>Impact</th><th>Gold Bias</th></tr></thead>
+          <tbody id="meh-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Live Macro Events -->
+    <div class="card" style="margin-top:14px">
+      <div class="sec-header">
+        <span class="sec-title">📅 Macro Events</span>
+        <div class="events-header-row">
+          <button class="events-window-btn active" onclick="setEventsWindow(7,this)">7d</button>
+          <button class="events-window-btn" onclick="setEventsWindow(14,this)">14d</button>
+          <button class="events-window-btn" onclick="setEventsWindow(30,this)">30d</button>
+          <span id="events-count" style="font-size:11px;color:var(--muted);">—</span>
+        </div>
+      </div>
+      <ul class="events-list" id="events-list"><li class="events-empty">Loading…</li></ul>
+    </div>
+
+  </div><!-- /.main engine -->
+</div><!-- /#page-engine -->
+
+
+<!-- ═══════════════════════ MACRO PAGE ═══════════════════════ -->
+<div id="page-macro" class="page">
 <div class="main">
 
-  <!-- Live Position card -->
-  <div class="pos-card" id="pos-card" style="display:none">
-    <div class="pos-header">
-      <div><span class="pos-dir" id="pos-dir">BUY</span><span style="color:var(--muted);margin-left:8px;font-size:13px;font-weight:500">GOLDTEN MCX</span></div>
-      <div style="display:flex;gap:10px;align-items:center">
-        <span id="pos-pnl" style="font-size:20px;font-weight:800"></span>
-        <button class="btn btn-red" onclick="forceExit()">Exit Position</button>
-      </div>
+  <!-- Live price strip pulled from engine -->
+  <div class="macro-metric-row">
+    <div class="macro-metric">
+      <div class="macro-metric-label">XAU/USD Spot</div>
+      <div class="macro-metric-val text-gold" id="m-xau">—</div>
+      <div class="macro-metric-sub">$/oz · live</div>
     </div>
-    <div class="pos-grid">
-      <div class="pos-item"><label>Entry (MCX)</label><span id="pos-entry">—</span></div>
-      <div class="pos-item"><label>Stop</label><span id="pos-stop" style="color:var(--red)">—</span></div>
-      <div class="pos-item"><label>Target</label><span id="pos-target" style="color:var(--green)">—</span></div>
-      <div class="pos-item"><label>Qty (lots)</label><span id="pos-qty">—</span></div>
-      <div class="pos-item"><label>XAU/USD Entry</label><span id="pos-xau">—</span></div>
-      <div class="pos-item"><label>USDINR at Entry</label><span id="pos-usdinr">—</span></div>
-      <div class="pos-item"><label>Basis at Entry</label><span id="pos-basis">—</span></div>
-      <div class="pos-item"><label>Current GOLDTEN</label><span id="pos-goldten">—</span></div>
+    <div class="macro-metric">
+      <div class="macro-metric-label">MCX GOLDTEN</div>
+      <div class="macro-metric-val" id="m-mcx">—</div>
+      <div class="macro-metric-sub">₹/10gms</div>
+    </div>
+    <div class="macro-metric">
+      <div class="macro-metric-label">USDINR</div>
+      <div class="macro-metric-val" id="m-inr">—</div>
+      <div class="macro-metric-sub">NSE Futures</div>
+    </div>
+    <div class="macro-metric">
+      <div class="macro-metric-label">DXY</div>
+      <div class="macro-metric-val" id="m-dxy">—</div>
+      <div class="macro-metric-sub">US Dollar Index</div>
+    </div>
+    <div class="macro-metric">
+      <div class="macro-metric-label">Basis</div>
+      <div class="macro-metric-val" id="m-basis">—</div>
+      <div class="macro-metric-sub">Futures premium</div>
+    </div>
+    <div class="macro-metric">
+      <div class="macro-metric-label">Macro Signal</div>
+      <div class="macro-metric-val" id="m-signal" style="font-size:14px;margin-top:4px">—</div>
+      <div class="macro-metric-sub">composite</div>
     </div>
   </div>
 
-  <!-- Top metrics -->
-  <div class="grid-3">
-    <div class="card"><div class="card-title">XAU/USD Spot</div><div class="card-value text-gold" id="xau-price">—</div><div class="card-sub">$/oz · Twelve Data</div></div>
-    <div class="card"><div class="card-title">GOLDTEN MCX Futures</div><div class="card-value" id="goldten-price">—</div><div class="card-sub">₹/10gms · MCX 30JUN26</div></div>
-    <div class="card"><div class="card-title">HTF Bias (15m XAU/USD)</div><div style="margin-top:8px"><span class="bias NONE" id="htf-bias">NONE</span></div><div class="card-sub" style="margin-top:8px" id="htf-ref">No pivot reference</div></div>
-  </div>
+  <div class="macro-grid-2">
 
-  <!-- Second metrics row -->
-  <div class="grid-3">
-    <div class="card"><div class="card-title">USDINR Futures</div><div class="card-value" id="usdinr-rate">—</div><div class="card-sub" id="usdinr-status">Live · NSE Futures</div></div>
-    <div class="card"><div class="card-title">DXY <span style="font-size:10px;color:var(--muted);font-weight:400">US Dollar Index</span></div><div class="card-value" id="dxy-val">—</div><div class="card-sub" id="dxy-sub">DX-Y.NYB · Newsbot</div></div>
-    <div class="card"><div class="card-title">Live Basis (Futures Premium)</div><div class="card-value" id="basis-val">—</div><div class="card-sub" id="basis-pct">GOLDTEN − XAU spot equiv</div></div>
-  </div>
-
-  <!-- Trading Terminal -->
-  <div class="upstox-terminal" id="upstox-terminal">
-    <div class="term-root"><div class="term-card">
-      <div class="term-header">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span class="dot" id="conn-dot"></span>
-          <span id="term-title-text">Trading Terminal</span>
-          <span id="last-sync" style="font-size:11px;color:#94a3b8;">—</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="display:flex;align-items:center;gap:0;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:20px;padding:2px;font-size:11px;font-weight:600;">
-            <button id="btn-mode-paper" onclick="setTerminalMode('paper')" style="background:#fff;border:1px solid #cbd5e1;border-radius:16px;padding:3px 12px;cursor:pointer;color:#475569;">📝 Paper</button>
-            <button id="btn-mode-live"  onclick="setTerminalMode('live')"  style="background:none;border:1px solid transparent;border-radius:16px;padding:3px 12px;cursor:pointer;color:#94a3b8;">⚡ Live</button>
-          </div>
-          <span id="ist-time" style="font-size:11px;color:#94a3b8;">—</span>
-        </div>
-      </div>
-      <div id="term-mode-banner" style="padding:5px 14px;font-size:11px;font-weight:600;background:#FFFBEB;border-bottom:1px solid #FDE68A;color:#92400E;">
-        📝 Paper mode — simulated engine positions &amp; paper balance. Switch to ⚡ Live for real Upstox data.
-      </div>
-      <div class="stat-row">
-        <div class="stat-cell"><div class="stat-label">Available</div><div class="stat-val neu" id="stat-balance">—</div></div>
-        <div class="stat-cell"><div class="stat-label">Day P&L</div><div class="stat-val" id="stat-daypnl">—</div></div>
-        <div class="stat-cell"><div class="stat-label">Overall P&L</div><div class="stat-val" id="stat-totalpnl">—</div></div>
-        <div class="stat-cell"><div class="stat-label">Open Positions</div><div class="stat-val neu" id="stat-pos-count">—</div></div>
-      </div>
-      <div id="term-search-row" class="search-row" style="display:none;">
-        <input id="sym-input" placeholder="Symbol (e.g. GOLDTEN, NIFTY)" style="flex:1;text-transform:uppercase;" />
-        <select id="exchange-sel"><option value="MCX">MCX</option><option value="NSE">NSE</option><option value="BSE">BSE</option><option value="ALL">All</option></select>
-        <button id="add-sym-btn">➕ Add</button>
-        <button id="order-btn" style="background:#fff;">⚡ Order</button>
-        <button id="refresh-live-btn" title="Refresh" style="background:#fff;">🔄</button>
-      </div>
-      <table class="pos-table">
-        <thead><tr><th>Symbol</th><th>Qty</th><th>Avg</th><th>LTP</th><th>Day P&L</th><th>Overall P&L</th><th style="width:120px;">Actions</th></tr></thead>
-        <tbody id="pos-tbody"><tr class="empty-row"><td colspan="7">Loading...</td></tr></tbody>
-      </table>
-      <div id="watchlist-section" style="display:none;border-top:1px solid #e2e8f0;">
-        <div style="padding:6px 12px;background:#f8fafc;font-size:10px;font-weight:600;color:#64748b;">Watchlist</div>
-        <table class="pos-table"><thead><tr><th>Symbol</th><th>LTP</th><th>Change</th><th>Actions</th></tr></thead><tbody id="watch-tbody"></tbody></table>
-      </div>
-      <!-- Order modal -->
-      <div id="order-modal" style="display:none;position:fixed;inset:0;z-index:9000;align-items:center;justify-content:center;">
-        <div onclick="closeOrderModal()" style="position:absolute;inset:0;background:rgba(0,0,0,.35);"></div>
-        <div style="position:relative;background:#fff;border-radius:12px;border:1px solid #e2e8f0;padding:20px;width:320px;">
-          <div style="display:flex;justify-content:space-between;margin-bottom:14px;">
-            <span style="font-weight:700;" id="modal-title-text">Place Order</span>
-            <button onclick="closeOrderModal()" style="background:none;border:none;cursor:pointer;font-size:18px;">✕</button>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <div><div style="font-size:11px;color:#64748b;">Instrument Key</div><input id="ord-sym" placeholder="MCX_FO|GOLDTEN…" style="width:100%;padding:6px;border:1px solid #cbd5e1;border-radius:6px;" /></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-              <div><div style="font-size:11px;color:#64748b;">Order Type</div><select id="ord-type" style="width:100%;padding:6px;"><option value="LIMIT">LIMIT</option><option value="MARKET">MARKET</option><option value="SL">SL</option><option value="SL-M">SL-M</option></select></div>
-              <div><div style="font-size:11px;color:#64748b;">Product</div><select id="ord-product" style="width:100%;padding:6px;"><option value="D">NRML</option><option value="I">Intraday</option></select></div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-              <div><div style="font-size:11px;color:#64748b;">Price (₹)</div><input id="ord-price" type="number" placeholder="0" style="width:100%;padding:6px;" /></div>
-              <div><div style="font-size:11px;color:#64748b;">Qty (lots)</div><input id="ord-qty" type="number" value="1" min="1" style="width:100%;padding:6px;" /></div>
-            </div>
-          </div>
-          <div style="display:flex;gap:8px;margin-top:16px;">
-            <button onclick="submitLiveOrder('BUY')"  style="flex:1;background:#1b5e20;color:#fff;border:none;border-radius:6px;padding:8px;font-weight:bold;">▲ BUY</button>
-            <button onclick="submitLiveOrder('SELL')" style="flex:1;background:#b71c1c;color:#fff;border:none;border-radius:6px;padding:8px;font-weight:bold;">▼ SELL</button>
-            <button onclick="closeOrderModal()" style="flex:1;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:6px;padding:8px;">Cancel</button>
-          </div>
-        </div>
-      </div>
-    </div></div>
-  </div>
-
-  <!-- Live Conversion + Strategy Config -->
-  <div class="grid-2">
+    <!-- Fed rates -->
     <div class="card">
-      <div class="sec-header"><span class="sec-title">Live Conversion</span><span style="font-size:11px;color:var(--muted)">XAU/USD → MCX ₹</span></div>
-      <div class="conv-row"><span class="conv-label">Formula</span><span class="conv-value" style="font-size:12px;color:var(--muted);font-weight:500">XAU × 0.35274 × USDINR</span></div>
-      <div class="conv-row"><span class="conv-label">XAU/USD</span><span class="conv-value" id="conv-xau">—</span></div>
-      <div class="conv-row"><span class="conv-label">× 0.35274 (oz → 10gms)</span><span class="conv-value" id="conv-mid">—</span></div>
-      <div class="conv-row"><span class="conv-label">× USDINR <span id="conv-frozen-tag"></span></span><span class="conv-value" id="conv-usdinr">—</span></div>
-      <div class="conv-row" style="border-top:2px solid var(--gold);margin-top:4px;padding-top:12px"><span class="conv-label" style="color:var(--gold);font-weight:700;">= MCX Spot Equiv</span><span class="conv-value text-gold" style="font-size:20px" id="conv-result">—</span></div>
-      <div class="conv-row"><span class="conv-label">GOLDTEN Futures</span><span class="conv-value" id="conv-goldten">—</span></div>
-      <div class="conv-row"><span class="conv-label">Basis (premium)</span><span class="conv-value" id="conv-basis">—</span></div>
+      <div class="sec-header"><span class="sec-title">🏦 Fed Funds Rate history</span></div>
+      <div class="macro-rate-row"><span>Dec 2024</span><span style="font-weight:600">4.25–4.50%</span><span class="macro-badge mb-cut">−25bps</span></div>
+      <div class="macro-rate-row"><span>Nov 2024</span><span style="font-weight:600">4.50–4.75%</span><span class="macro-badge mb-cut">−25bps</span></div>
+      <div class="macro-rate-row"><span>Sep 2024</span><span style="font-weight:600">4.75–5.00%</span><span class="macro-badge mb-cut">−50bps</span></div>
+      <div class="macro-rate-row"><span>Jul 2023</span><span style="font-weight:600">5.25–5.50%</span><span class="macro-badge mb-hike">+25bps</span></div>
+      <div class="macro-rate-row"><span style="color:var(--gold);font-weight:700">Current</span><span style="font-weight:700;color:var(--gold)">4.25–4.50%</span><span class="macro-badge mb-hold">Hold</span></div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px">CME FedWatch — next cut probability</div>
+        <div style="font-size:20px;font-weight:700;color:var(--green)">61% <span style="font-size:12px;font-weight:400;color:var(--muted)">by Sep 2025</span></div>
+      </div>
     </div>
+
+    <!-- CPI / WPI / RBI -->
     <div class="card">
-      <div class="sec-header"><span class="sec-title">Strategy Config</span><button class="btn btn-gold" onclick="saveConfig()">Save</button></div>
-      <div class="config-grid">
-        <div class="cfg-row"><label>Swing Threshold (%)</label><input type="number" id="cfg-threshold" step="0.05" min="0.1" max="2.0"></div>
-        <div class="cfg-row"><label>Risk : Reward</label><input type="number" id="cfg-rr" step="0.5" min="2" max="20"></div>
-        <div class="cfg-row"><label>Risk % / Trade</label><input type="number" id="cfg-risk" step="0.5" min="0.5" max="10"></div>
-        <div class="cfg-row"><label>Max Lots</label><input type="number" id="cfg-maxlots" step="1" min="1" max="20"></div>
-        <div class="cfg-row"><label>Swing Max Age (hrs)</label><input type="number" id="cfg-swingage" step="1" min="4" max="168"></div>
-        <div class="cfg-row"><label>Mode</label><select id="cfg-paper"><option value="true">📝 Paper (simulate)</option><option value="false">⚡ Live (real orders)</option></select></div>
-        <div class="cfg-row"><label>DXY Filter</label><select id="cfg-dxy"><option value="true">Enabled</option><option value="false">Disabled</option></select></div>
+      <div class="sec-header"><span class="sec-title">📈 CPI / WPI / RBI</span></div>
+      <div class="macro-rate-row"><span>US CPI May 25</span><span style="font-weight:600">2.4%</span><span class="macro-badge mb-cool">Cooling</span></div>
+      <div class="macro-rate-row"><span>US Core CPI</span><span style="font-weight:600">2.8%</span><span class="macro-badge mb-warm">Sticky</span></div>
+      <div class="macro-rate-row"><span>US PPI May 25</span><span style="font-weight:600">2.3%</span><span class="macro-badge mb-cool">Cooling</span></div>
+      <div class="macro-rate-row"><span>India WPI May 25</span><span style="font-weight:600">1.0%</span><span class="macro-badge mb-cool">Low</span></div>
+      <div class="macro-rate-row"><span>India CPI May 25</span><span style="font-weight:600">3.16%</span><span class="macro-badge mb-cool">Below 4%</span></div>
+      <div class="macro-rate-row"><span>RBI Repo Rate</span><span style="font-weight:600">6.00%</span><span class="macro-badge mb-cut">−50bps YTD</span></div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Inflation regime → gold bias</div>
+        <span class="mb-bull">↑ Bullish — rates peaking</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Upcoming macro events -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="sec-header">
+      <span class="sec-title">📅 Upcoming macro events</span>
+      <div style="display:flex;gap:8px;font-size:11px;color:var(--muted);align-items:center">
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;border-radius:50%;background:var(--gold);display:inline-block"></span>FOMC</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>CPI</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;border-radius:50%;background:#1D4ED8;display:inline-block"></span>WPI/RBI</span>
+      </div>
+    </div>
+    <div id="macro-upcoming-events">
+      <div class="macro-event-row"><span class="macro-event-dot" style="background:var(--green)"></span><div class="macro-event-body"><div class="macro-event-name">US CPI (May 2025)</div><div class="macro-event-meta">Wed 11 Jun 2025 · BLS · 8:30 AM ET</div><div class="macro-event-exp">Exp: 2.3% YoY · Prior: 2.3%</div></div><span class="days-left days-soon">Today</span></div>
+      <div class="macro-event-row"><span class="macro-event-dot" style="background:var(--gold)"></span><div class="macro-event-body"><div class="macro-event-name">FOMC Rate Decision</div><div class="macro-event-meta">Wed 18 Jun 2025 · Federal Reserve · 2:00 PM ET</div><div class="macro-event-exp">Exp: Hold 4.25–4.50% · Press conf follows</div></div><span class="days-left days-soon">7d</span></div>
+      <div class="macro-event-row"><span class="macro-event-dot" style="background:var(--green)"></span><div class="macro-event-body"><div class="macro-event-name">India CPI (May 2025)</div><div class="macro-event-meta">Fri 13 Jun 2025 · MOSPI · 5:30 PM IST</div><div class="macro-event-exp">Exp: ~3.2% YoY · Prior: 3.16%</div></div><span class="days-left days-soon">2d</span></div>
+      <div class="macro-event-row"><span class="macro-event-dot" style="background:#1D4ED8"></span><div class="macro-event-body"><div class="macro-event-name">India WPI (May 2025)</div><div class="macro-event-meta">Mon 16 Jun 2025 · DPIIT</div><div class="macro-event-exp">Exp: ~1.2% · Prior: 1.0%</div></div><span class="days-left">5d</span></div>
+      <div class="macro-event-row"><span class="macro-event-dot" style="background:var(--gold)"></span><div class="macro-event-body"><div class="macro-event-name">FOMC Minutes</div><div class="macro-event-meta">Wed 2 Jul 2025 · Federal Reserve</div><div class="macro-event-exp">Minutes from the Jun 17–18 meeting</div></div><span class="days-left">21d</span></div>
+      <div class="macro-event-row"><span class="macro-event-dot" style="background:var(--green)"></span><div class="macro-event-body"><div class="macro-event-name">US CPI (Jun 2025)</div><div class="macro-event-meta">Thu 10 Jul 2025 · BLS · 8:30 AM ET</div><div class="macro-event-exp">Exp: ~2.2% · Key for Sep cut probability</div></div><span class="days-left">29d</span></div>
+      <div class="macro-event-row"><span class="macro-event-dot" style="background:var(--gold)"></span><div class="macro-event-body"><div class="macro-event-name">FOMC Rate Decision</div><div class="macro-event-meta">Wed 30 Jul 2025 · Federal Reserve</div><div class="macro-event-exp">Exp: Hold — but watch CPI path</div></div><span class="days-left">49d</span></div>
+      <div class="macro-event-row"><span class="macro-event-dot" style="background:var(--gold)"></span><div class="macro-event-body"><div class="macro-event-name">Jackson Hole Symposium</div><div class="macro-event-meta">Aug 21–23 2025 · Federal Reserve, Kansas City</div><div class="macro-event-exp">Powell keynote — major pivot signal risk</div></div><span class="days-left">71d</span></div>
+    </div>
+  </div>
+
+  <div class="macro-grid-2">
+
+    <!-- Gold correlations -->
+    <div class="card">
+      <div class="sec-header"><span class="sec-title">↔ Gold correlations</span><span style="font-size:11px;color:var(--muted)">6m rolling Pearson</span></div>
+      <div class="corr-row"><span>Real yields (10Y TIPS)</span><div class="corr-bar-wrap"><div class="corr-bar" style="width:85%;background:var(--red)"></div></div><span style="font-size:12px;color:var(--red);font-weight:600">−0.82</span></div>
+      <div class="corr-row"><span>DXY (USD Index)</span><div class="corr-bar-wrap"><div class="corr-bar" style="width:70%;background:var(--red)"></div></div><span style="font-size:12px;color:var(--red);font-weight:600">−0.68</span></div>
+      <div class="corr-row"><span>US CPI YoY</span><div class="corr-bar-wrap"><div class="corr-bar" style="width:58%;background:var(--green)"></div></div><span style="font-size:12px;color:var(--green);font-weight:600">+0.55</span></div>
+      <div class="corr-row"><span>SPX (S&amp;P 500)</span><div class="corr-bar-wrap"><div class="corr-bar" style="width:20%;background:var(--muted)"></div></div><span style="font-size:12px;color:var(--muted);font-weight:600">+0.18</span></div>
+      <div class="corr-row"><span>USDINR</span><div class="corr-bar-wrap"><div class="corr-bar" style="width:72%;background:var(--green)"></div></div><span style="font-size:12px;color:var(--green);font-weight:600">+0.69</span></div>
+      <div class="corr-row"><span>Oil (Brent)</span><div class="corr-bar-wrap"><div class="corr-bar" style="width:40%;background:var(--green)"></div></div><span style="font-size:12px;color:var(--green);font-weight:600">+0.38</span></div>
+    </div>
+
+    <!-- Historical macro → gold moves -->
+    <div class="card">
+      <div class="sec-header"><span class="sec-title">🕐 Historical macro → gold</span></div>
+      <div class="macro-hist-row"><div class="macro-hist-title"><span>Mar 2022 — first 2022 hike</span><span class="down">−8% in 2w</span></div><div class="macro-hist-sub">Initial hawkish shock → gold sold off</div></div>
+      <div class="macro-hist-row"><div class="macro-hist-title"><span>Nov 2022 — pivot narrative</span><span class="up">+9% in 1m</span></div><div class="macro-hist-sub">CPI miss → pivot narrative → gold surged</div></div>
+      <div class="macro-hist-row"><div class="macro-hist-title"><span>Sep 2024 — 50bps cut</span><span class="up">+4% in 5d</span></div><div class="macro-hist-sub">First cut → new ATH above $2600</div></div>
+      <div class="macro-hist-row"><div class="macro-hist-title"><span>Apr 2025 — tariff shock</span><span class="up">+11% in 2w</span></div><div class="macro-hist-sub">Trade war fears → safe haven spike to $3500</div></div>
+    </div>
+
+  </div>
+
+  <!-- Macro composite signal -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="sec-header"><span class="sec-title">🧠 Macro composite signal</span><span class="macro-live-badge"><span class="pulse"></span>Updated from engine</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Components</div>
+        <div class="macro-comp-row"><span>Fed policy</span><span class="up">Bullish ↑</span></div>
+        <div class="macro-comp-row"><span>CPI trend</span><span class="up">Bullish ↑</span></div>
+        <div class="macro-comp-row"><span>Real yields</span><span class="neu">Neutral →</span></div>
+        <div class="macro-comp-row"><span>DXY trend</span><span class="up" id="m-dxy-comp">—</span></div>
+        <div class="macro-comp-row"><span>India WPI</span><span class="up">Bullish ↑</span></div>
+        <div class="macro-comp-row"><span>Geopolitical</span><span class="up">Bullish ↑</span></div>
+        <div class="macro-comp-row"><span>Positioning</span><span class="neu">Neutral →</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">
+        <div style="font-size:11px;color:var(--muted)">Composite score</div>
+        <div style="font-size:48px;font-weight:800;color:var(--green);line-height:1">+71</div>
+        <div style="font-size:12px;color:var(--muted)">out of 100</div>
+        <span class="mb-bull" style="font-size:13px;padding:5px 14px">↑ Macro Bullish</span>
+        <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:4px">
+          CPI today + FOMC Jun 18<br>
+          <span style="color:var(--red);font-weight:600">High volatility zone — tighten stops</span>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Swing levels -->
-  <div class="card mt-14" style="margin-bottom:14px">
-    <div class="sec-header"><span class="sec-title">Active Swing Levels (XAU/USD → MCX)</span><span style="font-size:11px;color:var(--muted)">Threshold: <span id="threshold-label">0.30</span>%</span></div>
-    <table class="swing-table"><thead><tr><th>Type</th><th>XAU/USD</th><th>MCX Equiv (₹)</th><th>USDINR</th><th>Time (IST)</th><th>Distance</th><th>Status</th></tr></thead><tbody id="swing-tbody"><tr><td colspan="7" style="text-align:center;padding:24px;">Loading swing levels...</td></tr></tbody></table>
-  </div>
-
-  <!-- Trade log -->
+  <!-- Gold macro news -->
   <div class="card">
-    <div class="sec-header"><span class="sec-title">Trade Log</span><span id="trade-count" style="font-size:11px;color:var(--muted);">—</span></div>
-    <table class="trade-table"><thead><tr><th>Time</th><th>Dir</th><th>XAU Entry</th><th>MCX Entry</th><th>Stop</th><th>Target</th><th>Qty</th><th>USDINR</th><th>PnL</th><th>Status</th></tr></thead><tbody id="trade-tbody"><tr><td colspan="10" style="text-align:center;padding:24px;">No trades yet</td></tr></tbody></table>
-  </div>
-
-  <!-- XAU Intelligence -->
-  <div class="card" style="margin-top:18px" id="intel-card">
-    <div class="sec-header"><span class="sec-title">🧠 XAU Intelligence</span><span id="intel-ts" style="font-size:11px;color:var(--muted);">—</span></div>
-    <div id="intel-body"><div style="color:var(--muted);padding:12px 0;">Loading intelligence…</div></div>
-  </div>
-
-  <!-- ══════════════════════════════════════════════════════════════════
-       MACRO EVENTS HISTORY TABLE  (hardcoded CPI + FOMC dataset)
-       Sits above the live events card so context is always visible.
-  ══════════════════════════════════════════════════════════════════ -->
-  <div class="card" style="margin-top:18px">
     <div class="sec-header">
-      <span class="sec-title">📊 Macro Events History</span>
-      <div class="meh-filter-bar">
-        <button class="meh-filter-btn active" onclick="mehFilter('ALL',this)">All</button>
-        <button class="meh-filter-btn" onclick="mehFilter('FOMC',this)">FOMC</button>
-        <button class="meh-filter-btn" onclick="mehFilter('CPI',this)">CPI</button>
-        <button class="meh-filter-btn" onclick="mehFilter('UPCOMING',this)">Upcoming</button>
-        <span id="meh-count" style="font-size:11px;color:var(--muted);margin-left:4px;"></span>
+      <span class="sec-title">📰 Gold macro news</span>
+      <div class="news-filter-bar" style="margin-bottom:0">
+        <button class="news-filter-btn active" onclick="filterMacroNews('all',this)">All</button>
+        <button class="news-filter-btn" onclick="filterMacroNews('fed',this)">Fed</button>
+        <button class="news-filter-btn" onclick="filterMacroNews('india',this)">India</button>
+        <button class="news-filter-btn" onclick="filterMacroNews('gold',this)">Gold</button>
       </div>
     </div>
-    <div style="overflow-x:auto">
-      <table class="meh-table" id="meh-table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Type</th>
-            <th>Details</th>
-            <th>Impact</th>
-            <th>Gold Bias</th>
-          </tr>
-        </thead>
-        <tbody id="meh-tbody"></tbody>
-      </table>
+    <div id="macro-news-list">
+      <div class="macro-news-row" data-cat="gold fed"><div style="flex:1"><div class="macro-news-title">Gold hovers near $3,320 ahead of US CPI print; markets price 2025 cuts</div><div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span class="macro-news-time">2h ago</span><span class="macro-news-src">Reuters</span></div></div></div>
+      <div class="macro-news-row" data-cat="fed"><div style="flex:1"><div class="macro-news-title">Fed's Waller signals openness to July cut if inflation data cooperates</div><div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span class="macro-news-time">4h ago</span><span class="macro-news-src">CNBC</span></div></div></div>
+      <div class="macro-news-row" data-cat="india gold"><div style="flex:1"><div class="macro-news-title">MCX gold extends gains as RBI rate cut cycle supports domestic demand outlook</div><div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span class="macro-news-time">6h ago</span><span class="macro-news-src">ET Markets</span></div></div></div>
+      <div class="macro-news-row" data-cat="gold"><div style="flex:1"><div class="macro-news-title">Central bank gold buying accelerates in Q1 2025 — WGC data shows 290t purchases</div><div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span class="macro-news-time">8h ago</span><span class="macro-news-src">Kitco</span></div></div></div>
+      <div class="macro-news-row" data-cat="fed"><div style="flex:1"><div class="macro-news-title">FOMC minutes show members divided on timing — sticky services inflation cited as key risk</div><div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span class="macro-news-time">Yesterday</span><span class="macro-news-src">Fed</span></div></div></div>
+      <div class="macro-news-row" data-cat="india"><div style="flex:1"><div class="macro-news-title">RBI holds rates steady in June MPC meeting; accommodative stance to support growth</div><div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span class="macro-news-time">Yesterday</span><span class="macro-news-src">RBI</span></div></div></div>
+      <div class="macro-news-row" data-cat="gold"><div style="flex:1"><div class="macro-news-title">Gold ETF inflows hit 14-month high as institutional allocations rise on recession risk</div><div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span class="macro-news-time">2 days ago</span><span class="macro-news-src">Bloomberg</span></div></div></div>
     </div>
   </div>
 
-  <!-- Live Macro Events (API-driven, upcoming window) -->
-  <div class="card" style="margin-top:14px">
-    <div class="sec-header">
-      <span class="sec-title">📅 Macro Events</span>
-      <div class="events-header-row">
-        <button class="events-window-btn active" onclick="setEventsWindow(7,this)">7d</button>
-        <button class="events-window-btn" onclick="setEventsWindow(14,this)">14d</button>
-        <button class="events-window-btn" onclick="setEventsWindow(30,this)">30d</button>
-        <span id="events-count" style="font-size:11px;color:var(--muted);">—</span>
-      </div>
-    </div>
-    <ul class="events-list" id="events-list"><li class="events-empty">Loading…</li></ul>
-  </div>
+</div><!-- /.main macro -->
+</div><!-- /#page-macro -->
 
-</div><!-- /.main -->
 
 <div id="upstox-toast" class="upstox-toast"></div>
 
 <script>
+// ── Tab switching ──────────────────────────────────────────────────────────
+function switchTab(tab, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.page-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
+  el.classList.add('active');
+  if (tab === 'macro') syncMacroMetrics();
+}
+
+// ── Macro page: pull live values from engine status ───────────────────────
+function syncMacroMetrics() {
+  if (!statusData || !Object.keys(statusData).length) return;
+  const d = statusData;
+  const xau = d.xauusd_last;
+  const mcx = d.goldten_last;
+  const inr = d.usdinr_is_frozen ? d.usdinr_frozen : d.usdinr_live;
+  document.getElementById('m-xau').textContent   = xau ? `$${xau.toLocaleString('en-US',{minimumFractionDigits:2})}` : '—';
+  document.getElementById('m-mcx').textContent   = mcx ? `₹${Math.round(mcx).toLocaleString('en-IN')}` : '—';
+  document.getElementById('m-inr').textContent   = inr ? `₹${inr.toFixed(4)}` : '—';
+  document.getElementById('m-dxy').textContent   = d.dxy_last ? d.dxy_last.toFixed(2) : '—';
+  document.getElementById('m-basis').textContent = d.live_basis ? `₹${Math.round(d.live_basis).toLocaleString('en-IN')}` : '—';
+  // Signal from intelligence
+  const intel = CONFIG_INTEL || {};
+  if (intel.bias) {
+    const el = document.getElementById('m-signal');
+    el.textContent = intel.bias;
+    el.className = 'macro-metric-val ' + (intel.bias === 'BULLISH' ? 'up' : intel.bias === 'BEARISH' ? 'down' : 'neu');
+  }
+  // DXY component
+  const dxyChg = d.dxy_change_pct || 0;
+  const dxyEl = document.getElementById('m-dxy-comp');
+  if (dxyEl) {
+    if (dxyChg < -0.15) { dxyEl.textContent = 'Bullish ↑'; dxyEl.className = 'up'; }
+    else if (dxyChg > 0.15) { dxyEl.textContent = 'Bearish ↓'; dxyEl.className = 'down'; }
+    else { dxyEl.textContent = 'Neutral →'; dxyEl.className = 'neu'; }
+  }
+}
+
+// ── News filter ────────────────────────────────────────────────────────────
+function filterMacroNews(cat, el) {
+  document.querySelectorAll('.news-filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('#macro-news-list .macro-news-row').forEach(row => {
+    const cats = row.dataset.cat || '';
+    row.style.display = (cat === 'all' || cats.includes(cat)) ? 'flex' : 'none';
+  });
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
-// MACRO EVENTS HISTORY TABLE (static dataset, client-side filter)
+// MACRO EVENTS HISTORY TABLE
 // ─────────────────────────────────────────────────────────────────────────────
 const MEH_EVENTS = [
   {date:"2025-07-15",type:"CPI",  detail:"Actual 2.8%",                        impact:"HIGH",     bias:"BULLISH",     past:true},
@@ -539,19 +841,14 @@ const MEH_EVENTS = [
   {date:"2026-05-12",type:"CPI",  detail:"Actual 3.8%",                        impact:"HIGH",     bias:"BEARISH",     past:true},
   {date:"2026-06-18",type:"FOMC", detail:"Expected HOLD · 3.50–3.75%",         impact:"VERY_HIGH",bias:"NEUTRAL",     past:false},
 ];
-
-// Today as YYYY-MM-DD (compare string-wise — ISO dates sort lexicographically)
-const MEH_TODAY = new Date().toLocaleDateString('en-CA'); // 'en-CA' gives YYYY-MM-DD
+const MEH_TODAY = new Date().toLocaleDateString('en-CA');
 
 function mehTypeBadge(t) {
-  return t === "FOMC"
-    ? `<span class="meh-badge meh-fomc">FOMC</span>`
-    : `<span class="meh-badge meh-cpi">CPI</span>`;
+  const cls = t === "FOMC" ? "meh-fomc" : t === "WPI" ? "meh-wpi" : t === "RBI" ? "meh-rbi" : "meh-cpi";
+  return `<span class="meh-badge ${cls}">${t}</span>`;
 }
 function mehImpactBadge(v) {
-  return v === "VERY_HIGH"
-    ? `<span class="meh-badge meh-vh">Very High</span>`
-    : `<span class="meh-badge meh-hi">High</span>`;
+  return v === "VERY_HIGH" ? `<span class="meh-badge meh-vh">Very High</span>` : `<span class="meh-badge meh-hi">High</span>`;
 }
 function mehDetailBadge(d) {
   if (d.includes("CUT"))      return `<span class="meh-badge meh-cut">${d}</span>`;
@@ -560,69 +857,53 @@ function mehDetailBadge(d) {
   return `<span style="color:var(--text)">${d}</span>`;
 }
 function mehBiasBadge(b) {
-  const map = {
-    "STRONG BULL": "meh-sbull",
-    "BULLISH":     "meh-bull",
-    "NEUTRAL":     "meh-neut",
-    "BEARISH":     "meh-bear",
-  };
-  return `<span class="meh-badge ${map[b] || 'meh-neut'}">${b}</span>`;
+  const map = {"STRONG BULL":"meh-sbull","BULLISH":"meh-bull","NEUTRAL":"meh-neut","BEARISH":"meh-bear"};
+  return `<span class="meh-badge ${map[b]||'meh-neut'}">${b}</span>`;
 }
 function mehFmtDate(s) {
-  const d = new Date(s + "T00:00:00");
-  return d.toLocaleDateString("en-IN", {day:"2-digit", month:"short", year:"numeric"});
+  return new Date(s+"T00:00:00").toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"});
 }
-
 let _mehFilter = "ALL";
-
 function mehFilter(f, btn) {
   _mehFilter = f;
   document.querySelectorAll(".meh-filter-btn").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
   renderMehTable();
 }
-
 function renderMehTable() {
   const tbody = document.getElementById("meh-tbody");
   let rows = "", count = 0;
   MEH_EVENTS.forEach(ev => {
-    if (_mehFilter === "FOMC"     && ev.type !== "FOMC")     return;
-    if (_mehFilter === "CPI"      && ev.type !== "CPI")      return;
-    if (_mehFilter === "UPCOMING" && ev.past)                return;
-    const isPast     = ev.date < MEH_TODAY;
-    const isToday    = ev.date === MEH_TODAY;
-    const isUpcoming = !isPast && !isToday;
+    if (_mehFilter === "FOMC"     && ev.type !== "FOMC") return;
+    if (_mehFilter === "CPI"      && ev.type !== "CPI")  return;
+    if (_mehFilter === "UPCOMING" && ev.past)            return;
+    const isPast = ev.date < MEH_TODAY;
+    const isUpcoming = !isPast && ev.date !== MEH_TODAY;
     const rowCls = isPast ? "meh-past" : isUpcoming ? "meh-upcoming" : "";
-    rows += `<tr class="${rowCls}">
-      <td style="white-space:nowrap;font-size:12px">${mehFmtDate(ev.date)}</td>
-      <td>${mehTypeBadge(ev.type)}</td>
-      <td>${mehDetailBadge(ev.detail)}</td>
-      <td>${mehImpactBadge(ev.impact)}</td>
-      <td>${mehBiasBadge(ev.bias)}</td>
-    </tr>`;
+    rows += `<tr class="${rowCls}"><td style="white-space:nowrap;font-size:12px">${mehFmtDate(ev.date)}</td><td>${mehTypeBadge(ev.type)}</td><td>${mehDetailBadge(ev.detail)}</td><td>${mehImpactBadge(ev.impact)}</td><td>${mehBiasBadge(ev.bias)}</td></tr>`;
     count++;
   });
   tbody.innerHTML = rows || `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted)">No events</td></tr>`;
   document.getElementById("meh-count").textContent = `${count} events`;
 }
-
-// Init on load
 renderMehTable();
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GOLDENGINE CORE
 // ─────────────────────────────────────────────────────────────────────────────
 let statusData = {};
+let CONFIG_INTEL = {};
 let termMode = 'paper';
 let liveWatchlist = [];
 let prevLtpMap = {};
 
-async function fetchStatus() { try { const r = await fetch('/api/status'); statusData = await r.json(); renderStatus(statusData); if (termMode === 'paper') renderPaperTerminal(statusData); } catch(e) {} }
+async function fetchStatus() { try { const r = await fetch('/api/status'); statusData = await r.json(); renderStatus(statusData); if (termMode === 'paper') renderPaperTerminal(statusData); syncMacroMetrics(); } catch(e) {} }
 async function fetchConversion() { try { const r = await fetch('/api/conversion'); const d = await r.json(); renderConversion(d); } catch(e) {} }
 async function fetchTrades() { try { const r = await fetch('/api/trades'); const trades = await r.json(); renderTrades(trades); } catch(e) {} }
 async function fetchIntelligence() {
   try {
     const r = await fetch('/api/intelligence'); const d = await r.json();
+    CONFIG_INTEL = d;
     const body = document.getElementById('intel-body');
     if (!d.available) { body.innerHTML = '<div style="color:var(--muted);">No signal</div>'; return; }
     let html = `<div class="intel-card"><div><div class="intel-bias ${d.bias}"><span class="intel-dot ${d.bias}"></span> ${d.bias}</div><div>Score: ${d.score > 0 ? '+' : ''}${d.score}</div></div><div class="intel-score-bar"><div class="intel-score-fill ${d.bias}" style="width:${Math.min(100, Math.abs(d.score) / 20 * 100)}%"></div></div>`;
@@ -642,21 +923,12 @@ function renderStatus(d) {
   const pb = document.getElementById('paper-badge');
   if (pb) { pb.textContent = d.paper_mode !== false ? '📝 PAPER' : '⚡ LIVE'; pb.style.background = d.paper_mode !== false ? '#FFFBEB' : '#F0FDF4'; }
   const sb = document.getElementById('session-badge');
-  if (sb) {
-    const sess = d.market_session || 'Closed';
-    const sessMap = { 'Morning': '🌅 Morning', 'Evening': '🌆 Evening', 'Closed': '🔴 Closed' };
-    sb.textContent = sessMap[sess] || sess;
-    sb.className = 'badge ' + sess.toLowerCase();
-  }
-  document.getElementById('xau-price').textContent = d.xauusd_last ? `$${d.xauusd_last.toLocaleString('en-US', {minimumFractionDigits:3})}` : '—';
+  if (sb) { const sess = d.market_session || 'Closed'; const sessMap = {'Morning':'🌅 Morning','Evening':'🌆 Evening','Closed':'🔴 Closed'}; sb.textContent = sessMap[sess] || sess; sb.className = 'badge ' + sess.toLowerCase(); }
+  document.getElementById('xau-price').textContent = d.xauusd_last ? `$${d.xauusd_last.toLocaleString('en-US',{minimumFractionDigits:3})}` : '—';
   document.getElementById('goldten-price').textContent = d.goldten_last ? `₹${Math.round(d.goldten_last).toLocaleString('en-IN')}` : '—';
   document.getElementById('dxy-val').textContent = d.dxy_last ? d.dxy_last.toFixed(2) : '—';
   const dxyChg = d.dxy_change_pct || 0;
-  document.getElementById('dxy-sub').textContent = d.dxy_last
-    ? (dxyChg > 0.15 ? `↑ DXY rising (+${dxyChg.toFixed(2)}%) — bearish gold`
-       : dxyChg < -0.15 ? `↓ DXY falling (${dxyChg.toFixed(2)}%) — bullish gold`
-       : `DXY neutral (${dxyChg > 0 ? '+' : ''}${dxyChg.toFixed(2)}%) · Newsbot`)
-    : 'DX-Y.NYB · Newsbot';
+  document.getElementById('dxy-sub').textContent = d.dxy_last ? (dxyChg > 0.15 ? `↑ DXY rising (+${dxyChg.toFixed(2)}%) — bearish gold` : dxyChg < -0.15 ? `↓ DXY falling (${dxyChg.toFixed(2)}%) — bullish gold` : `DXY neutral (${dxyChg > 0 ? '+' : ''}${dxyChg.toFixed(2)}%) · Newsbot`) : 'DX-Y.NYB · Newsbot';
   document.getElementById('basis-val').textContent = d.live_basis ? `₹${Math.round(d.live_basis).toLocaleString('en-IN')}` : '—';
   const usdinr = d.usdinr_is_frozen ? d.usdinr_frozen : d.usdinr_live;
   document.getElementById('usdinr-rate').textContent = usdinr ? `₹${usdinr.toFixed(4)}` : '—';
@@ -682,14 +954,10 @@ function renderStatus(d) {
     document.getElementById('pos-usdinr').textContent = `₹${pos.usdinr_rate?.toFixed(4)}`;
     if (d.goldten_last && pos.entry_price) {
       const pnl = (d.goldten_last - pos.entry_price) * pos.qty * (pos.direction === 'BUY' ? 1 : -1);
-      const el = document.getElementById('pos-pnl');
-      el.textContent = `₹${Math.round(pnl).toLocaleString('en-IN')}`;
-      el.style.color = pnl >= 0 ? 'var(--green)' : 'var(--red)';
+      const el = document.getElementById('pos-pnl'); el.textContent = `₹${Math.round(pnl).toLocaleString('en-IN')}`; el.style.color = pnl >= 0 ? 'var(--green)' : 'var(--red)';
     }
   } else { posCard.style.display = 'none'; }
-  ['cfg-rr','cfg-risk','cfg-maxlots','cfg-swingage','cfg-dxy','cfg-paper'].forEach(id => {
-    if (document.getElementById(id)) document.getElementById(id).value = d[id.replace('cfg-','')] ?? (id === 'cfg-dxy' ? true : d[id] ?? '');
-  });
+  ['cfg-rr','cfg-risk','cfg-maxlots','cfg-swingage','cfg-dxy','cfg-paper'].forEach(id => { if (document.getElementById(id)) document.getElementById(id).value = d[id.replace('cfg-','')] ?? (id === 'cfg-dxy' ? true : d[id] ?? ''); });
 }
 
 function renderConversion(d) {
@@ -706,18 +974,10 @@ function renderSwings(levels, goldten, threshold) {
   const tbody = document.getElementById('swing-tbody');
   if (!levels || !levels.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;">No swing levels</td></tr>'; return; }
   tbody.innerHTML = levels.map(lvl => {
-    const mcq  = Math.round(lvl.mcx_equiv || 0);
+    const mcq = Math.round(lvl.mcx_equiv || 0);
     const dist = goldten > 0 ? Math.abs(goldten - mcq) / mcq * 100 : null;
     const isNear = dist !== null && dist <= threshold;
-    return `<tr>
-      <td>${lvl.swing_type === 'swing_high' ? '<span class="tag tag-high">HIGH</span>' : '<span class="tag tag-low">LOW</span>'}</td>
-      <td>$${parseFloat(lvl.xau_price).toFixed(3)}</td>
-      <td>₹${mcq.toLocaleString('en-IN')}${isNear ? '<span class="near-tag">⚡ NEAR</span>' : ''}</td>
-      <td>₹${parseFloat(lvl.usdinr_rate || 0).toFixed(4)}</td>
-      <td style="color:var(--muted);font-size:11px">${lvl.timestamp ? new Date(lvl.timestamp).toLocaleString('en-IN', {timeZone:'Asia/Kolkata', hour12:false}) : '—'}</td>
-      <td>${dist !== null ? dist.toFixed(3) + '%' : '—'}</td>
-      <td><span style="color:${lvl.touched ? 'var(--muted)' : 'var(--green)'}">${lvl.touched ? 'Touched' : 'Active'}</span></td>
-    </tr>`;
+    return `<tr><td>${lvl.swing_type === 'swing_high' ? '<span class="tag tag-high">HIGH</span>' : '<span class="tag tag-low">LOW</span>'}</td><td>$${parseFloat(lvl.xau_price).toFixed(3)}</td><td>₹${mcq.toLocaleString('en-IN')}${isNear ? '<span class="near-tag">⚡ NEAR</span>' : ''}</td><td>₹${parseFloat(lvl.usdinr_rate || 0).toFixed(4)}</td><td style="color:var(--muted);font-size:11px">${lvl.timestamp ? new Date(lvl.timestamp).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour12:false}) : '—'}</td><td>${dist !== null ? dist.toFixed(3) + '%' : '—'}</td><td><span style="color:${lvl.touched ? 'var(--muted)' : 'var(--green)'}">${lvl.touched ? 'Touched' : 'Active'}</span></td></tr>`;
   }).join('');
 }
 
@@ -727,107 +987,55 @@ function renderTrades(trades) {
   if (!trades.length) { tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:24px;">No trades yet</td></tr>'; return; }
   tbody.innerHTML = trades.map(t => {
     const pnlCls = t.pnl != null ? (t.pnl >= 0 ? 'pnl-pos' : 'pnl-neg') : '';
-    return `<tr>
-      <td style="color:var(--muted);font-size:11px">${new Date(t.entry_time).toLocaleString('en-IN', {timeZone:'Asia/Kolkata', hour12:false})}</td>
-      <td style="color:${t.direction === 'BUY' ? 'var(--bull)' : 'var(--bear)'};font-weight:800">${t.direction}</td>
-      <td>$${parseFloat(t.xauusd_entry || 0).toFixed(3)}</td>
-      <td style="font-weight:600">₹${Math.round(t.entry_price || 0).toLocaleString('en-IN')}</td>
-      <td style="color:var(--red)">₹${Math.round(t.stop_price || 0).toLocaleString('en-IN')}</td>
-      <td style="color:var(--green)">₹${Math.round(t.target_price || 0).toLocaleString('en-IN')}</td>
-      <td>${t.qty}</td>
-      <td>₹${parseFloat(t.usdinr_rate || 0).toFixed(4)}</td>
-      <td class="${pnlCls}">${t.pnl != null ? `₹${Math.round(t.pnl).toLocaleString('en-IN')}` : '—'}</td>
-      <td>${t.status}</td>
-    </tr>`;
+    return `<tr><td style="color:var(--muted);font-size:11px">${new Date(t.entry_time).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour12:false})}</td><td style="color:${t.direction==='BUY'?'var(--bull)':'var(--bear)'};font-weight:800">${t.direction}</td><td>$${parseFloat(t.xauusd_entry||0).toFixed(3)}</td><td style="font-weight:600">₹${Math.round(t.entry_price||0).toLocaleString('en-IN')}</td><td style="color:var(--red)">₹${Math.round(t.stop_price||0).toLocaleString('en-IN')}</td><td style="color:var(--green)">₹${Math.round(t.target_price||0).toLocaleString('en-IN')}</td><td>${t.qty}</td><td>₹${parseFloat(t.usdinr_rate||0).toFixed(4)}</td><td class="${pnlCls}">${t.pnl!=null?`₹${Math.round(t.pnl).toLocaleString('en-IN')}`:'—'}</td><td>${t.status}</td></tr>`;
   }).join('');
 }
 
-async function engineStart() { await fetch('/engine/start', {method:'POST'}); fetchStatus(); }
-async function engineStop()  { await fetch('/engine/stop',  {method:'POST'}); fetchStatus(); }
-async function forceExit()   { if (confirm('Force close position at market price?')) await fetch('/engine/force-exit', {method:'POST'}); fetchStatus(); }
-async function toggleKill()  { const url = statusData?.kill_switch ? '/engine/reset-kill-switch' : '/engine/kill-switch'; await fetch(url, {method:'POST'}); fetchStatus(); }
+async function engineStart() { await fetch('/engine/start',{method:'POST'}); fetchStatus(); }
+async function engineStop()  { await fetch('/engine/stop', {method:'POST'}); fetchStatus(); }
+async function forceExit()   { if (confirm('Force close position at market price?')) await fetch('/engine/force-exit',{method:'POST'}); fetchStatus(); }
+async function toggleKill()  { const url = statusData?.kill_switch ? '/engine/reset-kill-switch' : '/engine/kill-switch'; await fetch(url,{method:'POST'}); fetchStatus(); }
 async function saveConfig()  {
-  const payload = {
-    swing_level_threshold_pct: parseFloat(document.getElementById('cfg-threshold').value),
-    risk_reward:   parseFloat(document.getElementById('cfg-rr').value),
-    risk_pct:      parseFloat(document.getElementById('cfg-risk').value),
-    max_lots:      parseInt(document.getElementById('cfg-maxlots').value),
-    swing_max_age_hours: parseInt(document.getElementById('cfg-swingage').value),
-    dxy_enabled:   document.getElementById('cfg-dxy').value === 'true',
-    paper_mode:    document.getElementById('cfg-paper').value === 'true',
-  };
-  await fetch('/config/update', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+  const payload = { swing_level_threshold_pct:parseFloat(document.getElementById('cfg-threshold').value), risk_reward:parseFloat(document.getElementById('cfg-rr').value), risk_pct:parseFloat(document.getElementById('cfg-risk').value), max_lots:parseInt(document.getElementById('cfg-maxlots').value), swing_max_age_hours:parseInt(document.getElementById('cfg-swingage').value), dxy_enabled:document.getElementById('cfg-dxy').value==='true', paper_mode:document.getElementById('cfg-paper').value==='true' };
+  await fetch('/config/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
   alert('Saved'); fetchStatus();
 }
 
-// ── Live Macro Events (API-driven upcoming window) ──
 let _eventsDays = 7;
-function setEventsWindow(days, btn) {
-  _eventsDays = days;
-  document.querySelectorAll('.events-window-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  fetchMacroEvents();
-}
+function setEventsWindow(days, btn) { _eventsDays = days; document.querySelectorAll('.events-window-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); fetchMacroEvents(); }
 async function fetchMacroEvents() {
   try {
-    const r = await fetch(`/api/macro-events?days=${_eventsDays}`);
-    const d = await r.json();
-    renderEvents(d.events || []);
-    document.getElementById('events-count').textContent = `${d.count} events`;
-  } catch(e) {
-    document.getElementById('events-list').innerHTML = '<li class="events-empty">Failed to load events</li>';
-  }
+    const r = await fetch(`/api/macro-events?days=${_eventsDays}`); const d = await r.json();
+    renderEvents(d.events || []); document.getElementById('events-count').textContent = `${d.count} events`;
+  } catch(e) { document.getElementById('events-list').innerHTML = '<li class="events-empty">Failed to load events</li>'; }
 }
 function renderEvents(events) {
   const ul = document.getElementById('events-list');
   if (!events.length) { ul.innerHTML = '<li class="events-empty">No events in selected window</li>'; return; }
-  const IMPACT_DOT = {HIGH:'#EF4444', MEDIUM:'#F59E0B', LOW:'#9CA3AF'};
+  const IMPACT_DOT = {HIGH:'#EF4444',MEDIUM:'#F59E0B',LOW:'#9CA3AF'};
   ul.innerHTML = events.map(ev => {
-    const dot  = IMPACT_DOT[ev.impact] || '#9CA3AF';
-    const hrs  = ev.in_hours;
-    const isSoon = hrs >= 0 && hrs <= 48;
+    const dot = IMPACT_DOT[ev.impact] || '#9CA3AF'; const hrs = ev.in_hours; const isSoon = hrs >= 0 && hrs <= 48;
     let timeLabel;
-    if      (hrs < 0)  timeLabel = ev.date_ist;
-    else if (hrs < 1)  timeLabel = 'In &lt;1h';
-    else if (hrs < 24) timeLabel = `In ${Math.round(hrs)}h`;
-    else               timeLabel = ev.date_ist;
+    if (hrs < 0) timeLabel = ev.date_ist; else if (hrs < 1) timeLabel = 'In <1h'; else if (hrs < 24) timeLabel = `In ${Math.round(hrs)}h`; else timeLabel = ev.date_ist;
     const badgeClass = isSoon ? 'event-badge event-soon' : 'event-badge';
     const badge = isSoon ? `<span class="${badgeClass}">⚡ ${ev.time_ist}</span>` : `<span class="${badgeClass}">${ev.time_ist}</span>`;
     const src = ev.source === 'finnhub' ? '' : ev.source === 'fed_rss' ? ' · Fed RSS' : '';
-    return `<li class="event-item">
-      <span class="event-impact" style="background:${dot}"></span>
-      <div class="event-body">
-        <div class="event-title" title="${ev.title}">${ev.title}</div>
-        <div class="event-meta">${ev.impact} · ${timeLabel}${src}</div>
-      </div>${badge}
-    </li>`;
+    return `<li class="event-item"><span class="event-impact" style="background:${dot}"></span><div class="event-body"><div class="event-title" title="${ev.title}">${ev.title}</div><div class="event-meta">${ev.impact} · ${timeLabel}${src}</div></div>${badge}</li>`;
   }).join('');
 }
 
-// ── Terminal Logic ──
+// ── Terminal ──
 function setTerminalMode(mode) {
-  termMode = mode;
-  const isPaper = mode === 'paper';
-  const btnP = document.getElementById('btn-mode-paper');
-  const btnL = document.getElementById('btn-mode-live');
-  btnP.style.background = isPaper ? '#fff' : 'none';
-  btnP.style.border = isPaper ? '1px solid #cbd5e1' : '1px solid transparent';
-  btnP.style.color  = isPaper ? '#475569' : '#94a3b8';
-  btnL.style.background = !isPaper ? '#fff' : 'none';
-  btnL.style.border = !isPaper ? '1px solid #10b981' : '1px solid transparent';
-  btnL.style.color  = !isPaper ? '#059669' : '#94a3b8';
+  termMode = mode; const isPaper = mode === 'paper';
+  const btnP = document.getElementById('btn-mode-paper'); const btnL = document.getElementById('btn-mode-live');
+  btnP.style.background = isPaper ? '#fff' : 'none'; btnP.style.border = isPaper ? '1px solid #cbd5e1' : '1px solid transparent'; btnP.style.color = isPaper ? '#475569' : '#94a3b8';
+  btnL.style.background = !isPaper ? '#fff' : 'none'; btnL.style.border = !isPaper ? '1px solid #10b981' : '1px solid transparent'; btnL.style.color = !isPaper ? '#059669' : '#94a3b8';
   const banner = document.getElementById('term-mode-banner');
-  if (isPaper) {
-    banner.style.background = '#FFFBEB'; banner.style.borderBottomColor = '#FDE68A'; banner.style.color = '#92400E';
-    banner.innerHTML = '📝 <b>Paper mode</b> — simulated engine positions &amp; paper balance. Switch to ⚡ Live for real Upstox data.';
-  } else {
-    banner.style.background = '#F0FDF4'; banner.style.borderBottomColor = '#86EFAC'; banner.style.color = '#166534';
-    banner.innerHTML = '⚡ <b>Live mode</b> — showing real Upstox positions &amp; available margin. Orders go to exchange.';
-  }
+  if (isPaper) { banner.style.background='#FFFBEB'; banner.style.borderBottomColor='#FDE68A'; banner.style.color='#92400E'; banner.innerHTML='📝 <b>Paper mode</b> — simulated engine positions &amp; paper balance. Switch to ⚡ Live for real Upstox data.'; }
+  else { banner.style.background='#F0FDF4'; banner.style.borderBottomColor='#86EFAC'; banner.style.color='#166534'; banner.innerHTML='⚡ <b>Live mode</b> — showing real Upstox positions &amp; available margin. Orders go to exchange.'; }
   document.getElementById('term-search-row').style.display = isPaper ? 'none' : 'flex';
   document.getElementById('watchlist-section').style.display = isPaper ? 'none' : (liveWatchlist.length ? 'block' : 'none');
-  if (isPaper) { if (statusData && Object.keys(statusData).length) renderPaperTerminal(statusData); }
-  else { refreshLiveTerminal(); }
+  if (isPaper) { if (statusData && Object.keys(statusData).length) renderPaperTerminal(statusData); } else { refreshLiveTerminal(); }
 }
 function renderPaperTerminal(data) {
   if (termMode !== 'paper') return;
@@ -835,41 +1043,35 @@ function renderPaperTerminal(data) {
   setTermStat('stat-balance', bal !== undefined ? '₹' + Math.round(Number(bal)).toLocaleString('en-IN') : '—', 'neu');
   const positions = [];
   if (data.current_position && data.current_position.direction) {
-    const pos = data.current_position; const ltp = data.goldten_last || 0;
-    const qty = pos.qty || 0; const mult = pos.direction === 'BUY' ? 1 : -1;
+    const pos = data.current_position; const ltp = data.goldten_last || 0; const qty = pos.qty || 0; const mult = pos.direction === 'BUY' ? 1 : -1;
     const pnl = ltp && pos.entry_price ? (ltp - pos.entry_price) * qty * mult : 0;
-    positions.push({tradingsymbol:'GOLDTEN', net_quantity:qty * mult, average_price:pos.entry_price || 0, last_price:ltp, instrument_key:data.goldten_instrument_key || 'MCX_FO|GOLDTEN', day_pnl:pnl, unrealised:pnl});
+    positions.push({tradingsymbol:'GOLDTEN',net_quantity:qty*mult,average_price:pos.entry_price||0,last_price:ltp,instrument_key:data.goldten_instrument_key||'MCX_FO|GOLDTEN',day_pnl:pnl,unrealised:pnl});
   }
   renderPositionRows(positions, true);
   let totalDay = 0, totalOverall = 0;
   positions.forEach(p => { totalDay += p.day_pnl || 0; totalOverall += p.unrealised || 0; });
   setTermStat('stat-pos-count', positions.length, 'neu');
-  setTermStat('stat-daypnl',    fmtPnlText(totalDay),    totalDay    >= 0 ? 'pos' : 'neg');
-  setTermStat('stat-totalpnl',  fmtPnlText(totalOverall), totalOverall >= 0 ? 'pos' : 'neg');
-  document.getElementById('last-sync').textContent = 'paper · ' + new Date().toLocaleTimeString('en-IN', {timeZone:'Asia/Kolkata'});
+  setTermStat('stat-daypnl',   fmtPnlText(totalDay),    totalDay    >= 0 ? 'pos' : 'neg');
+  setTermStat('stat-totalpnl', fmtPnlText(totalOverall), totalOverall >= 0 ? 'pos' : 'neg');
+  document.getElementById('last-sync').textContent = 'paper · ' + new Date().toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata'});
   document.getElementById('conn-dot').className = 'dot';
 }
 async function refreshLiveTerminal() {
   if (termMode !== 'live') return;
   document.getElementById('last-sync').textContent = 'syncing…';
   try {
-    const r  = await fetch('/api/positions'); if (!r.ok) throw new Error();
+    const r = await fetch('/api/positions'); if (!r.ok) throw new Error();
     const positions = await r.json();
     const rs = await fetch('/api/status'); const sd = await rs.json();
     const liveBal = sd.balance ?? sd.available_balance;
     setTermStat('stat-balance', liveBal !== undefined ? '₹' + Math.round(Number(liveBal)).toLocaleString('en-IN') : '—', 'neu');
     renderPositionRows(positions, false);
     let totalDay = 0, totalOverall = 0;
-    positions.forEach(p => {
-      const qty = p.net_quantity || 0, avg = p.average_price || 0, ltp = p.last_price || 0, mult = qty >= 0 ? 1 : -1;
-      const pnl = (ltp - avg) * Math.abs(qty) * mult;
-      totalDay     += p.day_pnl     != null ? Number(p.day_pnl)     : pnl;
-      totalOverall += p.unrealised  != null ? Number(p.unrealised)  : pnl;
-    });
+    positions.forEach(p => { const qty=p.net_quantity||0,avg=p.average_price||0,ltp=p.last_price||0,mult=qty>=0?1:-1; const pnl=(ltp-avg)*Math.abs(qty)*mult; totalDay+=p.day_pnl!=null?Number(p.day_pnl):pnl; totalOverall+=p.unrealised!=null?Number(p.unrealised):pnl; });
     setTermStat('stat-pos-count', positions.length, 'neu');
     setTermStat('stat-daypnl',   fmtPnlText(totalDay),    totalDay    >= 0 ? 'pos' : 'neg');
     setTermStat('stat-totalpnl', fmtPnlText(totalOverall), totalOverall >= 0 ? 'pos' : 'neg');
-    document.getElementById('last-sync').textContent = 'live · ' + new Date().toLocaleTimeString('en-IN', {timeZone:'Asia/Kolkata'});
+    document.getElementById('last-sync').textContent = 'live · ' + new Date().toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata'});
     await refreshWatchlistLtps();
   } catch(e) { document.getElementById('last-sync').textContent = 'error'; }
 }
@@ -878,114 +1080,88 @@ function renderPositionRows(positions, isPaper) {
   if (!positions.length) { tbody.innerHTML = `<tr class="empty-row"><td colspan="7">${isPaper ? 'No paper position' : 'No open positions'}</td></tr>`; return; }
   tbody.innerHTML = '';
   positions.forEach(pos => {
-    const sym  = pos.tradingsymbol || pos.instrument_key || '—';
-    const qty  = pos.net_quantity ?? 0;
-    const avg  = Number(pos.average_price || 0);
-    const ltp  = Number(pos.last_price || 0);
-    const side = qty > 0 ? 'LONG' : qty < 0 ? 'SHORT' : 'FLAT';
-    const badge = side === 'LONG' ? '<span class="badge-long">L</span>' : side === 'SHORT' ? '<span class="badge-short">S</span>' : '';
-    const mult  = qty >= 0 ? 1 : -1;
-    const pnl     = pos.day_pnl    != null ? Number(pos.day_pnl)    : (ltp - avg) * Math.abs(qty) * mult;
-    const overall = pos.unrealised != null ? Number(pos.unrealised) : pnl;
-    const ltpCls  = prevLtpMap[sym] !== undefined ? (ltp > prevLtpMap[sym] ? 'ltp-up' : ltp < prevLtpMap[sym] ? 'ltp-down' : '') : '';
-    prevLtpMap[sym] = ltp;
-    const instrKey = pos.instrument_key || sym;
-    const tr = document.createElement('tr'); tr.className = 'pos-row';
-    if (isPaper) {
-      tr.innerHTML = `<td><b>${sym}</b>${badge}</td><td>${Math.abs(qty)}</td><td>₹${avg.toFixed(0)}</td><td class="${ltpCls}">₹${ltp.toFixed(0)}</td><td class="${pnl>=0?'pos':'neg'}">${fmtPnlText(pnl)}</td><td class="${overall>=0?'pos':'neg'}">${fmtPnlText(overall)}</td><td><div class="action-btns"><button class="btn-buy" onclick="paperOrderToast('BUY','${sym}',${ltp})">B</button><button class="btn-sell" onclick="paperOrderToast('SELL','${sym}',${ltp})">S</button><button class="btn-sq" onclick="paperSqOff('${sym}')">SQ</button></div></td>`;
-    } else {
-      tr.innerHTML = `<td><b>${sym}</b>${badge}</td><td>${Math.abs(qty)}</td><td>₹${avg.toFixed(0)}</td><td class="${ltpCls}">₹${ltp.toFixed(0)}</td><td class="${pnl>=0?'pos':'neg'}">${fmtPnlText(pnl)}</td><td class="${overall>=0?'pos':'neg'}">${fmtPnlText(overall)}</td><td><div class="action-btns"><button class="btn-buy" onclick="openOrderModal('${instrKey}','${sym}','BUY',${ltp})">B</button><button class="btn-sell" onclick="openOrderModal('${instrKey}','${sym}','SELL',${ltp})">S</button><button class="btn-sq" onclick="liveSquareOff('${instrKey}','${sym}',${qty},${ltp})">SQ</button></div></td>`;
-    }
+    const sym=pos.tradingsymbol||pos.instrument_key||'—', qty=pos.net_quantity??0, avg=Number(pos.average_price||0), ltp=Number(pos.last_price||0);
+    const side=qty>0?'LONG':qty<0?'SHORT':'FLAT';
+    const badge=side==='LONG'?'<span class="badge-long">L</span>':side==='SHORT'?'<span class="badge-short">S</span>':'';
+    const mult=qty>=0?1:-1;
+    const pnl=pos.day_pnl!=null?Number(pos.day_pnl):(ltp-avg)*Math.abs(qty)*mult;
+    const overall=pos.unrealised!=null?Number(pos.unrealised):pnl;
+    const ltpCls=prevLtpMap[sym]!==undefined?(ltp>prevLtpMap[sym]?'ltp-up':ltp<prevLtpMap[sym]?'ltp-down':''):'';
+    prevLtpMap[sym]=ltp;
+    const instrKey=pos.instrument_key||sym;
+    const tr=document.createElement('tr'); tr.className='pos-row';
+    if (isPaper) tr.innerHTML=`<td><b>${sym}</b>${badge}</td><td>${Math.abs(qty)}</td><td>₹${avg.toFixed(0)}</td><td class="${ltpCls}">₹${ltp.toFixed(0)}</td><td class="${pnl>=0?'pos':'neg'}">${fmtPnlText(pnl)}</td><td class="${overall>=0?'pos':'neg'}">${fmtPnlText(overall)}</td><td><div class="action-btns"><button class="btn-buy" onclick="paperOrderToast('BUY','${sym}',${ltp})">B</button><button class="btn-sell" onclick="paperOrderToast('SELL','${sym}',${ltp})">S</button><button class="btn-sq" onclick="paperSqOff('${sym}')">SQ</button></div></td>`;
+    else tr.innerHTML=`<td><b>${sym}</b>${badge}</td><td>${Math.abs(qty)}</td><td>₹${avg.toFixed(0)}</td><td class="${ltpCls}">₹${ltp.toFixed(0)}</td><td class="${pnl>=0?'pos':'neg'}">${fmtPnlText(pnl)}</td><td class="${overall>=0?'pos':'neg'}">${fmtPnlText(overall)}</td><td><div class="action-btns"><button class="btn-buy" onclick="openOrderModal('${instrKey}','${sym}','BUY',${ltp})">B</button><button class="btn-sell" onclick="openOrderModal('${instrKey}','${sym}','SELL',${ltp})">S</button><button class="btn-sq" onclick="liveSquareOff('${instrKey}','${sym}',${qty},${ltp})">SQ</button></div></td>`;
     tbody.appendChild(tr);
   });
 }
-function paperOrderToast(side, sym, ltp) { upstoxToast(`📝 Paper: ${side} ${sym} @ ₹${Math.round(ltp)} — switch to ⚡ Live to place real orders`); }
-function paperSqOff(sym) { if (confirm(`Paper mode: force-close ${sym} position?`)) { fetch('/engine/force-exit', {method:'POST'}).then(() => { fetchStatus(); upstoxToast('📝 Paper position closed'); }); } }
-function openOrderModal(key, sym, side, ltp) {
-  document.getElementById('ord-sym').value  = key || sym;
-  document.getElementById('ord-price').value = ltp ? Math.round(ltp) : '';
-  document.getElementById('ord-qty').value  = 1;
-  document.getElementById('modal-title-text').textContent = `Order — ${sym}`;
-  document.getElementById('order-modal').style.display = 'flex';
-}
-function closeOrderModal() { document.getElementById('order-modal').style.display = 'none'; }
-async function submitLiveOrder(direction) {
-  const instrKey  = document.getElementById('ord-sym').value.trim();
-  const price     = parseFloat(document.getElementById('ord-price').value) || 0;
-  const qty       = parseInt(document.getElementById('ord-qty').value) || 1;
-  const orderType = document.getElementById('ord-type').value;
-  const product   = document.getElementById('ord-product').value;
-  if (!instrKey) { upstoxToast('⚠ Enter instrument key'); return; }
+function paperOrderToast(side,sym,ltp){ upstoxToast(`📝 Paper: ${side} ${sym} @ ₹${Math.round(ltp)} — switch to ⚡ Live to place real orders`); }
+function paperSqOff(sym){ if(confirm(`Paper mode: force-close ${sym} position?`)){ fetch('/engine/force-exit',{method:'POST'}).then(()=>{ fetchStatus(); upstoxToast('📝 Paper position closed'); }); } }
+function openOrderModal(key,sym,side,ltp){ document.getElementById('ord-sym').value=key||sym; document.getElementById('ord-price').value=ltp?Math.round(ltp):''; document.getElementById('ord-qty').value=1; document.getElementById('modal-title-text').textContent=`Order — ${sym}`; document.getElementById('order-modal').style.display='flex'; }
+function closeOrderModal(){ document.getElementById('order-modal').style.display='none'; }
+async function submitLiveOrder(direction){
+  const instrKey=document.getElementById('ord-sym').value.trim(), price=parseFloat(document.getElementById('ord-price').value)||0, qty=parseInt(document.getElementById('ord-qty').value)||1, orderType=document.getElementById('ord-type').value, product=document.getElementById('ord-product').value;
+  if(!instrKey){ upstoxToast('⚠ Enter instrument key'); return; }
   closeOrderModal();
   try {
-    const r = await fetch('/api/manual-order', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({direction, instrument_key:instrKey, qty, price, order_type:orderType, product})});
-    const d = await r.json();
-    if (d.order_id || d.ok) { upstoxToast(`✅ ${direction} ${qty}× ${instrKey} → ${d.order_id || 'ok'}`); setTimeout(refreshLiveTerminal, 1500); }
-    else { upstoxToast(`❌ ${d.error || 'Order failed'}`); }
-  } catch(e) { upstoxToast('❌ Network error'); }
+    const r=await fetch('/api/manual-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({direction,instrument_key:instrKey,qty,price,order_type:orderType,product})});
+    const d=await r.json();
+    if(d.order_id||d.ok){ upstoxToast(`✅ ${direction} ${qty}× ${instrKey} → ${d.order_id||'ok'}`); setTimeout(refreshLiveTerminal,1500); }
+    else upstoxToast(`❌ ${d.error||'Order failed'}`);
+  } catch(e){ upstoxToast('❌ Network error'); }
 }
-async function liveSquareOff(key, sym, qty, ltp) {
-  const side = qty >= 0 ? 'SELL' : 'BUY'; const absQty = Math.abs(qty);
-  if (!confirm(`Square off ${absQty}× ${sym} at market?`)) return;
+async function liveSquareOff(key,sym,qty,ltp){
+  const side=qty>=0?'SELL':'BUY'; const absQty=Math.abs(qty);
+  if(!confirm(`Square off ${absQty}× ${sym} at market?`)) return;
   try {
-    const r = await fetch('/api/manual-order', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({direction:side, instrument_key:key, qty:absQty, order_type:'MARKET', product:'D', price:0})});
-    const d = await r.json();
-    if (d.order_id || d.ok) { upstoxToast(`✅ SQ ${sym} ${side} → ${d.order_id || 'ok'}`); setTimeout(refreshLiveTerminal, 1500); }
-    else upstoxToast(`❌ ${d.error || 'SQ failed'}`);
-  } catch(e) { upstoxToast('❌ Network error'); }
+    const r=await fetch('/api/manual-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({direction:side,instrument_key:key,qty:absQty,order_type:'MARKET',product:'D',price:0})});
+    const d=await r.json();
+    if(d.order_id||d.ok){ upstoxToast(`✅ SQ ${sym} ${side} → ${d.order_id||'ok'}`); setTimeout(refreshLiveTerminal,1500); }
+    else upstoxToast(`❌ ${d.error||'SQ failed'}`);
+  } catch(e){ upstoxToast('❌ Network error'); }
 }
-async function addWatchlistSymbol() {
-  const raw = document.getElementById('sym-input').value.trim().toUpperCase();
-  const exchange = document.getElementById('exchange-sel').value;
-  if (!raw) return;
+async function addWatchlistSymbol(){
+  const raw=document.getElementById('sym-input').value.trim().toUpperCase(), exchange=document.getElementById('exchange-sel').value;
+  if(!raw) return;
   try {
-    const r = await fetch(`/api/search-instrument?query=${encodeURIComponent(raw)}&exchange=${exchange}`);
-    const d = r.ok ? await r.json() : {data:[]};
-    const results = d.data || d.results || [];
-    const item = results[0]; const key = item?.instrument_key || raw; const sym = item?.trading_symbol || raw;
-    if (!liveWatchlist.find(w => w.key === key)) {
-      liveWatchlist.push({sym, key, exchange:item?.exchange || exchange, ltp:0, change:0});
-      upstoxToast(`➕ Added ${sym}`); await refreshWatchlistLtps(); renderWatchlist();
-    } else upstoxToast(`${sym} already in watchlist`);
-  } catch(e) { liveWatchlist.push({sym:raw, key:raw, exchange, ltp:0, change:0}); renderWatchlist(); }
-  document.getElementById('sym-input').value = '';
+    const r=await fetch(`/api/search-instrument?query=${encodeURIComponent(raw)}&exchange=${exchange}`);
+    const d=r.ok?await r.json():{data:[]};
+    const results=d.data||d.results||[]; const item=results[0]; const key=item?.instrument_key||raw; const sym=item?.trading_symbol||raw;
+    if(!liveWatchlist.find(w=>w.key===key)){ liveWatchlist.push({sym,key,exchange:item?.exchange||exchange,ltp:0,change:0}); upstoxToast(`➕ Added ${sym}`); await refreshWatchlistLtps(); renderWatchlist(); }
+    else upstoxToast(`${sym} already in watchlist`);
+  } catch(e){ liveWatchlist.push({sym:raw,key:raw,exchange,ltp:0,change:0}); renderWatchlist(); }
+  document.getElementById('sym-input').value='';
 }
-async function refreshWatchlistLtps() {
-  for (const item of liveWatchlist) {
-    try { const r = await fetch(`/api/ltp?instrument_key=${encodeURIComponent(item.key)}`); if (r.ok) { const d = await r.json(); item.ltp = d.ltp || item.ltp; } } catch(e) {}
-  }
-  if (liveWatchlist.length) renderWatchlist();
+async function refreshWatchlistLtps(){
+  for(const item of liveWatchlist){ try{ const r=await fetch(`/api/ltp?instrument_key=${encodeURIComponent(item.key)}`); if(r.ok){ const d=await r.json(); item.ltp=d.ltp||item.ltp; } }catch(e){} }
+  if(liveWatchlist.length) renderWatchlist();
 }
-function renderWatchlist() {
-  const sec = document.getElementById('watchlist-section'); const tbody = document.getElementById('watch-tbody');
-  if (!liveWatchlist.length || termMode !== 'live') { sec.style.display = 'none'; return; }
-  sec.style.display = 'block';
-  tbody.innerHTML = liveWatchlist.map((item, idx) => {
-    const ltpCls = item.change > 0 ? 'ltp-up' : item.change < 0 ? 'ltp-down' : '';
-    return `<tr><td><b>${item.sym}</b> <span style="font-size:9px;background:#f1f5f9;padding:1px 4px;border-radius:2px;">${item.exchange}</span></td><td class="${ltpCls}">${item.ltp ? '₹' + Math.round(item.ltp).toLocaleString('en-IN') : '—'}</td><td>${item.change ? (item.change >= 0 ? '+' : '') + item.change.toFixed(2) : '—'}</td><td><div class="action-btns" style="display:flex;"><button class="btn-buy" onclick="openOrderModal('${item.key}','${item.sym}','BUY',${item.ltp||0})">B</button><button class="btn-sell" onclick="openOrderModal('${item.key}','${item.sym}','SELL',${item.ltp||0})">S</button><button class="btn-sq" onclick="removeWatchlistItem(${idx})" style="background:#fff;">✕</button></div></td></tr>`;
+function renderWatchlist(){
+  const sec=document.getElementById('watchlist-section'), tbody=document.getElementById('watch-tbody');
+  if(!liveWatchlist.length||termMode!=='live'){ sec.style.display='none'; return; }
+  sec.style.display='block';
+  tbody.innerHTML=liveWatchlist.map((item,idx)=>{
+    const ltpCls=item.change>0?'ltp-up':item.change<0?'ltp-down':'';
+    return `<tr><td><b>${item.sym}</b> <span style="font-size:9px;background:#f1f5f9;padding:1px 4px;border-radius:2px;">${item.exchange}</span></td><td class="${ltpCls}">${item.ltp?'₹'+Math.round(item.ltp).toLocaleString('en-IN'):'—'}</td><td>${item.change?(item.change>=0?'+':'')+item.change.toFixed(2):'—'}</td><td><div class="action-btns" style="display:flex;"><button class="btn-buy" onclick="openOrderModal('${item.key}','${item.sym}','BUY',${item.ltp||0})">B</button><button class="btn-sell" onclick="openOrderModal('${item.key}','${item.sym}','SELL',${item.ltp||0})">S</button><button class="btn-sq" onclick="removeWatchlistItem(${idx})" style="background:#fff;">✕</button></div></td></tr>`;
   }).join('');
 }
-function removeWatchlistItem(idx) { liveWatchlist.splice(idx, 1); renderWatchlist(); }
-function fmtPnlText(n) { if (n === null || isNaN(n)) return '—'; const v = Number(n); return (v >= 0 ? '+' : '') + '₹' + Math.abs(Math.round(v)).toLocaleString('en-IN'); }
-function setTermStat(id, text, cls) { const el = document.getElementById(id); if (!el) return; el.textContent = text; if (cls) el.className = 'stat-val ' + cls; }
-function upstoxToast(msg) { const t = document.getElementById('upstox-toast'); t.textContent = msg; t.style.display = 'block'; clearTimeout(upstoxToast._timer); upstoxToast._timer = setTimeout(() => t.style.display = 'none', 3000); }
-function tickTerminalClock() { const el = document.getElementById('ist-time'); if (el) el.textContent = new Date().toLocaleTimeString('en-IN', {timeZone:'Asia/Kolkata', hour12:false}) + ' IST'; }
-setInterval(tickTerminalClock, 1000); tickTerminalClock();
+function removeWatchlistItem(idx){ liveWatchlist.splice(idx,1); renderWatchlist(); }
+function fmtPnlText(n){ if(n===null||isNaN(n)) return '—'; const v=Number(n); return (v>=0?'+':'')+'₹'+Math.abs(Math.round(v)).toLocaleString('en-IN'); }
+function setTermStat(id,text,cls){ const el=document.getElementById(id); if(!el) return; el.textContent=text; if(cls) el.className='stat-val '+cls; }
+function upstoxToast(msg){ const t=document.getElementById('upstox-toast'); t.textContent=msg; t.style.display='block'; clearTimeout(upstoxToast._timer); upstoxToast._timer=setTimeout(()=>t.style.display='none',3000); }
+function tickTerminalClock(){ const el=document.getElementById('ist-time'); if(el) el.textContent=new Date().toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata',hour12:false})+' IST'; }
+setInterval(tickTerminalClock,1000); tickTerminalClock();
 
-document.getElementById('add-sym-btn')?.addEventListener('click', addWatchlistSymbol);
-document.getElementById('sym-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') addWatchlistSymbol(); });
-document.getElementById('order-btn')?.addEventListener('click', () => {
-  const key = statusData?.goldten_instrument_key || '';
-  const sym = statusData?.goldten_trading_symbol || 'GOLDTEN';
-  openOrderModal(key, sym, 'BUY', statusData?.goldten_last || 0);
-});
-document.getElementById('refresh-live-btn')?.addEventListener('click', refreshLiveTerminal);
+document.getElementById('add-sym-btn')?.addEventListener('click',addWatchlistSymbol);
+document.getElementById('sym-input')?.addEventListener('keydown',e=>{ if(e.key==='Enter') addWatchlistSymbol(); });
+document.getElementById('order-btn')?.addEventListener('click',()=>{ const key=statusData?.goldten_instrument_key||''; const sym=statusData?.goldten_trading_symbol||'GOLDTEN'; openOrderModal(key,sym,'BUY',statusData?.goldten_last||0); });
+document.getElementById('refresh-live-btn')?.addEventListener('click',refreshLiveTerminal);
 
 setTerminalMode('paper');
 fetchStatus(); fetchConversion(); fetchTrades(); fetchIntelligence(); fetchMacroEvents();
-setInterval(fetchStatus, 5000); setInterval(fetchConversion, 5000); setInterval(fetchTrades, 15000);
-setInterval(fetchIntelligence, 1800000); setInterval(fetchMacroEvents, 3600000);
-setInterval(() => { if (termMode === 'live') refreshLiveTerminal(); }, 15000);
+setInterval(fetchStatus,5000); setInterval(fetchConversion,5000); setInterval(fetchTrades,15000);
+setInterval(fetchIntelligence,1800000); setInterval(fetchMacroEvents,3600000);
+setInterval(()=>{ if(termMode==='live') refreshLiveTerminal(); },15000);
 </script>
 </body>
 </html>
