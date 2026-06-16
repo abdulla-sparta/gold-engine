@@ -234,23 +234,15 @@
   .mt-14 { margin-top: 14px; }
 
   /* Chart */
-  /* Charts Row — full viewport width, Option 2 layout */
-  .charts-row { display: flex; gap: 10px; margin-bottom: 20px;
-                width: 100%; height: 620px; box-sizing: border-box; }
-  .chart-container { background: white; border-radius: 10px;
+  .chart-container { background: white; height: 600px; border-radius: 10px; min-width: 0;
                      border: 1px solid var(--border); box-shadow: var(--shadow);
-                     overflow: hidden; min-width: 0; }
-  .chart-container.chart-main { flex: 1; height: 100%; }
-  .charts-side-col { flex: 1; display: flex; flex-direction: column;
-                     gap: 10px; height: 100%; min-width: 0; }
-  .charts-side-col .chart-container { flex: 1; height: 0; }
-  .chart-header { padding: 10px 14px 0 14px; display: flex; align-items: baseline;
+                     margin-bottom: 20px; overflow: hidden; }
+  .chart-header { padding: 12px 18px 0 18px; display: flex; align-items: baseline;
                   justify-content: space-between; }
-  .chart-header h3 { font-size: 12px; background: #FAFBFC; display: inline-block;
-                     padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border);
-                     font-weight: 600; white-space: nowrap; overflow: hidden;
-                     text-overflow: ellipsis; max-width: 80%; }
-  .tradingview-widget-container { height: calc(100% - 36px); width: 100%; margin-top: 4px; }
+  .chart-header h3 { font-size: 13px; background: #FAFBFC; display: inline-block;
+                     padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border);
+                     font-weight: 600; }
+  .tradingview-widget-container { height: 100%; min-height: 320px; width: 100%; margin-top: 6px; }
 
   /* Upstox terminal */
   .upstox-terminal { background: white; border-radius: 12px; border: 1px solid var(--border);
@@ -371,11 +363,7 @@
     .grid-3, .grid-2, .macro-grid-2 { grid-template-columns: 1fr; gap: 12px; }
     .macro-metric-row { grid-template-columns: 1fr 1fr 1fr; }
     .pos-grid { grid-template-columns: 1fr 1fr; }
-    .charts-row { flex-direction: column; height: auto; }
-    .charts-side-col { height: auto; }
-    .charts-side-col .chart-container { flex: none; height: 45vh; }
-    .chart-container.chart-main { flex: none; height: 45vh; }
-    .tradingview-widget-container { height: calc(100% - 36px); }
+    .tradingview-widget-container { height: 45vh; }
     .meh-table th:nth-child(5), .meh-table td:nth-child(5) { display: none; }
   }
 </style>
@@ -403,72 +391,58 @@
 <!-- ═══════════════════════ ENGINE PAGE ═══════════════════════ -->
 <div id="page-engine" class="page active">
 
-  <!-- TradingView Charts Row -->
-  <div style="padding: 20px 16px 0 16px; width: 100%; box-sizing: border-box;">
-    <div class="charts-row">
+  <!-- TradingView Charts — Gold (left, full height) | Oil + DXY (right, stacked) -->
+  <div class="main" style="padding-bottom:0;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:stretch;">
 
-      <!-- MAIN: XAU/USD -->
-      <div class="chart-container chart-main">
+      <!-- LEFT — Gold full height -->
+      <div class="chart-container" style="height:480px;margin-bottom:0;">
         <div class="chart-header">
-          <h3>📈 XAU/USD Spot & Futures (TVC:GOLD)</h3>
-          <small>15m · TradingView</small>
+          <h3>📈 XAU/USD · Gold</h3>
+          <small style="font-size:10px;color:var(--muted)">15m · TradingView</small>
         </div>
-        <div class="tradingview-widget-container">
-          <div class="tradingview-widget-container__widget"></div>
-          <div class="tradingview-widget-copyright" style="font-size:10px;text-align:right;padding-right:12px;">
-            <a href="https://www.tradingview.com/symbols/GOLD/?exchange=TVC" rel="noopener nofollow" target="_blank" style="color:var(--muted);text-decoration:none;">
-              <span class="blue-text">GOLD chart</span> by TradingView
-            </a>
-          </div>
+        <div class="tradingview-widget-container" style="height:calc(100% - 36px);min-height:0;">
+          <div class="tradingview-widget-container__widget" style="height:100%;"></div>
           <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
-          {"allow_symbol_change":true,"calendar":false,"details":false,"hide_side_toolbar":true,"hide_top_toolbar":false,"hide_legend":false,"hide_volume":false,"hotlist":false,"interval":"15","locale":"en","save_image":true,"style":"1","symbol":"TVC:GOLD","theme":"light","timezone":"Etc/UTC","backgroundColor":"#ffffff","gridColor":"rgba(46,46,46,0.06)","watchlist":[],"withdateranges":false,"compareSymbols":[],"studies":[],"autosize":true}
+          {"allow_symbol_change":true,"calendar":false,"details":false,"hide_side_toolbar":true,"hide_top_toolbar":false,"hide_legend":false,"hide_volume":false,"hotlist":false,"interval":"15","locale":"en","save_image":false,"style":"1","symbol":"TVC:GOLD","theme":"light","timezone":"Etc/UTC","backgroundColor":"#ffffff","gridColor":"rgba(46,46,46,0.06)","watchlist":[],"withdateranges":false,"compareSymbols":[],"studies":[],"autosize":true}
           </script>
         </div>
       </div>
 
-      <!-- SIDE COLUMN: OIL + DXY -->
-      <div class="charts-side-col">
+      <!-- RIGHT — Oil top + DXY bottom stacked -->
+      <div style="display:flex;flex-direction:column;gap:10px;min-width:0;">
 
-        <!-- USOIL -->
-        <div class="chart-container">
+        <!-- WTI Oil — top half -->
+        <div class="chart-container" style="height:235px;margin-bottom:0;flex:1;">
           <div class="chart-header">
-            <h3>🛢️ USOIL (TVC:USOIL)</h3>
-            <small>15m · TradingView</small>
+            <h3>🛢️ USOIL · WTI Crude</h3>
+            <small style="font-size:10px;color:var(--muted)">15m · TradingView</small>
           </div>
-          <div class="tradingview-widget-container">
-            <div class="tradingview-widget-container__widget"></div>
-            <div class="tradingview-widget-copyright" style="font-size:10px;text-align:right;padding-right:12px;">
-              <a href="https://www.tradingview.com/symbols/USOIL/?exchange=TVC" rel="noopener nofollow" target="_blank" style="color:var(--muted);text-decoration:none;">
-                <span class="blue-text">USOIL chart</span> by TradingView
-              </a>
-            </div>
+          <div class="tradingview-widget-container" style="height:calc(100% - 36px);min-height:0;">
+            <div class="tradingview-widget-container__widget" style="height:100%;"></div>
             <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
-            {"allow_symbol_change":true,"calendar":false,"details":false,"hide_side_toolbar":true,"hide_top_toolbar":false,"hide_legend":false,"hide_volume":false,"hotlist":false,"interval":"15","locale":"en","save_image":true,"style":"1","symbol":"TVC:USOIL","theme":"light","timezone":"Etc/UTC","backgroundColor":"#ffffff","gridColor":"rgba(46,46,46,0.06)","watchlist":[],"withdateranges":false,"compareSymbols":[],"studies":[],"autosize":true}
+            {"allow_symbol_change":true,"calendar":false,"details":false,"hide_side_toolbar":true,"hide_top_toolbar":false,"hide_legend":false,"hide_volume":false,"hotlist":false,"interval":"15","locale":"en","save_image":false,"style":"1","symbol":"TVC:USOIL","theme":"light","timezone":"Etc/UTC","backgroundColor":"#ffffff","gridColor":"rgba(46,46,46,0.06)","watchlist":[],"withdateranges":false,"compareSymbols":[],"studies":[],"autosize":true}
             </script>
           </div>
         </div>
 
-        <!-- DXY -->
-        <div class="chart-container">
+        <!-- DXY — bottom half -->
+        <div class="chart-container" style="height:235px;margin-bottom:0;flex:1;">
           <div class="chart-header">
-            <h3>💵 DXY — US Dollar Index</h3>
-            <small>15m · TradingView</small>
+            <h3>💵 DXY · US Dollar Index</h3>
+            <small style="font-size:10px;color:var(--muted)">15m · TradingView</small>
           </div>
-          <div class="tradingview-widget-container">
-            <div class="tradingview-widget-container__widget"></div>
-            <div class="tradingview-widget-copyright" style="font-size:10px;text-align:right;padding-right:12px;">
-              <a href="https://www.tradingview.com/symbols/CAPITALCOM-DXY/" rel="noopener nofollow" target="_blank" style="color:var(--muted);text-decoration:none;">
-                <span class="blue-text">DXY chart</span> by TradingView
-              </a>
-            </div>
+          <div class="tradingview-widget-container" style="height:calc(100% - 36px);min-height:0;">
+            <div class="tradingview-widget-container__widget" style="height:100%;"></div>
             <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
-            {"allow_symbol_change":true,"calendar":false,"details":false,"hide_side_toolbar":true,"hide_top_toolbar":false,"hide_legend":false,"hide_volume":false,"hotlist":false,"interval":"15","locale":"en","save_image":true,"style":"1","symbol":"CAPITALCOM:DXY","theme":"light","timezone":"Etc/UTC","backgroundColor":"#ffffff","gridColor":"rgba(46,46,46,0.06)","watchlist":[],"withdateranges":false,"compareSymbols":[],"studies":[],"autosize":true}
+            {"allow_symbol_change":true,"calendar":false,"details":false,"hide_side_toolbar":true,"hide_top_toolbar":false,"hide_legend":false,"hide_volume":false,"hotlist":false,"interval":"15","locale":"en","save_image":false,"style":"1","symbol":"TVC:DXY","theme":"light","timezone":"Etc/UTC","backgroundColor":"#ffffff","gridColor":"rgba(46,46,46,0.06)","watchlist":[],"withdateranges":false,"compareSymbols":[],"studies":[],"autosize":true}
             </script>
           </div>
         </div>
 
-      </div><!-- /.charts-side-col -->
-    </div><!-- /.charts-row -->
+      </div><!-- end right column -->
+
+    </div>
   </div>
 
   <div class="main">
@@ -703,29 +677,32 @@
     <!-- Fed rates -->
     <div class="card">
       <div class="sec-header"><span class="sec-title">🏦 Fed Funds Rate history</span></div>
-      <div class="macro-rate-row"><span>Dec 2024</span><span style="font-weight:600">4.25–4.50%</span><span class="macro-badge mb-cut">−25bps</span></div>
-      <div class="macro-rate-row"><span>Nov 2024</span><span style="font-weight:600">4.50–4.75%</span><span class="macro-badge mb-cut">−25bps</span></div>
       <div class="macro-rate-row"><span>Sep 2024</span><span style="font-weight:600">4.75–5.00%</span><span class="macro-badge mb-cut">−50bps</span></div>
-      <div class="macro-rate-row"><span>Jul 2023</span><span style="font-weight:600">5.25–5.50%</span><span class="macro-badge mb-hike">+25bps</span></div>
-      <div class="macro-rate-row"><span style="color:var(--gold);font-weight:700">Current</span><span style="font-weight:700;color:var(--gold)">4.25–4.50%</span><span class="macro-badge mb-hold">Hold</span></div>
+      <div class="macro-rate-row"><span>Nov 2024</span><span style="font-weight:600">4.50–4.75%</span><span class="macro-badge mb-cut">−25bps</span></div>
+      <div class="macro-rate-row"><span>Dec 2024</span><span style="font-weight:600">4.25–4.50%</span><span class="macro-badge mb-cut">−25bps</span></div>
+      <div class="macro-rate-row"><span>Jan–May 2025</span><span style="font-weight:600">4.25–4.50%</span><span class="macro-badge mb-hold">Hold ×4</span></div>
+      <div class="macro-rate-row"><span>Dec 2025</span><span style="font-weight:600">3.50–3.75%</span><span class="macro-badge mb-cut">−25bps</span></div>
+      <div class="macro-rate-row"><span>Mar 2026</span><span style="font-weight:600">3.50–3.75%</span><span class="macro-badge mb-hold">Hold</span></div>
+      <div class="macro-rate-row"><span>May 2026</span><span style="font-weight:600">3.50–3.75%</span><span class="macro-badge mb-hold">Hold</span></div>
+      <div class="macro-rate-row"><span style="color:var(--gold);font-weight:700">Current</span><span style="font-weight:700;color:var(--gold)">3.50–3.75%</span><span class="macro-badge mb-hold">Hold</span></div>
       <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
         <div style="font-size:11px;color:var(--muted);margin-bottom:4px">CME FedWatch — next cut probability</div>
-        <div style="font-size:20px;font-weight:700;color:var(--green)">61% <span style="font-size:12px;font-weight:400;color:var(--muted)">by Sep 2025</span></div>
+        <div style="font-size:20px;font-weight:700;color:var(--green)">48% <span style="font-size:12px;font-weight:400;color:var(--muted)">by Sep 2026</span></div>
       </div>
     </div>
 
     <!-- CPI / WPI / RBI -->
     <div class="card">
       <div class="sec-header"><span class="sec-title">📈 CPI / WPI / RBI</span></div>
-      <div class="macro-rate-row"><span>US CPI May 25</span><span style="font-weight:600">2.4%</span><span class="macro-badge mb-cool">Cooling</span></div>
-      <div class="macro-rate-row"><span>US Core CPI</span><span style="font-weight:600">2.8%</span><span class="macro-badge mb-warm">Sticky</span></div>
-      <div class="macro-rate-row"><span>US PPI May 25</span><span style="font-weight:600">2.3%</span><span class="macro-badge mb-cool">Cooling</span></div>
-      <div class="macro-rate-row"><span>India WPI May 25</span><span style="font-weight:600">1.0%</span><span class="macro-badge mb-cool">Low</span></div>
-      <div class="macro-rate-row"><span>India CPI May 25</span><span style="font-weight:600">3.16%</span><span class="macro-badge mb-cool">Below 4%</span></div>
-      <div class="macro-rate-row"><span>RBI Repo Rate</span><span style="font-weight:600">6.00%</span><span class="macro-badge mb-cut">−50bps YTD</span></div>
+      <div class="macro-rate-row"><span>US CPI Apr 26</span><span style="font-weight:600">3.3%</span><span class="macro-badge mb-hot">Re-heating</span></div>
+      <div class="macro-rate-row"><span>US Core CPI Apr 26</span><span style="font-weight:600">3.6%</span><span class="macro-badge mb-warm">Sticky</span></div>
+      <div class="macro-rate-row"><span>US PPI Apr 26</span><span style="font-weight:600">3.4%</span><span class="macro-badge mb-hot">Elevated</span></div>
+      <div class="macro-rate-row"><span>India WPI Apr 26</span><span style="font-weight:600">1.4%</span><span class="macro-badge mb-cool">Benign</span></div>
+      <div class="macro-rate-row"><span>India CPI May 26</span><span style="font-weight:600">3.6%</span><span class="macro-badge mb-cool">Below 4%</span></div>
+      <div class="macro-rate-row"><span>RBI Repo Rate</span><span style="font-weight:600">5.75%</span><span class="macro-badge mb-cut">−75bps YTD</span></div>
       <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
         <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Inflation regime → gold bias</div>
-        <span class="mb-bull">↑ Bullish — rates peaking</span>
+        <span class="mb-bull">↑ Bullish — stagflation risk bid</span>
       </div>
     </div>
 
@@ -742,14 +719,13 @@
       </div>
     </div>
     <div id="macro-upcoming-events">
-      <div class="macro-event-row"><span class="macro-event-dot" style="background:var(--green)"></span><div class="macro-event-body"><div class="macro-event-name">US CPI (May 2025)</div><div class="macro-event-meta">Wed 11 Jun 2025 · BLS · 8:30 AM ET</div><div class="macro-event-exp">Exp: 2.3% YoY · Prior: 2.3%</div></div><span class="days-left days-soon">Today</span></div>
-      <div class="macro-event-row"><span class="macro-event-dot" style="background:var(--gold)"></span><div class="macro-event-body"><div class="macro-event-name">FOMC Rate Decision</div><div class="macro-event-meta">Wed 18 Jun 2025 · Federal Reserve · 2:00 PM ET</div><div class="macro-event-exp">Exp: Hold 4.25–4.50% · Press conf follows</div></div><span class="days-left days-soon">7d</span></div>
-      <div class="macro-event-row"><span class="macro-event-dot" style="background:var(--green)"></span><div class="macro-event-body"><div class="macro-event-name">India CPI (May 2025)</div><div class="macro-event-meta">Fri 13 Jun 2025 · MOSPI · 5:30 PM IST</div><div class="macro-event-exp">Exp: ~3.2% YoY · Prior: 3.16%</div></div><span class="days-left days-soon">2d</span></div>
-      <div class="macro-event-row"><span class="macro-event-dot" style="background:#1D4ED8"></span><div class="macro-event-body"><div class="macro-event-name">India WPI (May 2025)</div><div class="macro-event-meta">Mon 16 Jun 2025 · DPIIT</div><div class="macro-event-exp">Exp: ~1.2% · Prior: 1.0%</div></div><span class="days-left">5d</span></div>
-      <div class="macro-event-row"><span class="macro-event-dot" style="background:var(--gold)"></span><div class="macro-event-body"><div class="macro-event-name">FOMC Minutes</div><div class="macro-event-meta">Wed 2 Jul 2025 · Federal Reserve</div><div class="macro-event-exp">Minutes from the Jun 17–18 meeting</div></div><span class="days-left">21d</span></div>
-      <div class="macro-event-row"><span class="macro-event-dot" style="background:var(--green)"></span><div class="macro-event-body"><div class="macro-event-name">US CPI (Jun 2025)</div><div class="macro-event-meta">Thu 10 Jul 2025 · BLS · 8:30 AM ET</div><div class="macro-event-exp">Exp: ~2.2% · Key for Sep cut probability</div></div><span class="days-left">29d</span></div>
-      <div class="macro-event-row"><span class="macro-event-dot" style="background:var(--gold)"></span><div class="macro-event-body"><div class="macro-event-name">FOMC Rate Decision</div><div class="macro-event-meta">Wed 30 Jul 2025 · Federal Reserve</div><div class="macro-event-exp">Exp: Hold — but watch CPI path</div></div><span class="days-left">49d</span></div>
-      <div class="macro-event-row"><span class="macro-event-dot" style="background:var(--gold)"></span><div class="macro-event-body"><div class="macro-event-name">Jackson Hole Symposium</div><div class="macro-event-meta">Aug 21–23 2025 · Federal Reserve, Kansas City</div><div class="macro-event-exp">Powell keynote — major pivot signal risk</div></div><span class="days-left">71d</span></div>
+      <div class="macro-event-row"><span class="macro-event-dot" style="background:var(--gold)"></span><div class="macro-event-body"><div class="macro-event-name">FOMC Rate Decision</div><div class="macro-event-meta">Wed 18 Jun 2026 · Federal Reserve · 2:00 PM ET</div><div class="macro-event-exp">Exp: Hold 3.50–3.75% · Hawkish tilt likely on CPI</div></div><span class="days-left days-soon">5d</span></div>
+      <div class="macro-event-row"><span class="macro-event-dot" style="background:#1D4ED8"></span><div class="macro-event-body"><div class="macro-event-name">India WPI (May 2026)</div><div class="macro-event-meta">Mon 16 Jun 2026 · DPIIT</div><div class="macro-event-exp">Exp: ~1.5% · Prior: 1.4%</div></div><span class="days-left days-soon">3d</span></div>
+      <div class="macro-event-row"><span class="macro-event-dot" style="background:var(--gold)"></span><div class="macro-event-body"><div class="macro-event-name">FOMC Minutes (May meeting)</div><div class="macro-event-meta">Wed 2 Jul 2026 · Federal Reserve</div><div class="macro-event-exp">Internal debate on sticky inflation — watch for hawkish dissents</div></div><span class="days-left">19d</span></div>
+      <div class="macro-event-row"><span class="macro-event-dot" style="background:var(--green)"></span><div class="macro-event-body"><div class="macro-event-name">US CPI (Jun 2026)</div><div class="macro-event-meta">Thu 9 Jul 2026 · BLS · 8:30 AM ET</div><div class="macro-event-exp">Exp: ~3.1% · High volatility event for gold</div></div><span class="days-left">26d</span></div>
+      <div class="macro-event-row"><span class="macro-event-dot" style="background:var(--gold)"></span><div class="macro-event-body"><div class="macro-event-name">FOMC Rate Decision</div><div class="macro-event-meta">Wed 29 Jul 2026 · Federal Reserve</div><div class="macro-event-exp">Exp: Hold — no cut until inflation path clears</div></div><span class="days-left">46d</span></div>
+      <div class="macro-event-row"><span class="macro-event-dot" style="background:#1D4ED8"></span><div class="macro-event-body"><div class="macro-event-name">RBI MPC Meeting</div><div class="macro-event-meta">Aug 5–7 2026 · Reserve Bank of India</div><div class="macro-event-exp">Exp: −25bps cut · Repo rate → 5.50%</div></div><span class="days-left">53d</span></div>
+      <div class="macro-event-row"><span class="macro-event-dot" style="background:var(--gold)"></span><div class="macro-event-body"><div class="macro-event-name">Jackson Hole Symposium</div><div class="macro-event-meta">Aug 27–29 2026 · Federal Reserve, Kansas City</div><div class="macro-event-exp">Powell keynote — key pivot signal for H2 2026</div></div><span class="days-left">75d</span></div>
     </div>
   </div>
 
@@ -784,20 +760,20 @@
       <div>
         <div style="font-size:11px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Components</div>
         <div class="macro-comp-row"><span>Fed policy</span><span class="up">Bullish ↑</span></div>
-        <div class="macro-comp-row"><span>CPI trend</span><span class="up">Bullish ↑</span></div>
+        <div class="macro-comp-row"><span>CPI trend</span><span class="down">Bearish ↓</span></div>
         <div class="macro-comp-row"><span>Real yields</span><span class="neu">Neutral →</span></div>
         <div class="macro-comp-row"><span>DXY trend</span><span class="up" id="m-dxy-comp">—</span></div>
         <div class="macro-comp-row"><span>India WPI</span><span class="up">Bullish ↑</span></div>
         <div class="macro-comp-row"><span>Geopolitical</span><span class="up">Bullish ↑</span></div>
-        <div class="macro-comp-row"><span>Positioning</span><span class="neu">Neutral →</span></div>
+        <div class="macro-comp-row"><span>Positioning</span><span class="up">Bullish ↑</span></div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">
         <div style="font-size:11px;color:var(--muted)">Composite score</div>
-        <div style="font-size:48px;font-weight:800;color:var(--green);line-height:1">+71</div>
+        <div style="font-size:48px;font-weight:800;color:var(--green);line-height:1">+68</div>
         <div style="font-size:12px;color:var(--muted)">out of 100</div>
         <span class="mb-bull" style="font-size:13px;padding:5px 14px">↑ Macro Bullish</span>
         <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:4px">
-          CPI today + FOMC Jun 18<br>
+          FOMC Jun 18 + sticky US CPI<br>
           <span style="color:var(--red);font-weight:600">High volatility zone — tighten stops</span>
         </div>
       </div>
@@ -816,13 +792,13 @@
       </div>
     </div>
     <div id="macro-news-list">
-      <div class="macro-news-row" data-cat="gold fed"><div style="flex:1"><div class="macro-news-title">Gold hovers near $3,320 ahead of US CPI print; markets price 2025 cuts</div><div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span class="macro-news-time">2h ago</span><span class="macro-news-src">Reuters</span></div></div></div>
-      <div class="macro-news-row" data-cat="fed"><div style="flex:1"><div class="macro-news-title">Fed's Waller signals openness to July cut if inflation data cooperates</div><div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span class="macro-news-time">4h ago</span><span class="macro-news-src">CNBC</span></div></div></div>
-      <div class="macro-news-row" data-cat="india gold"><div style="flex:1"><div class="macro-news-title">MCX gold extends gains as RBI rate cut cycle supports domestic demand outlook</div><div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span class="macro-news-time">6h ago</span><span class="macro-news-src">ET Markets</span></div></div></div>
-      <div class="macro-news-row" data-cat="gold"><div style="flex:1"><div class="macro-news-title">Central bank gold buying accelerates in Q1 2025 — WGC data shows 290t purchases</div><div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span class="macro-news-time">8h ago</span><span class="macro-news-src">Kitco</span></div></div></div>
-      <div class="macro-news-row" data-cat="fed"><div style="flex:1"><div class="macro-news-title">FOMC minutes show members divided on timing — sticky services inflation cited as key risk</div><div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span class="macro-news-time">Yesterday</span><span class="macro-news-src">Fed</span></div></div></div>
-      <div class="macro-news-row" data-cat="india"><div style="flex:1"><div class="macro-news-title">RBI holds rates steady in June MPC meeting; accommodative stance to support growth</div><div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span class="macro-news-time">Yesterday</span><span class="macro-news-src">RBI</span></div></div></div>
-      <div class="macro-news-row" data-cat="gold"><div style="flex:1"><div class="macro-news-title">Gold ETF inflows hit 14-month high as institutional allocations rise on recession risk</div><div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span class="macro-news-time">2 days ago</span><span class="macro-news-src">Bloomberg</span></div></div></div>
+      <div class="macro-news-row" data-cat="gold fed"><div style="flex:1"><div class="macro-news-title">Gold near $4,220 as FOMC Jun 18 looms; traders eye Powell's tone on rate path</div><div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span class="macro-news-time">2h ago</span><span class="macro-news-src">Reuters</span></div></div></div>
+      <div class="macro-news-row" data-cat="fed"><div style="flex:1"><div class="macro-news-title">Fed's Waller flags sticky services inflation — says data needs to cooperate before any cut</div><div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span class="macro-news-time">5h ago</span><span class="macro-news-src">CNBC</span></div></div></div>
+      <div class="macro-news-row" data-cat="india gold"><div style="flex:1"><div class="macro-news-title">MCX GOLDTEN hits ₹97,800 as RBI rate cut cycle offsets INR strength</div><div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span class="macro-news-time">6h ago</span><span class="macro-news-src">ET Markets</span></div></div></div>
+      <div class="macro-news-row" data-cat="gold"><div style="flex:1"><div class="macro-news-title">Central bank gold demand hits record in Q1 2026 — WGC reports 374t purchases</div><div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span class="macro-news-time">8h ago</span><span class="macro-news-src">Kitco</span></div></div></div>
+      <div class="macro-news-row" data-cat="fed"><div style="flex:1"><div class="macro-news-title">FOMC May minutes: members split on hold vs hike as tariff-driven inflation persists</div><div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span class="macro-news-time">Yesterday</span><span class="macro-news-src">Fed</span></div></div></div>
+      <div class="macro-news-row" data-cat="india"><div style="flex:1"><div class="macro-news-title">RBI cuts repo rate to 5.75% at Jun MPC — third cut this year, INR mildly weaker</div><div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span class="macro-news-time">Yesterday</span><span class="macro-news-src">RBI</span></div></div></div>
+      <div class="macro-news-row" data-cat="gold"><div style="flex:1"><div class="macro-news-title">Gold ETF inflows surge to 18-month high as stagflation fears drive safe-haven demand</div><div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span class="macro-news-time">2 days ago</span><span class="macro-news-src">Bloomberg</span></div></div></div>
     </div>
   </div>
 

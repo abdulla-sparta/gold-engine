@@ -319,9 +319,27 @@ class GoldEngine:
     def _usdinr_aligns(self, direction: str) -> bool:
         return True   # pass-through; refine later with previous-day close
 
+    def _get_market_session(self) -> str:
+        """Return MCX session label: Morning (09:00-17:00), Evening (17:00-23:30), Closed."""
+        now = datetime.now(IST)
+        if now.weekday() >= 6:          # Sunday — closed all day
+            return "Closed"
+        if now.weekday() == 5:          # Saturday — morning only 09:00-14:00
+            hm = now.hour * 60 + now.minute
+            if 9 * 60 <= hm < 14 * 60:
+                return "Morning"
+            return "Closed"
+        hm = now.hour * 60 + now.minute
+        if 9 * 60 <= hm < 17 * 60:
+            return "Morning"
+        if 17 * 60 <= hm <= 23 * 60 + 30:
+            return "Evening"
+        return "Closed"
+
     def get_status(self) -> dict:
         return {
             "running":          CONFIG.get("engine_running"),
+            "market_session":   self._get_market_session(),
             "kill_switch":      CONFIG.get("kill_switch"),
             "htf_bias":         self.htf.status(),
             "xauusd_last":      CONFIG.get("xauusd_last"),

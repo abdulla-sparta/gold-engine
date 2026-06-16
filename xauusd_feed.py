@@ -32,7 +32,8 @@ _KEY_NAMES = [
     "twelve_data_api_key_2",
     "twelve_data_api_key_3",
 ]
-_RATE_LIMIT_COOLDOWN = 65
+_RATE_LIMIT_COOLDOWN  = 65        # per-minute rate limit
+_DAILY_LIMIT_COOLDOWN = 86400     # daily credits exhausted (24h)
 
 
 def _all_keys() -> list[str]:
@@ -56,15 +57,16 @@ def _get_api_key() -> str:
         return CONFIG.get(_KEY_NAMES[soonest], "")
 
 
-def _mark_key_exhausted(key: str):
+def _mark_key_exhausted(key: str, cooldown: float = _RATE_LIMIT_COOLDOWN):
     global _key_index
     with _key_lock:
         keys = _all_keys()
         for i, name in enumerate(_KEY_NAMES):
             if CONFIG.get(name, "") == key:
-                _key_exhausted_until[i] = time.time() + _RATE_LIMIT_COOLDOWN
+                _key_exhausted_until[i] = time.time() + cooldown
+                label = "24h (daily limit)" if cooldown > 3600 else f"{int(cooldown)}s"
                 log.warning(
-                    f"[TwelveData] Key slot {i+1} exhausted — cooling down {_RATE_LIMIT_COOLDOWN}s"
+                    f"[TwelveData] Key slot {i+1} exhausted — cooling down {label}"
                 )
                 _key_index = (i + 1) % max(len(keys), 1)
                 break
@@ -73,6 +75,12 @@ def _mark_key_exhausted(key: str):
 def _is_rate_limit_error(data: dict) -> bool:
     msg = (data.get("message") or "").lower()
     return "run out of api credits" in msg or "rate limit" in msg
+
+
+def _is_daily_exhaustion(data: dict) -> bool:
+    """True when key exhausted ALL daily credits (not just per-minute)."""
+    msg = (data.get("message") or "").lower()
+    return "run out of api credits for the day" in msg or "daily limit" in msg
 
 
 # ── Candle buffer ─────────────────────────────────────────────────────────────
@@ -172,7 +180,8 @@ def _td_get(params: dict, timeout: int = 10) -> dict | None:
             data = r.json()
             if _is_rate_limit_error(data):
                 log.warning(f"[TwelveData] {params.get('symbol','')}: {data.get('message')} — rotating key")
-                _mark_key_exhausted(key)
+                cooldown = _DAILY_LIMIT_COOLDOWN if _is_daily_exhaustion(data) else _RATE_LIMIT_COOLDOWN
+                _mark_key_exhausted(key, cooldown)
                 continue
             if data.get("status") == "error":
                 log.warning(f"[TwelveData] {params.get('symbol','')}: {data.get('message')}")
@@ -211,7 +220,8 @@ def _td_price(symbol: str, timeout: int = 8) -> float:
             data = r.json()
             if _is_rate_limit_error(data):
                 log.warning(f"[TwelveData] /price {symbol}: rate limit — rotating key")
-                _mark_key_exhausted(key)
+                cooldown = _DAILY_LIMIT_COOLDOWN if _is_daily_exhaustion(data) else _RATE_LIMIT_COOLDOWN
+                _mark_key_exhausted(key, cooldown)
                 continue
             price = float(data.get("price", 0) or 0)
             if price > 0:
