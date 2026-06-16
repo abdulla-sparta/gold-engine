@@ -234,7 +234,7 @@
   .mt-14 { margin-top: 14px; }
 
   /* Chart */
-  .chart-container { background: white; height: 600px; border-radius: 10px; min-width: 0;
+  .chart-container { background: white; height: 800px; border-radius: 10px; min-width: 0;
                      border: 1px solid var(--border); box-shadow: var(--shadow);
                      margin-bottom: 20px; overflow: hidden; }
   .chart-header { padding: 12px 18px 0 18px; display: flex; align-items: baseline;
@@ -242,7 +242,8 @@
   .chart-header h3 { font-size: 13px; background: #FAFBFC; display: inline-block;
                      padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border);
                      font-weight: 600; }
-  .tradingview-widget-container { height: 100%; min-height: 320px; width: 100%; margin-top: 6px; }
+  .tradingview-widget-container { height: 100%; width: 100%; margin-top: 6px; }
+  .tradingview-widget-container__widget { height: 100% !important; }
 
   /* Upstox terminal */
   .upstox-terminal { background: white; border-radius: 12px; border: 1px solid var(--border);
@@ -396,7 +397,7 @@
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:stretch;">
 
       <!-- LEFT — Gold full height -->
-      <div class="chart-container" style="height:500px;margin-bottom:0;">
+      <div class="chart-container" style="height:620px;margin-bottom:0;">
         <div class="chart-header">
           <h3>📈 XAU/USD · Gold</h3>
           <small style="font-size:10px;color:var(--muted)">15m · TradingView</small>
@@ -413,7 +414,7 @@
       <div style="display:flex;flex-direction:column;gap:10px;min-width:0;">
 
         <!-- WTI Oil — top half -->
-        <div class="chart-container" style="height:245px;margin-bottom:0;flex:1;">
+        <div class="chart-container" style="height:305px;margin-bottom:0;flex:1;">
           <div class="chart-header">
             <h3>🛢️ USOIL · WTI Crude</h3>
             <small style="font-size:10px;color:var(--muted)">15m · TradingView</small>
@@ -427,7 +428,7 @@
         </div>
 
         <!-- DXY — bottom half -->
-        <div class="chart-container" style="height:245px;margin-bottom:0;flex:1;">
+        <div class="chart-container" style="height:305px;margin-bottom:0;flex:1;">
           <div class="chart-header">
             <h3>💵 DXY · US Dollar Index</h3>
             <small style="font-size:10px;color:var(--muted)">15m · TradingView</small>
