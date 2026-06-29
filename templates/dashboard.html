@@ -473,7 +473,16 @@
     <!-- Top metrics -->
     <div class="grid-3">
       <div class="card"><div class="card-title">XAU/USD Spot</div><div class="card-value text-gold" id="xau-price">—</div><div class="card-sub">$/oz · Twelve Data</div></div>
-      <div class="card"><div class="card-title">GOLDTEN MCX Futures</div><div class="card-value" id="goldten-price">—</div><div class="card-sub">₹/10gms · MCX 30JUN26</div></div>
+      <div class="card">
+        <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          GOLDTEN MCX Futures
+          <select id="goldten-expiry-select" style="font-size:11px;color:var(--muted);background:transparent;border:1px solid var(--border);border-radius:5px;padding:2px 4px;cursor:pointer;max-width:130px" title="Switch expiry">
+            <option value="">Loading…</option>
+          </select>
+        </div>
+        <div class="card-value" id="goldten-price">—</div>
+        <div class="card-sub" id="goldten-card-sub">₹/10gms · MCX</div>
+      </div>
       <div class="card"><div class="card-title">HTF Bias (15m XAU/USD)</div><div style="margin-top:8px"><span class="bias NONE" id="htf-bias">NONE</span></div><div class="card-sub" style="margin-top:8px" id="htf-ref">No pivot reference</div></div>
     </div>
 
@@ -962,7 +971,10 @@ function renderStatus(d) {
   const sb = document.getElementById('session-badge');
   if (sb) { const sess = d.market_session || 'Closed'; const sessMap = {'Morning':'🌅 Morning','Evening':'🌆 Evening','Closed':'🔴 Closed'}; sb.textContent = sessMap[sess] || sess; sb.className = 'badge ' + sess.toLowerCase(); }
   document.getElementById('xau-price').textContent = d.xauusd_last ? `$${d.xauusd_last.toLocaleString('en-US',{minimumFractionDigits:3})}` : '—';
-  document.getElementById('goldten-price').textContent = d.goldten_last ? `₹${Math.round(d.goldten_last).toLocaleString('en-IN')}` : '—';
+  // Only update goldten price card if user is viewing the default (active) expiry
+  if (!goldtenSelectedKey || goldtenSelectedKey === (statusData?.goldten_instrument_key || '')) {
+    document.getElementById('goldten-price').textContent = d.goldten_last ? `₹${Math.round(d.goldten_last).toLocaleString('en-IN')}` : '—';
+  }
   document.getElementById('dxy-val').textContent = d.dxy_last ? d.dxy_last.toFixed(2) : '—';
   const dxyChg = d.dxy_change_pct || 0;
   document.getElementById('dxy-sub').textContent = d.dxy_last ? (dxyChg > 0.15 ? `↑ DXY rising (+${dxyChg.toFixed(2)}%) — bearish gold` : dxyChg < -0.15 ? `↓ DXY falling (${dxyChg.toFixed(2)}%) — bullish gold` : `DXY neutral (${dxyChg > 0 ? '+' : ''}${dxyChg.toFixed(2)}%) · Newsbot`) : 'DX-Y.NYB · Newsbot';
@@ -1199,6 +1211,84 @@ fetchStatus(); fetchConversion(); fetchTrades(); fetchIntelligence(); fetchMacro
 setInterval(fetchStatus,5000); setInterval(fetchConversion,5000); setInterval(fetchTrades,15000);
 setInterval(fetchIntelligence,1800000); setInterval(fetchMacroEvents,3600000);
 setInterval(()=>{ if(termMode==='live') refreshLiveTerminal(); },15000);
+
+// ── GOLDTEN Expiry Dropdown ─────────────────────────────────────────────────
+const goldtenExpiries = [];  // [{label, instrument_key, ltp}]
+let goldtenSelectedKey = '';  // currently displayed expiry key
+let goldtenPollTimer = null;
+
+async function fetchGoldtenExpiries() {
+  try {
+    const r = await fetch('/api/goldten-expiries');
+    if (!r.ok) return;
+    const d = await r.json();
+    const expiries = d.expiries || [];
+    if (!expiries.length) return;
+
+    goldtenExpiries.length = 0;
+    expiries.forEach(e => goldtenExpiries.push(e));
+
+    const sel = document.getElementById('goldten-expiry-select');
+    const prevKey = goldtenSelectedKey || expiries[0].instrument_key;
+    sel.innerHTML = '';
+    expiries.forEach(e => {
+      const opt = document.createElement('option');
+      opt.value = e.instrument_key;
+      opt.textContent = e.label;
+      if (e.instrument_key === prevKey) opt.selected = true;
+      sel.appendChild(opt);
+    });
+
+    // Show the selected expiry price
+    const selected = expiries.find(e => e.instrument_key === prevKey) || expiries[0];
+    goldtenSelectedKey = selected.instrument_key;
+    renderGoldtenExpiry(selected);
+  } catch(e) {
+    console.warn('[goldten-expiry]', e);
+  }
+}
+
+function renderGoldtenExpiry(expiry) {
+  const priceEl = document.getElementById('goldten-price');
+  const subEl   = document.getElementById('goldten-card-sub');
+  if (priceEl) priceEl.textContent = expiry.ltp ? `₹${Math.round(expiry.ltp).toLocaleString('en-IN')}` : '—';
+  if (subEl)   subEl.textContent   = `₹/10gms · ${expiry.label}`;
+}
+
+async function fetchGoldtenExpiryLtp(instrument_key) {
+  try {
+    const r = await fetch(`/api/ltp?instrument_key=${encodeURIComponent(instrument_key)}`);
+    if (!r.ok) return null;
+    const d = await r.json();
+    return d.ltp || null;
+  } catch(e) { return null; }
+}
+
+document.getElementById('goldten-expiry-select')?.addEventListener('change', async function() {
+  const key = this.value;
+  goldtenSelectedKey = key;
+  const cached = goldtenExpiries.find(e => e.instrument_key === key);
+  if (cached) renderGoldtenExpiry(cached);
+
+  // Fetch live LTP for this expiry
+  const ltp = await fetchGoldtenExpiryLtp(key);
+  if (ltp) {
+    if (cached) cached.ltp = ltp;
+    renderGoldtenExpiry({ ltp, label: cached?.label || '' });
+  }
+});
+
+// Refresh expiry list + prices every 30s
+fetchGoldtenExpiries();
+setInterval(async () => {
+  await fetchGoldtenExpiries();
+  // Also refresh the selected expiry LTP if it's not the default key
+  if (goldtenSelectedKey) {
+    const ltp = await fetchGoldtenExpiryLtp(goldtenSelectedKey);
+    const sel = goldtenExpiries.find(e => e.instrument_key === goldtenSelectedKey);
+    if (ltp && sel) { sel.ltp = ltp; renderGoldtenExpiry(sel); }
+  }
+}, 30000);
 </script>
 </body>
 </html>

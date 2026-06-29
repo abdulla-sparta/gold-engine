@@ -181,8 +181,8 @@ def api_ltp():
     if not instrument_key:
         return jsonify({"error": "instrument_key required"}), 400
 
-    # Shortcut — return cached value for GOLDTEN to avoid extra Upstox calls
-    if "GOLDTEN" in instrument_key.upper():
+    # Shortcut — return cached value for the ACTIVE GOLDTEN contract only
+    if "GOLDTEN" in instrument_key.upper() and instrument_key == CONFIG.get("goldten_instrument_key", ""):
         ltp = CONFIG.get("goldten_last", 0)
         return jsonify({"ltp": ltp, "change": 0, "change_pct": 0})
 
@@ -386,6 +386,74 @@ def update_config():
 
 
 # ── Data API ──────────────────────────────────────────────────────────────────
+
+@app.route("/api/goldten-expiries")
+def api_goldten_expiries():
+    """
+    GET /api/goldten-expiries
+    Returns the next 3 GOLDTEN MCX futures expiries with their LTPs.
+    Used by the dashboard expiry dropdown.
+    """
+    import requests as req
+    from instrument_resolver import search_instrument
+
+    token = CONFIG.get("upstox_access_token", "")
+    if not token:
+        return jsonify({"error": "not authenticated", "expiries": []}), 401
+
+    try:
+        # Search for GOLDTEN futures — returns all available expiries
+        results = search_instrument(query="GOLDTEN", exchanges="MCX", segments="COMM")
+        futs = [r for r in results if r.get("instrument_type") == "FUT"]
+        futs.sort(key=lambda x: x.get("trading_symbol", ""))
+        futs = futs[:3]  # next 3 expiries
+
+        if not futs:
+            return jsonify({"expiries": []})
+
+        # Batch LTP fetch
+        keys = "|".join(f["instrument_key"] for f in futs)
+        ltp_map = {}
+        try:
+            r = req.get(
+                "https://api.upstox.com/v2/market-quote/ltp",
+                headers={"Authorization": f"Bearer {token}", "Accept": "application/json", "Api-Version": "2.0"},
+                params={"instrument_key": keys},
+                timeout=6,
+            )
+            if r.status_code == 200:
+                data = r.json().get("data", {})
+                for k, v in data.items():
+                    # Upstox returns keys with : instead of |
+                    norm = k.replace(":", "|")
+                    ltp_map[norm] = v.get("last_price", 0)
+        except Exception as e:
+            log.warning(f"[api/goldten-expiries] LTP fetch error: {e}")
+
+        expiries = []
+        for f in futs:
+            sym = f.get("trading_symbol", "")  # e.g. GOLDTEN26JULFUT
+            key = f["instrument_key"]
+            # Build a readable label like "JUL26 FUT" from trading_symbol
+            label = sym  # fallback
+            if sym.startswith("GOLDTEN") and sym.endswith("FUT"):
+                middle = sym[7:-3]  # e.g. "26JUL"
+                if len(middle) >= 5:
+                    year = middle[:2]
+                    month = middle[2:]
+                    label = f"MCX {month}{year}"
+            ltp = ltp_map.get(key, 0)
+            # Fallback: use cached GOLDTEN price for the active key
+            if not ltp and key == CONFIG.get("goldten_instrument_key", ""):
+                ltp = CONFIG.get("goldten_last", 0)
+            expiries.append({"label": label, "instrument_key": key, "trading_symbol": sym, "ltp": ltp})
+
+        return jsonify({"expiries": expiries})
+
+    except Exception as e:
+        log.warning(f"[api/goldten-expiries] {e}")
+        return jsonify({"error": str(e), "expiries": []}), 500
+
 
 @app.route("/api/status")
 def api_status():
