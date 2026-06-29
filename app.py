@@ -402,10 +402,37 @@ def api_goldten_expiries():
         return jsonify({"error": "not authenticated", "expiries": []}), 401
 
     try:
+        # Month map for calendar-correct sorting (alphabetical gives wrong order: AUG<JUL<NOV<OCT<SEP)
+        MONTH_NUM = {"JAN":1,"FEB":2,"MAR":3,"APR":4,"MAY":5,"JUN":6,
+                     "JUL":7,"AUG":8,"SEP":9,"OCT":10,"NOV":11,"DEC":12}
+
+        def expiry_sort_key(fut):
+            sym = fut.get("trading_symbol", "")
+            # GOLDTEN26JULFUT → body = "26JUL"
+            body = sym[7:-3] if (sym.startswith("GOLDTEN") and sym.endswith("FUT")) else ""
+            if len(body) >= 5:
+                year  = int(body[:2])
+                month = MONTH_NUM.get(body[2:], 99)
+                return (year, month)
+            return (99, 99)
+
         # Search for GOLDTEN futures — returns all available expiries
         results = search_instrument(query="GOLDTEN", exchanges="MCX", segments="COMM")
         futs = [r for r in results if r.get("instrument_type") == "FUT"]
-        futs.sort(key=lambda x: x.get("trading_symbol", ""))
+        futs.sort(key=expiry_sort_key)
+
+        # Drop already-expired contracts (expiry month < today's year-month)
+        now_ist = datetime.now(IST)
+        def is_live_or_future(fut):
+            sym = fut.get("trading_symbol", "")
+            body = sym[7:-3] if (sym.startswith("GOLDTEN") and sym.endswith("FUT")) else ""
+            if len(body) >= 5:
+                year  = 2000 + int(body[:2])
+                month = MONTH_NUM.get(body[2:], 99)
+                # Keep if expiry month >= current month (MCX expires on last Monday of month)
+                return (year, month) >= (now_ist.year, now_ist.month)
+            return True  # keep unknowns
+        futs = [f for f in futs if is_live_or_future(f)]
         futs = futs[:3]  # next 3 expiries
 
         if not futs:
@@ -434,14 +461,12 @@ def api_goldten_expiries():
         for f in futs:
             sym = f.get("trading_symbol", "")  # e.g. GOLDTEN26JULFUT
             key = f["instrument_key"]
-            # Build a readable label like "JUL26 FUT" from trading_symbol
+            # Build readable label e.g. "MCX JUL26" from trading_symbol GOLDTEN26JULFUT
             label = sym  # fallback
             if sym.startswith("GOLDTEN") and sym.endswith("FUT"):
-                middle = sym[7:-3]  # e.g. "26JUL"
-                if len(middle) >= 5:
-                    year = middle[:2]
-                    month = middle[2:]
-                    label = f"MCX {month}{year}"
+                body = sym[7:-3]  # e.g. "26JUL"
+                if len(body) >= 5:
+                    label = f"MCX {body[2:]} {body[:2]}"  # "MCX JUL 26"
             ltp = ltp_map.get(key, 0)
             # Fallback: use cached GOLDTEN price for the active key
             if not ltp and key == CONFIG.get("goldten_instrument_key", ""):
